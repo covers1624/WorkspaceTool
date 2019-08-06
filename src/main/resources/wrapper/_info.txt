@@ -1,0 +1,5 @@
+Okay, let me explain the use of this.
+WorkspaceTool needs to run on a newer version of Gradle than Forge's MDK ships by default.
+Most of FG works on this Gradle version, at least the stuff we care about.
+So, due to how the Gradle wrapper work we can invoke this wrapper and trigger a build
+of what ever project we want, with out init script and updated gradle.

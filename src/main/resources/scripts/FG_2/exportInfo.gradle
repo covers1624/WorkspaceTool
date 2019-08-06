@@ -1,0 +1,342 @@
+/*
+ * Copyright (c) 2018-2019 covers1624
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+rootProject {
+    task exportInfo {
+        //fail-fast on export_out not being set.
+        if (!project.hasProperty("export_out")) {
+            throw new GradleException("Property 'export_out' must be specified.")
+        }
+        doLast {
+            //Plugins haven't loaded yet, this is as fail-fast as we can get for this.
+            //fail-fast on FG not existing.
+            if (!project.plugins.hasPlugin("net.minecraftforge.gradle.forge")
+                    //Compat for running on Forge.
+                    && !project.plugins.hasPlugin("net.minecraftforge.gradle.patcher")) {
+                throw new GradleException("Forge plugin not present.")
+            }
+            def out = file(project.export_out)
+
+            def mcExt = project.extensions.getByName("minecraft")
+            def isPatcher = project.plugins.hasPlugin("net.minecraftforge.gradle.patcher")
+
+
+            def info = new GradleInfoJson()
+            //Pull basic information from the rootProject.
+            //'project' here is actually the project we added the task to, so 'rootProject'.
+            info.archivesBaseName = project.archivesBaseName
+            info.group = project.group
+            info.mcp_mappings = mcExt.mappings
+            info.mc_version = mcExt.version
+
+            if (!isPatcher) {
+                info.forge_version = mcExt.forgeVersion
+            } else {
+                info.forge_version = project.version
+            }
+
+            info.hasJavaPlugin = project.plugins.hasPlugin("java")
+            info.hasScalaPlugin = project.plugins.hasPlugin("scala")
+
+            def javaPluginConvention = project.convention.findPlugin(JavaPluginConvention)
+            if (javaPluginConvention != null) {
+                javaPluginConvention.sourceSets.each { SourceSet srcSet ->
+                    def srcSetJson = new SourceSetJson()
+                    info.sourceSets << srcSetJson
+                    srcSetJson.name = srcSet.name
+                    srcSet.resources.srcDirs.each { srcSetJson.resources << it.absolutePath }
+                    srcSet.java.srcDirs.each { srcSetJson.javaSources << it.absolutePath }
+                    if (srcSet.hasProperty("scala")) {
+                        srcSet.scala.srcDirs.each { srcSetJson.scalaSources << it.absolutePath }
+                    }
+                }
+            }
+
+            //Closure to clean things up.
+            def visit = { Configuration config, DependencyScope scope, boolean doDeobf ->
+                //Create the depSet, add the config, then visit.
+                def depSet = new DependencySet(project.dependencies)
+                depSet.configurations << config
+                depSet.visit(new DepVisitor(info: info, scope: scope, doDeobf: doDeobf))
+            }
+            def configurations = project.configurations
+
+            if (!isPatcher) {
+                //Grab some configurations.
+                def compile = configurations.getByName("compile")
+                def deobfCompile = configurations.getByName("deobfCompile")
+                def testCompile = configurations.findByName("testCompile")
+                def compileOnly = configurations.findByName("compileOnly")
+                def runtime = configurations.findByName("runtime")
+
+                //Visit each configuration.
+                visit(compile, DependencyScope.COMPILE, false)
+                visit(deobfCompile, DependencyScope.COMPILE, true)
+
+                if (testCompile != null) {
+                    visit(testCompile, DependencyScope.TEST, false)
+                }
+                if (compileOnly != null) {
+                    visit(compileOnly, DependencyScope.PROVIDED, false)
+                }
+                if (runtime != null) {
+                    visit(runtime, DependencyScope.RUNTIME, false)
+                }
+            } else {
+                //If we are running on forge, we only want this configuration.
+                def fgMcDeps = configurations.getByName("forgeGradleMcDeps")
+                visit(fgMcDeps, DependencyScope.COMPILE, false)
+
+                //Get test dependencies. This is such a hack.
+                def genGradleProjects = tasks.findByName("genGradleProjects")
+                if (genGradleProjects != null) {
+                    //Configuration is called wt_testCompile to not conflict with anything.
+                    def testCompile = configurations.maybeCreate("wt_testCompile")
+                    //Get the task's class then that classes super class, then the field 'dependencies'
+                    //The task's class instance is actually 'TaskGenSubprojects_Decorated', so grab that classes
+                    //superclass that is going to be 'TaskGenSubprojects'. Like seriously, why no fucking getter..
+                    def field = genGradleProjects.getClass().getSuperclass().getDeclaredField("dependencies")
+                    field.setAccessible(true)
+                    field.get(genGradleProjects).each { String dep ->
+                        if (dep.startsWith("testCompile ")) {
+                            String trimmed = dep.replace("testCompile", "").replace("'", "").trim()
+                            project.dependencies.add("wt_testCompile", trimmed)
+                        }
+                    }
+                    visit(testCompile, DependencyScope.TEST, false)
+                }
+            }
+
+
+            //De-Duplicate, favour deobfCompile.
+            def remove = []
+            info.dependencies.each { d1 ->
+                info.dependencies.each { d2 ->
+                    if (d1 != d2 && d1.mavenDep == d2.mavenDep) {
+                        if (d1.doDeobf) {
+                            remove << d2
+                        } else if (d2.doDeobf) {
+                            remove << d1
+                        }
+                    }
+                }
+            }
+            info.dependencies -= remove
+
+            tasks.withType(Jar).each {
+                def attribs = it.manifest.attributes
+                def cm = attribs.get("FMLCorePlugin")
+                def tweaker = attribs.get("TweakClass")
+                if (cm != null) info.fmlCoreMods << cm
+                if (tweaker != null) info.tweakClasses << tweaker
+            }
+
+
+            //Weird stuff here
+            //Use JsonOutput to convert to string.
+            def jsonS = JsonOutput.toJson(info)
+            //Convert back from a string to a map.
+            def jMap = new JsonSlurper().parseText(jsonS)
+            //Remove some garbage.
+            cleanGarbage(jMap)
+
+            //Convert back to a string, prettify it and write to file.
+            out.write(JsonOutput.prettyPrint(JsonOutput.toJson(jMap)))
+        }
+    }
+}
+
+class DepVisitor implements DependencyVisitor {
+
+    DependencyScope scope
+    GradleInfoJson info
+    boolean doDeobf = false
+
+    @Override
+    void visitDependency(ResolvedArtifactResult artifact, Set<ResolvedArtifactResult> sources, Set<ResolvedArtifactResult> javadoc) {
+        //We only care about maven deps.
+        if (artifact.id.componentIdentifier instanceof ModuleComponentIdentifier) {
+            //Strip out FG's deobfCompile outputs, we only want the raw inputs.
+            //The deobf.blah deps are in the 'compile' and 'provided' configurations.
+            //The raw deps are in 'deobfCompile' and 'deobfProvided', its safe to void these.
+            if (!artifact.id.componentIdentifier.group.startsWith("deobf.")) {
+                def dep = new DependencyJson(scope: scope.name())
+                dep.classes = artifact.file.absolutePath
+                dep.mavenDep = artifact.id.componentIdentifier.toString()
+                dep.doDeobf = doDeobf
+                if (!sources.empty) {
+                    dep.sources = sources.first().file.absolutePath
+                }
+                if (!javadoc.empty) {
+                    dep.javadoc = javadoc.first().file.absolutePath
+                }
+                info.dependencies << dep
+            }
+        }
+    }
+}
+
+class GradleInfoJson {
+
+    String group
+    String archivesBaseName
+    String mcp_mappings
+    String mc_version
+    String forge_version
+
+    boolean hasScalaPlugin
+    boolean hasJavaPlugin
+
+    List<SourceSetJson> sourceSets = []
+    List<DependencyJson> dependencies = []
+
+    Set<String> fmlCoreMods = new HashSet<>()
+    Set<String> tweakClasses = new HashSet<>()
+}
+
+class SourceSetJson {
+    String name
+    List<String> javaSources = []
+    List<String> scalaSources = []
+    List<String> resources = []
+}
+
+class DependencyJson {
+
+    DependencyScope scope
+    boolean doDeobf
+    String mavenDep
+
+    String classes
+    String sources
+    String javadoc
+}
+
+enum DependencyScope {
+    PROVIDED,
+    COMPILE,
+    RUNTIME,
+    TEST
+}
+
+//Removes some garbage.
+def cleanGarbage(Object obj) {
+    def theGarbage = ["contentHash", "originalClassName"].toSet()
+    if (obj instanceof Map) {
+        def itr = obj.keySet().iterator()
+        while (itr.hasNext()) {
+            if (theGarbage.contains(itr.next())) {
+                itr.remove()
+            }
+        }
+        for (Object value : obj.values()) {
+            cleanGarbage(value)
+        }
+    } else if (obj instanceof List) {
+        for (Object v : obj) {
+            cleanGarbage(v)
+        }
+    }
+}
+
+interface DependencyVisitor {
+    void visitDependency(ResolvedArtifactResult artifact, Set<ResolvedArtifactResult> sources, Set<ResolvedArtifactResult> javadoc);
+}
+
+//Mostly a rip of Gradles IdeDependencySet & IdeDependencyVisitor system.
+//Except with some assumptions made and lower gradle requirements.
+class DependencySet {
+
+    DependencyHandler dependencyHandler
+    List<Configuration> configurations = []
+
+    private Map<ComponentArtifactIdentifier, ResolvedArtifactResult> resolvedArtifacts = [:]
+    private Table<ComponentIdentifier, Class<? extends Artifact>, Set<ResolvedArtifactResult>> resolvedAuxiliary = new Table()
+
+    DependencySet(DependencyHandler depHandler) {
+        this.dependencyHandler = depHandler
+    }
+
+    def visit(DependencyVisitor visitor) {
+        //Resolve each of the configurations with lenient.
+        configurations.each { config ->
+            def artifacts = config.incoming.artifactView { it.lenient = true }.getArtifacts()
+            artifacts.each { artifact ->
+                //Add resolved artifacts to the master set.
+                resolvedArtifacts[artifact.id] = artifact
+            }
+        }
+        //Filter and Map for all the ModuleComponentIdentifiers from our resolved artifacts.
+        def components = resolvedArtifacts.keySet()
+                .findAll { it.componentIdentifier instanceof ModuleComponentIdentifier }
+                .collect { it.componentIdentifier as ModuleComponentIdentifier }
+        //Fire off a new query for SourcesArtifact and JavadocArtifact, for each of the resolvedArtifacts.
+        def result = dependencyHandler.createArtifactResolutionQuery()
+                .forComponents(components)
+        //Holy groovy that cast is fucking cancer and amazing <3
+                .withArtifacts(JvmLibrary, [SourcesArtifact, JavadocArtifact] as Class<? extends Artifact>[])
+                .execute()
+        //Add each of the resolvedComponents of our query to the resolvedAuxiliary Table.
+        result.resolvedComponents.each { ar ->
+            [SourcesArtifact, JavadocArtifact].each { type ->
+                ar.getArtifacts(type).each { artifact ->
+                    if (artifact instanceof ResolvedArtifactResult) {
+                        resolvedAuxiliary.computeIfAbsent(ar.id, type, { new HashSet() }) << artifact
+                    }
+                }
+            }
+        }
+        //Finally, collect the resolved sources and javadoc for each artifact and visit the visitor.
+        resolvedArtifacts.each { key, value ->
+            def sources = resolvedAuxiliary.getOrDefault(key.componentIdentifier, SourcesArtifact, Collections.emptySet())
+            def javadoc = resolvedAuxiliary.getOrDefault(key.componentIdentifier, JavadocArtifact, Collections.emptySet())
+            visitor.visitDependency(value, sources, javadoc)
+        }
+    }
+
+    //Super simple table, not worth a guava dep.
+    class Table<R, C, V> {
+        private Map<R, Map<C, V>> table = [:]
+
+        def put(R r, C c, V v) {
+            def row = getRow(r)
+            row[c] = v
+        }
+
+        def computeIfAbsent(R r, C c, Closure<V> v) {
+            def row = getRow(r)
+            return row.computeIfAbsent(c, { v.call() })
+        }
+
+        def getOrDefault(R r, C c, V default_) {
+            return (table[r] ?: Collections.emptyMap())[c] ?: default_
+        }
+
+        def getRow(R r) {
+            return table.computeIfAbsent(r, { [:] })
+        }
+    }
+}

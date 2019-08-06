@@ -1,0 +1,6 @@
+initscript {
+    dependencies {
+        $ { DEPENDENCIES }
+    }
+}
+apply plugin: net.covers1624.wt.gradle.WorkspaceToolGradlePlugin

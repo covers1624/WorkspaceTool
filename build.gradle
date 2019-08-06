@@ -1,0 +1,379 @@
+import groovy.xml.MarkupBuilder
+import net.covers1624.gradlestuff.dependencies.ConfigurationVisitor
+import net.covers1624.gradlestuff.dependencies.ConfigurationWalker
+import net.covers1624.gradlestuff.dependencies.DependencyName
+import org.apache.commons.lang3.StringUtils
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+
+import java.security.MessageDigest
+import java.util.jar.JarEntry
+import java.util.jar.JarInputStream
+import java.util.jar.JarOutputStream
+
+buildscript {
+    repositories() {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url 'https://maven.covers1624.net/' }
+    }
+    dependencies {
+        classpath 'org.ow2.asm:asm:7.0'
+        classpath 'org.apache.commons:commons-lang3:3.9'
+        classpath 'net.covers1624:GradleStuff:1.1-SNAPSHOT'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'maven-publish'
+}
+
+//Converts source set output's to proper Dependencies in a configuration.
+apply plugin: 'net.covers1624.ss-dependencies'
+
+group 'net.covers1624.workspace_tool'
+version '0.1.0'
+
+sourceCompatibility = 1.8
+
+sourceSets {
+    common
+    forge
+    create('gradle')
+    intellij
+    main
+    create('wrapper')
+}
+
+repositories {
+    jcenter()
+    mavenLocal()
+    maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
+    maven { url 'https://maven.covers1624.net/' }
+    maven { url 'https://maven.fabricmc.net/' }
+    maven { url 'https://files.minecraftforge.net/maven/' }
+    maven { url 'https://dl.bintray.com/jetbrains/intellij-third-party-dependencies/' }
+}
+
+configurations {
+    common
+    mavenResolver
+    forgeCompile.extendsFrom common
+    gradleCompile.extendsFrom common
+    intellijCompile.extendsFrom common
+    compile.extendsFrom common
+    commonCompile.extendsFrom common
+    compile.extendsFrom mavenResolver
+    wrapperCompile.extendsFrom mavenResolver
+}
+
+dependencies {
+
+    //Common
+    common 'org.ow2.asm:asm:7.0'
+    common 'org.ow2.asm:asm-commons:7.0'
+    common 'org.apache.logging.log4j:log4j-core:2.11.1'
+    common 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
+    common 'org.apache.logging.log4j:log4j-jul:2.11.1'
+    common 'com.google.code.gson:gson:2.8.5'
+    common 'com.google.guava:guava:26.0-jre'
+    common 'org.codehaus.groovy:groovy:2.5.5'
+    common 'org.codehaus.groovy:groovy-xml:2.5.5'
+    common 'org.apache.commons:commons-text:1.6'
+    common 'org.apache.commons:commons-lang3:3.9'
+    common 'org.apache.maven:maven-artifact:3.6.0'
+    common 'it.unimi.dsi:fastutil:7.1.0'
+    common 'org.eclipse.jgit:org.eclipse.jgit:5.2.1.201812262042-r'
+    commonCompileOnly 'org.jetbrains:annotations:16.0.2'
+
+    //mavenResolver
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-api:1.3.3'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-spi:1.3.3'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-impl:1.3.3'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-util:1.3.3'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-connector-basic:1.3.3'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-transport-http:1.3.3'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-transport-file:1.3.3'
+    mavenResolver 'org.apache.maven:maven-model-builder:3.6.0'
+    mavenResolver 'org.apache.maven:maven-resolver-provider:3.6.0'
+
+    //Forge
+    forgeCompileOnly sourceSets.common.output
+    forgeCompileOnly sourceSets.main.output
+    forgeCompileOnly sourceSets.gradle.output
+    forgeCompileOnly gradleApi()
+
+    //Gradle
+    gradleImplementation "net.covers1624:GradleStuff:1.1-SNAPSHOT"
+    gradleCompileOnly gradleApi()
+    gradleCompileOnly sourceSets.common.output
+    gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+
+    //Intellij
+    intellijCompileOnly sourceSets.common.output
+    intellijCompileOnly sourceSets.main.output
+
+    //Main
+    compile 'net.covers1624.workspacetool.deps:gradle-api:4.10.3'
+    compile sourceSets.common.output
+    runtimeOnly sourceSets.forge.output
+    runtimeOnly sourceSets.intellij.output
+    runtimeOnly sourceSets.gradle.output
+    runtimeOnly 'net.covers1624:GradleStuff:1.1-SNAPSHOT'
+    compileOnly 'org.jetbrains:annotations:16.0.2'
+    compileOnly sourceSets.wrapper.output
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.github.stefanbirkner:system-rules:1.19.0'
+    testCompile 'org.apache.logging.log4j:log4j-core:2.11.1:tests'
+
+    //Wrapper
+    wrapperCompile "com.google.code.gson:gson:2.8.5"
+    wrapperCompile 'org.apache.logging.log4j:log4j-core:2.11.1'
+    wrapperCompile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
+}
+
+jar {
+    baseName 'wt-core'
+    from sourceSets.main.output
+}
+
+task commonJar(type: Jar) {
+    baseName 'wt-common'
+    dependsOn compileCommonJava, compileCommonGroovy
+    from sourceSets.common.output
+}
+
+task forgeJar(type: Jar) {
+    baseName 'wt-forge'
+    dependsOn compileForgeJava, compileForgeGroovy
+    from sourceSets.forge.output
+}
+
+task gradleJar(type: Jar) {
+    baseName 'wt-gradle'
+    dependsOn compileGradleJava, compileGradleGroovy
+    from sourceSets.gradle.output
+}
+
+task intellijJar(type: Jar) {
+    baseName 'wt-intellij'
+    dependsOn compileIntellijJava, compileIntellijGroovy
+    from sourceSets.intellij.output
+}
+
+
+task makeWrapperLibs {
+    doLast {
+        def properties = new Properties()
+        sourceSets.wrapper.compileClasspath.each {
+            if (it.isFile()) {
+                def out = new File(makeWrapperLibs.temporaryDir, it.getName())
+                out.createNewFile()
+                processJar(it.newInputStream(), out.newOutputStream())
+                wrapperJar.from(out) {
+                    into "META-INF/libs"
+                }
+                properties.setProperty(out.getName(), sha256(out))
+            }
+        }
+        def propsFile = new File(temporaryDir, "libraries.properties")
+        def out = propsFile.newOutputStream()
+        properties.save(out, "List of libraries to extract.")
+        out.close()
+        wrapperJar.from(propsFile) {
+            into "META-INF"
+        }
+    }
+}
+
+task wrapperJar(type: Jar) {
+    baseName 'wt-wrapper'
+    dependsOn makeWrapperLibs
+    from sourceSets.wrapper.output
+    manifest {
+        attributes 'Main-Class': "net.covers1624.wt.wrapper.Main"
+    }
+}
+
+//build.dependsOn commonJar, forgeJar, gradleJar, intellijJar, wrapperJar
+
+publishing {
+    repositories {
+        maven {
+            url "https://maven-upload.covers1624.net/"
+            if (project.hasProperty('maven_pass')) {
+                credentials {
+                    username 'covers1624'
+                    password project.getProperty('maven_pass')
+                }
+            }
+        }
+    }
+    publications {
+        'wt-core'(MavenPublication) {
+            groupId = project.group
+            artifactId = 'wt-core'
+            version = project.version
+            artifact jar
+            addDependencies(pom, sourceSets.main)
+        }
+        'wt-common'(MavenPublication) {
+            groupId = project.group
+            artifactId = 'wt-common'
+            version = project.version
+            artifact commonJar
+            addDependencies(pom, sourceSets.common)
+        }
+        'wt-forge'(MavenPublication) {
+            groupId = project.group
+            artifactId = 'wt-forge'
+            version = project.version
+            artifact forgeJar
+            addDependencies(pom, sourceSets.forge)
+        }
+        'wt-gradle'(MavenPublication) {
+            groupId = project.group
+            artifactId = 'wt-gradle'
+            version = project.version
+            artifact gradleJar
+            addDependencies(pom, sourceSets.gradle)
+        }
+        'wt-intellij'(MavenPublication) {
+            groupId = project.group
+            artifactId = 'wt-intellij'
+            version = project.version
+            artifact intellijJar
+            addDependencies(pom, sourceSets.intellij)
+        }
+        'wt-wrapper'(MavenPublication) {
+            groupId = project.group
+            artifactId = 'wt-wrapper'
+            version = project.version
+            artifact wrapperJar
+            addDependencies(pom, sourceSets.wrapper)
+        }
+    }
+}
+
+def sha256(File file) {
+    MessageDigest md = MessageDigest.getInstance("SHA-256")
+    file.eachByte 4096, { bytes, len ->
+        md.update(bytes, 0, len)
+    }
+    return md.digest().encodeHex().toString()
+}
+
+def processJar(InputStream is, OutputStream os) {
+    def jos = new JarOutputStream(os)
+    def jis = new JarInputStream(is)
+    JarEntry entry = null
+    while ((entry = jis.nextJarEntry) != null) {
+        if (entry.getName().endsWith(".class")) {
+            jos.putNextEntry(new JarEntry(entry.getName()))
+            stripDebug(jis, jos)
+            jos.closeEntry()
+        } else {
+            jos.putNextEntry(new JarEntry(entry))
+            copy(jis, jos)
+            jos.closeEntry()
+        }
+    }
+    jis.close()
+    jos.close()
+}
+
+def stripDebug(def is, OutputStream os) {
+    def cr = new ClassReader(is)
+    def cw = new ClassWriter(0)
+    cr.accept(cw, ClassReader.SKIP_DEBUG)
+    os.write(cw.toByteArray())
+}
+
+ext.bufferCache = ThreadLocal.withInitial({ new byte[32 * 1024] })
+
+def copy(InputStream is, OutputStream os) throws IOException {
+    byte[] buffer = bufferCache.get()
+    int len
+    while ((len = is.read(buffer)) != -1) {
+        os.write(buffer, 0, len)
+    }
+}
+
+def addDependencies(pom, SourceSet ss) {
+    pom.withXml {
+        def walker = new ConfigurationWalker(dependencies)
+        def dependencies = it.asNode().appendNode('dependencies')
+        def visitor = new Visitor(dependencies, project)
+        def compileConfig = configurations.findByName(ss.compileConfigurationName)
+        def implementationConfig = configurations.findByName(ss.implementationConfigurationName)
+        def runtimeConfig = configurations.findByName(ss.runtimeConfigurationName)
+        def runtimeOnlyConfig = configurations.findByName(ss.runtimeOnlyConfigurationName)
+        def compileOnlyConfig = configurations.findByName(ss.compileOnlyConfigurationName)
+        visitor.scope = 'compile'
+        walker.walkTree([compileConfig, implementationConfig], visitor, false, false, true)
+        visitor.scope = 'runtime'
+        walker.walkTree([runtimeConfig, runtimeOnlyConfig], visitor, false, false, true)
+        visitor.scope = 'provided'
+        walker.walkTree([compileOnlyConfig], visitor, false, false, true)
+    }
+}
+
+def markupPom(XmlProvider provider, Closure closure) {
+    def node = markupXml(closure)
+    provider.asNode().append(node)
+}
+
+def markupXml(Closure closure) {
+    def xml = new StringWriter()
+    def b = new MarkupBuilder(xml)
+    Closure copy = closure.clone()
+    copy.setResolveStrategy(Closure.DELEGATE_FIRST)
+    copy.setDelegate(b)
+    if (copy.getMaximumNumberOfParameters() == 0) {
+        copy.call()
+    } else {
+        copy.call(b)
+    }
+    return new XmlParser().parseText(xml.toString())
+}
+
+class Visitor implements ConfigurationVisitor {
+
+    final Project project
+    final Node dependencies
+    String scope
+
+    Visitor(dependencies, project) {
+        this.dependencies = dependencies
+        this.project = project
+    }
+
+    @Override
+    void visitModuleDependency(DependencyName name, File classes, File sources, File javadoc) {
+        def dep = dependencies.appendNode('dependency')
+        dep.appendNode('groupId', name.group)
+        dep.appendNode('artifactId', name.module)
+        dep.appendNode('version', name.version)
+        dep.appendNode('scope', scope)
+        if (StringUtils.isNotEmpty(name.classifier)) {
+            dep.appendNode('classifier', name.classifier)
+        }
+        if (!StringUtils.equals(name.extension, 'jar')) {
+            dep.appendNode('type', name.extension)
+        }
+    }
+
+    @Override
+    void visitSourceSetDependency(SourceSet ss) {
+        this.visitModuleDependency(new DependencyName(project.group, "wt-${ss.name}", project.version, null, 'jar'), null, null, null)
+    }
+
+    //@formatter:off
+    @Override void startVisit(Configuration configuration) {}
+    @Override void endVisit() {}
+    //@formatter:on
+}
