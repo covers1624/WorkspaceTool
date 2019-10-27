@@ -1,13 +1,12 @@
 package net.covers1624.wt.api.script;
 
 import groovy.lang.Closure;
-import net.covers1624.wt.api.framework.ModdingFramework;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.script.runconfig.RunConfigContainer;
-import net.covers1624.wt.api.workspace.Workspace;
 import net.covers1624.wt.util.ClosureBackedConsumer;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -99,24 +98,21 @@ public interface WorkspaceScript {
      */
     <T extends Workspace> void workspace(Class<T> clazz);
 
-    /**
-     * Configures the RunConfigContainer.
-     *
-     * @param closure The configure Closure.
-     */
-    default void runConfigs(Closure<RunConfigContainer> closure) {
-        runConfigs(new ClosureBackedConsumer<>(closure));
-    }
+    List<String> getRepos();
 
-    /**
-     * Overload of {@link #runConfigs(Closure)}
-     */
-    void runConfigs(Consumer<RunConfigContainer> consumer);
+    List<String> getClasspathDeps();
 
-    /**
-     * @return Gets the RunConfigContainer.
-     */
-    RunConfigContainer getRunConfigContainer();
+    Class<? extends ModdingFramework> getFrameworkClass();
+
+    ModdingFramework getFramework();
+
+    Class<? extends Workspace> getWorkspaceType();
+
+    Workspace getWorkspace();
+
+    Map<String, String> getDepOverrides();
+
+    ModuleContainerSpec getModuleContainer();
 
 }
 /*Iggy was here*/

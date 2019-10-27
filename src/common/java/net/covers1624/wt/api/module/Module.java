@@ -14,14 +14,15 @@ public interface Module {
     String getName();
 
     /**
-     * @return The Group this Module belongs to.
-     */
-    String getGroup();
-
-    /**
      * @return The Path to this Module's root.
      */
     Path getPath();
+
+    @Deprecated
+    Path getCompileOutput();
+
+    @Deprecated
+    void setCompileOutput(Path compileOutput);
 
     /**
      * @return Any SourceSets this Module has.
@@ -62,4 +63,8 @@ public interface Module {
      * @param configurations The Configuration Map.
      */
     void setConfigurations(Map<String, Configuration> configurations);
+
+    boolean getModulePerSourceSet();
+
+    void setModulePerSourceSet(boolean value);
 }

@@ -45,6 +45,7 @@ sourceSets {
     create('gradle')
     intellij
     main
+    minecraft
     create('wrapper')
 }
 
@@ -68,6 +69,7 @@ configurations {
     commonCompile.extendsFrom common
     compile.extendsFrom mavenResolver
     wrapperCompile.extendsFrom mavenResolver
+    minecraftCompile.extendsFrom common
 }
 
 dependencies {
@@ -80,13 +82,19 @@ dependencies {
     common 'org.apache.logging.log4j:log4j-jul:2.11.1'
     common 'com.google.code.gson:gson:2.8.5'
     common 'com.google.guava:guava:26.0-jre'
-    common 'org.codehaus.groovy:groovy:2.5.5'
-    common 'org.codehaus.groovy:groovy-xml:2.5.5'
+    common 'org.codehaus.groovy:groovy-all:3.0.0-beta-3'
     common 'org.apache.commons:commons-text:1.6'
     common 'org.apache.commons:commons-lang3:3.9'
     common 'org.apache.maven:maven-artifact:3.6.0'
     common 'it.unimi.dsi:fastutil:7.1.0'
     common 'org.eclipse.jgit:org.eclipse.jgit:5.2.1.201812262042-r'
+    common 'net.rubygrapefruit:native-platform:0.18'
+    common 'org.fusesource.jansi:jansi:1.18'
+    common 'org.jline:jline-terminal-jna:3.12.1'
+    common 'org.apache.httpcomponents:httpclient:4.5.7'
+    common 'commons-io:commons-io:2.6'
+    common 'com.electronwill.night-config:core:3.6.0'
+    common 'com.electronwill.night-config:toml:3.6.0'
     commonCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //mavenResolver
@@ -101,16 +109,21 @@ dependencies {
     mavenResolver 'org.apache.maven:maven-resolver-provider:3.6.0'
 
     //Forge
+    forgeCompile sourceSets.minecraft.output
     forgeCompileOnly sourceSets.common.output
     forgeCompileOnly sourceSets.main.output
     forgeCompileOnly sourceSets.gradle.output
-    forgeCompileOnly gradleApi()
+    forgeCompileOnly('net.covers1624.workspacetool.deps:gradle-api:4.10.3') {
+        exclude module: 'gradle-api-impldep'
+    }
 
     //Gradle
     gradleImplementation "net.covers1624:GradleStuff:1.1-SNAPSHOT"
-    gradleCompileOnly gradleApi()
     gradleCompileOnly sourceSets.common.output
     gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+    gradleCompileOnly('net.covers1624.workspacetool.deps:gradle-api:4.10.3') {
+        exclude module: 'gradle-api-impldep'
+    }
 
     //Intellij
     intellijCompileOnly sourceSets.common.output
@@ -122,9 +135,14 @@ dependencies {
     runtimeOnly sourceSets.forge.output
     runtimeOnly sourceSets.intellij.output
     runtimeOnly sourceSets.gradle.output
+    runtimeOnly sourceSets.minecraft.output
     runtimeOnly 'net.covers1624:GradleStuff:1.1-SNAPSHOT'
     compileOnly 'org.jetbrains:annotations:16.0.2'
     compileOnly sourceSets.wrapper.output
+    annotationProcessor 'org.apache.logging.log4j:log4j-core:2.11.1'
+
+    //Minecraft
+    minecraftCompileOnly sourceSets.common.output
 
     testCompile 'junit:junit:4.12'
     testCompile 'com.github.stefanbirkner:system-rules:1.19.0'
@@ -134,6 +152,10 @@ dependencies {
     wrapperCompile "com.google.code.gson:gson:2.8.5"
     wrapperCompile 'org.apache.logging.log4j:log4j-core:2.11.1'
     wrapperCompile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
+
+
+    testImplementation sourceSets.intellij.output
+
 }
 
 jar {
@@ -163,6 +185,12 @@ task intellijJar(type: Jar) {
     baseName 'wt-intellij'
     dependsOn compileIntellijJava, compileIntellijGroovy
     from sourceSets.intellij.output
+}
+
+task minecraftJar(type: Jar) {
+    baseName 'wt-minecraft'
+    dependsOn compileMinecraftJava, compileMinecraftGroovy
+    from sourceSets.minecraft.output
 }
 
 
@@ -199,7 +227,26 @@ task wrapperJar(type: Jar) {
     }
 }
 
-//build.dependsOn commonJar, forgeJar, gradleJar, intellijJar, wrapperJar
+task makeShell() {
+    sourceSets.each {
+        def isMain = it.name == "main"
+        def name = isMain ? "" : StringUtils.capitalize(it.name)
+        makeShell.dependsOn("compile" + name + "Java")
+        makeShell.dependsOn("compile" + name + "Groovy")
+    }
+    doLast {
+        def libs = new HashSet()
+        sourceSets.each { libs += it.runtimeClasspath }
+        libs = libs.collect { it.absolutePath }.join(":")
+        def lines = []
+        lines << "#!/bin/bash"
+        lines << "java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -classpath \"${libs}\" ${shellMain}"
+        lines << "read -p \"Press enter to continue\""
+        file('build/shell.sh').text = lines.join("\n")
+    }
+}
+
+//tasks['curseforge'].outputs.upToDateWhen { false }
 
 publishing {
     repositories {
@@ -255,6 +302,13 @@ publishing {
             version = project.version
             artifact wrapperJar
             addDependencies(pom, sourceSets.wrapper)
+        }
+        'wt-minecraft'(MavenPublication) {
+            groupId = project.group
+            artifactId = 'wt-minecraft'
+            version = project.version
+            artifact minecraftJar
+            addDependencies(pom, sourceSets.minecraft)
         }
     }
 }

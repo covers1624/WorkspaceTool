@@ -3,22 +3,17 @@ package net.covers1624.wt.event;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Opcodes;
+import net.covers1624.wt.util.Utils;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.ObjectStreamClass;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Collects extra variables to be considered when checking the up-to-date status of extracted gradle data.
@@ -31,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ModuleHashCheckEvent extends Event {
 
     public static final EventRegistry<ModuleHashCheckEvent> REGISTRY = new EventRegistry<>(ModuleHashCheckEvent.class);
-    private static final VersionedClassExtractor versionExtractor = new VersionedClassExtractor();
+    private static final ClassVersionCache classVersionCache = new ClassVersionCache();
 
     private static final HashFunction sha256 = Hashing.sha256();
 
@@ -110,63 +105,59 @@ public class ModuleHashCheckEvent extends Event {
         extraHashes.put(key, sha256.newHasher().putString(v, charset).hash());
     }
 
-    //TODO, Lift restrictions on not passing Classes.
-    public void putVersionedClass(String className) {
-        versionExtractor.extractFrom(className)//
-                .object2IntEntrySet()//
-                .forEach(e -> putInt("extracted_version:" + e.getKey(), e.getIntValue()));
+    public void putVersionedClass(Class<?> clazz) {
+        classVersionCache.lookup(clazz).addToEvent(this);
     }
 
-    //This is disgusting, needed because we can't load most of the classes provided to putVersionedClass.
-    //I hate myself for writing this.
-    private static class VersionedClassExtractor {
+    public void putVersionedClass(String cName) {
+        putVersionedClass(Utils.sneaky(() -> Class.forName(cName)));
+    }
 
-        private final HashMap<String, Object2IntMap<String>> specificCache = new HashMap<>();
+    private static class ClassVersionCache {
 
-        public Object2IntMap<String> extractFrom(String className) {
-            String cName = className.replace(".", "/");
-            Object2IntMap<String> curr = specificCache.get(className);
-            if (curr != null) {
-                return curr;
-            }
-            Object2IntMap<String> versions = new Object2IntArrayMap<>();
-            specificCache.put(cName, versions);
-            try (InputStream is = ModuleHashCheckEvent.class.getResourceAsStream("/" + cName + ".class")) {
-                ClassReader reader = new ClassReader(is);
-                AtomicBoolean ignoreSuper = new AtomicBoolean(false);
-                reader.accept(new ClassVisitor(Opcodes.ASM7) {
-                    @Override
-                    public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-                        AnnotationVisitor other = super.visitAnnotation(descriptor, visible);
-                        if (descriptor.equals("Lnet/covers1624/wt/event/VersionedClass$IgnoreSuper;")) {
-                            ignoreSuper.set(true);
-                        } else if (descriptor.equals("Lnet/covers1624/wt/event/VersionedClass;")) {
-                            return new AnnotationVisitor(Opcodes.ASM7, other) {
-                                @Override
-                                public void visit(String name, Object value) {
-                                    if (name.equals("value")) {
-                                        versions.put(cName, (Integer) value);
-                                    }
-                                    super.visit(name, value);
-                                }
-                            };
-                        }
-                        return other;
-                    }
-                }, ClassReader.SKIP_CODE);
-                if (!ignoreSuper.get()) {
-                    String c_super = reader.getSuperName();
-                    if (!c_super.equals("java/lang/Object")) {
-                        versions.putAll(extractFrom(c_super));
-                    }
-                    for (String iFace : reader.getInterfaces()) {
-                        versions.putAll(extractFrom(iFace));
-                    }
+        private final Map<Class<?>, CachedClass> classCache = new HashMap<>();
+
+        public CachedClass lookup(Class<?> clazz) {
+            return classCache.computeIfAbsent(clazz, CachedClass::new);
+        }
+
+        public class CachedClass {
+
+            public final Class<?> clazz;
+            public boolean hasVersionedClass;
+            public int versionedClassValue;
+            public ObjectStreamClass osc;
+
+            public CachedClass superClass;
+            public List<CachedClass> interfaces = new ArrayList<>();
+
+            public CachedClass(Class<?> clazz) {
+                this.clazz = clazz;
+                if (clazz.isAnnotationPresent(VersionedClass.class)) {
+                    hasVersionedClass = true;
+                    versionedClassValue = clazz.getAnnotation(VersionedClass.class).value();
                 }
-            } catch (IOException e) {
-                throw new RuntimeException("Unable to get bytes for class: " + className, e);
+                osc = ObjectStreamClass.lookup(clazz);
+                if (clazz.getSuperclass() != null && !Object.class.equals(clazz.getSuperclass())) {
+                    superClass = lookup(clazz.getSuperclass());
+                }
+                for (Class<?> iFace : clazz.getInterfaces()) {
+                    interfaces.add(lookup(iFace));
+                }
             }
-            return versions;
+
+            public void addToEvent(ModuleHashCheckEvent event) {
+                if (hasVersionedClass) {
+                    event.putInt("extracted_version:" + clazz.getName(), versionedClassValue);
+                }
+                if (osc != null) {
+                    event.putLong("serialVersionId:" + clazz.getName(), osc.getSerialVersionUID());
+                }
+                if (superClass != null) {
+                    superClass.addToEvent(event);
+                }
+                interfaces.forEach(e -> e.addToEvent(event));
+            }
         }
     }
 }

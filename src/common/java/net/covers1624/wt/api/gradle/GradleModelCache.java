@@ -3,6 +3,7 @@ package net.covers1624.wt.api.gradle;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -20,5 +21,9 @@ public interface GradleModelCache {
      * @param extraHash  Any extra files to consider.
      * @return The {@link WorkspaceToolModel} instance.
      */
-    WorkspaceToolModel getModel(Path modulePath, Set<String> extraHash);
+    WorkspaceToolModel getModel(Path modulePath, Set<String> extraHash, Set<String> extraTasks);
+
+    default WorkspaceToolModel getModel(Path modulePath, Set<String> extraHash) {
+        return getModel(modulePath, extraHash, Collections.emptySet());
+    }
 }

@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Implemented by {@link GradleData} and {@link PluginData} to hold data built by ExtraModelBuilders.
+ * Implemented by {@link ProjectData} and {@link PluginData} to hold data built by ExtraModelBuilders.
  *
  * @see GradleManager
  *

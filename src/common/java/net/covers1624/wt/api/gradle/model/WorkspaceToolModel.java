@@ -1,7 +1,6 @@
 package net.covers1624.wt.api.gradle.model;
 
-import net.covers1624.wt.api.data.GradleData;
-import net.covers1624.wt.api.data.PluginData;
+import net.covers1624.wt.api.data.ProjectData;
 import net.covers1624.wt.event.VersionedClass;
 
 import java.io.Serializable;
@@ -15,12 +14,7 @@ import java.io.Serializable;
 public interface WorkspaceToolModel extends Serializable {
 
     /**
-     * @return the PluginData instance.
+     * @return the {@link ProjectData} instance.
      */
-    PluginData getPluginData();
-
-    /**
-     * @return the GradleData instance.
-     */
-    GradleData getGradleData();
+    ProjectData getProjectData();
 }

@@ -1,6 +1,7 @@
 package net.covers1624.wt.api.framework;
 
-import net.covers1624.wt.api.module.ModuleList;
+import net.covers1624.wt.api.WorkspaceToolContext;
+import net.covers1624.wt.api.script.ModdingFramework;
 
 /**
  * This is used to control the Framework API for the exported workspace.
@@ -20,6 +21,6 @@ public interface FrameworkHandler<T extends ModdingFramework> {
      * @param frameworkImpl The Framework's impl.
      * @param moduleList    The ModuleList.
      */
-    void constructFrameworkModules(T frameworkImpl, ModuleList moduleList);
+    void constructFrameworkModules(T frameworkImpl);
 
 }

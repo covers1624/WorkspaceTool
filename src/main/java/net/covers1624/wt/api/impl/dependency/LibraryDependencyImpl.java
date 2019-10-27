@@ -21,11 +21,6 @@ public class LibraryDependencyImpl extends AbstractDependency implements Library
     }
 
     @Override
-    public boolean isExport() {
-        return super.isExport();
-    }
-
-    @Override
     public LibraryDependency setExport(boolean export) {
         super.setExport(export);
         return this;
@@ -51,6 +46,34 @@ public class LibraryDependencyImpl extends AbstractDependency implements Library
     public LibraryDependency setMavenDependency(MavenDependency dependency) {
         this.mavenDependency = dependency;
         return this;
+    }
+
+    @Override
+    public int hashCode() {
+        int i = 0;
+        i = 31 * i + getMavenDependency().hashCode();
+        i = 31 * i + getLibraryName().hashCode();
+        i = 31 * i + (getExport() ? 1 : 0);
+        return i;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (super.equals(obj)) {
+            return true;
+        }
+        if (!(obj instanceof LibraryDependency)) {
+            return false;
+        }
+        LibraryDependency other = (LibraryDependency) obj;
+        return other.getMavenDependency().equals(getMavenDependency())//
+                && other.getLibraryName().equals(getLibraryName())//
+                && other.getExport() == getExport();
+    }
+
+    @Override
+    public String toString() {
+        return "LibraryDependency: " + mavenDependency.toString();
     }
 
     @Override

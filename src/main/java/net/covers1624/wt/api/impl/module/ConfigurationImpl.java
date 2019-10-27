@@ -3,9 +3,7 @@ package net.covers1624.wt.api.impl.module;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.module.Configuration;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -15,8 +13,8 @@ public class ConfigurationImpl implements Configuration {
 
     private final String name;
     private final boolean transitive;
-    private final List<Dependency> dependencies = new ArrayList<>();
-    private Set<Configuration> extendsFrom = new HashSet<>();
+    private final Set<Dependency> dependencies = new HashSet<>();
+    private final Set<Configuration> extendsFrom = new HashSet<>();
 
     public ConfigurationImpl(String name, boolean transitive) {
         this.name = name;
@@ -50,7 +48,7 @@ public class ConfigurationImpl implements Configuration {
     }
 
     @Override
-    public List<Dependency> getDependencies() {
+    public Set<Dependency> getDependencies() {
         return dependencies;
     }
 
@@ -60,8 +58,13 @@ public class ConfigurationImpl implements Configuration {
     }
 
     @Override
-    public void setDependencies(List<Dependency> dependencies) {
+    public void setDependencies(Set<Dependency> dependencies) {
         this.dependencies.clear();
+        this.dependencies.addAll(dependencies);
+    }
+
+    @Override
+    public void addDependencies(Set<Dependency> dependencies) {
         this.dependencies.addAll(dependencies);
     }
 

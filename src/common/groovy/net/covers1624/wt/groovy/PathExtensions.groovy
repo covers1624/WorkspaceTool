@@ -33,4 +33,16 @@ class PathExtensions {
         Files.exists(self)
     }
 
+    //See org.gradle.plugins.ide.idea.model.PathFactory#path(File)
+    static String getIdeaURL(Path self) {
+        if (self.fileName.toString().endsWith('.jar')) {
+            return "jar://${self.absolutePath.toString()}!/"
+        }
+        return self.fileURL
+    }
+
+    static String getFileURL(Path self) {
+        return "file://${self.absolutePath.toString()}"
+    }
+
 }

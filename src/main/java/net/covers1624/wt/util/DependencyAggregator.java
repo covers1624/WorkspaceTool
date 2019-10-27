@@ -1,5 +1,6 @@
 package net.covers1624.wt.util;
 
+import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
@@ -17,12 +18,14 @@ import java.util.TreeMap;
  */
 public class DependencyAggregator {
 
+    private final WorkspaceToolContext context;
     private final Map<String, String> overrides;
 
     private final HashMap<String, NavigableMap<ArtifactVersion, MavenDependency>> versionTable = new HashMap<>();
 
-    public DependencyAggregator(Map<String, String> overrides) {
-        this.overrides = overrides;
+    public DependencyAggregator(WorkspaceToolContext context) {
+        this.context = context;
+        overrides = context.workspaceScript.getDepOverrides();
     }
 
     public void consume(Module module) {

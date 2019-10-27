@@ -1,14 +1,14 @@
 package net.covers1624.wt.api.impl.module;
 
-import net.covers1624.wt.api.data.GradleData;
-import net.covers1624.wt.api.data.PluginData;
+import net.covers1624.wt.api.WorkspaceToolContext;
+import net.covers1624.wt.api.data.ProjectData;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
-import net.covers1624.wt.gradle.GradleModelCacheImpl;
-import net.covers1624.wt.util.GradleModuleModelHelper;
+import net.covers1624.wt.event.ProcessProjectDataEvent;
+import net.covers1624.wt.util.ProjectDataHelper;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -21,14 +21,14 @@ import java.util.Map;
 public class ModuleImpl implements Module {
 
     private final String name;
-    private final String group;
     private final Path path;
     private final Map<String, SourceSet> sourceSets;
     private final Map<String, Configuration> configurations;
+    private Path compileOutput;
+    private boolean modulePerSourceSet;
 
-    public ModuleImpl(String name, String group, Path path) {
+    public ModuleImpl(String name, Path path) {
         this.name = name;
-        this.group = group;
         this.path = path;
         this.sourceSets = new HashMap<>();
         this.configurations = new HashMap<>();
@@ -43,13 +43,18 @@ public class ModuleImpl implements Module {
     }
 
     @Override
-    public String getGroup() {
-        return group;
+    public Path getPath() {
+        return path;
     }
 
     @Override
-    public Path getPath() {
-        return path;
+    public Path getCompileOutput() {
+        return compileOutput;
+    }
+
+    @Override
+    public void setCompileOutput(Path compileOutput) {
+        this.compileOutput = compileOutput;
     }
 
     @Override
@@ -84,32 +89,36 @@ public class ModuleImpl implements Module {
         this.configurations.putAll(configurations);
     }
 
+    @Override
+    public boolean getModulePerSourceSet() {
+        return modulePerSourceSet;
+    }
+
+    @Override
+    public void setModulePerSourceSet(boolean value) {
+        modulePerSourceSet = value;
+    }
+
     public static class GradleModule extends ModuleImpl implements GradleBackedModule {
 
-        private final PluginData pluginData;
-        private final GradleData gradleData;
+        private final ProjectData projectData;
 
-        public GradleModule(String name, String group, Path path, PluginData pluginData, GradleData gradleData) {
-            super(name, group, path);
-            this.pluginData = pluginData;
-            this.gradleData = gradleData;
+        public GradleModule(String name, Path path, ProjectData projectData) {
+            super(name, path);
+            this.projectData = projectData;
         }
 
         @Override
-        public PluginData getPluginData() {
-            return pluginData;
-        }
-
-        @Override
-        public GradleData getGradleData() {
-            return gradleData;
+        public ProjectData getProjectData() {
+            return projectData;
         }
     }
 
-    public static Module makeGradleModule(String name, String group, Path path, GradleModelCacheImpl modelCache) {
-        WorkspaceToolModel model = modelCache.getModel(path, Collections.emptySet());//TODO
-        GradleModule module = new GradleModule(name, group, path, model.getPluginData(), model.getGradleData());
-        GradleModuleModelHelper.populateModule(module, model);
+    public static Module makeGradleModule(String name, Path path, WorkspaceToolContext context) {
+        WorkspaceToolModel model = context.modelCache.getModel(path, Collections.emptySet());//TODO
+        ProcessProjectDataEvent.REGISTRY.fireEvent(new ProcessProjectDataEvent(context, model.getProjectData()));
+        GradleModule module = new GradleModule(name, path, model.getProjectData());
+        ProjectDataHelper.buildModule(module, model);
         return module;
     }
 }

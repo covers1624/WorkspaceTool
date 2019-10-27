@@ -51,7 +51,12 @@ public interface SourceSet {
      * @param name  The language name.
      * @param paths The Paths.
      */
+    void setSource(String name, List<Path> paths);
+
+
     void addSource(String name, List<Path> paths);
+
+    void addSource(String name, Path path);
 
     /**
      * Sets all Sources for this SourceSet.
@@ -65,6 +70,10 @@ public interface SourceSet {
      */
     default Iterable<Path> getAllSource() {
         return Iterables.concat(getSourceMap().values());
+    }
+
+    default Iterable<Path> getAllSourceResource() {
+        return Iterables.concat(getAllSource(), getResources());
     }
 
     /**

@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 /**
  * Created by covers1624 on 23/05/19.
  */
+@Deprecated
 public class ModuleGroupImpl implements ModuleGroupSpec {
 
     private final String name;
@@ -47,6 +48,7 @@ public class ModuleGroupImpl implements ModuleGroupSpec {
         //consumer.accept(definedModules.computeIfAbsent(name, e -> new ModuleSpecImpl()));
     }
 
+    @Override
     public Predicate<Path> createMatcher() {
         return makePredicate(includes, true).and(makePredicate(excludes, false).negate());
     }

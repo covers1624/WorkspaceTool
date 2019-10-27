@@ -14,11 +14,11 @@ public abstract class AbstractDependency implements Dependency {
     }
 
     public AbstractDependency(Dependency other) {
-        setExport(other.isExport());
+        setExport(other.getExport());
     }
 
     @Override
-    public boolean isExport() {
+    public boolean getExport() {
         return export;
     }
 

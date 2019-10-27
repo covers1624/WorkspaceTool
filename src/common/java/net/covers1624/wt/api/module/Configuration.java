@@ -1,9 +1,11 @@
 package net.covers1624.wt.api.module;
 
-import com.google.common.collect.Iterables;
 import net.covers1624.wt.api.dependency.Dependency;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -72,7 +74,7 @@ public interface Configuration {
      *
      * @return The Dependencies.
      */
-    List<Dependency> getDependencies();
+    Set<Dependency> getDependencies();
 
     /**
      * Adds a {@link Dependency} to this Configuration.
@@ -86,16 +88,19 @@ public interface Configuration {
      *
      * @param dependencies The Dependencies.
      */
-    void setDependencies(List<Dependency> dependencies);
+    void setDependencies(Set<Dependency> dependencies);
+
+
+    void addDependencies(Set<Dependency> dependencies);
 
     /**
      * Gets all transitive Dependencies provided by this Configuration.
      *
-     * @return The Dependencies.
+     * @return The Dependencies.s
      */
-    default Iterable<Dependency> getAllDependencies() {
-        List<Iterable<Dependency>> toJoin = new ArrayList<>();
-        walkHierarchy(e -> toJoin.add(e.getDependencies()));
-        return Iterables.concat(toJoin);
+    default Set<Dependency> getAllDependencies() {
+        Set<Dependency> ret = new HashSet<>();
+        walkHierarchy(e -> ret.addAll(e.getDependencies()));
+        return ret;
     }
 }

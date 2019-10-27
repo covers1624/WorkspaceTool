@@ -1,6 +1,6 @@
 package net.covers1624.wt.api.module;
 
-import net.covers1624.wt.api.data.GradleData;
+import net.covers1624.wt.api.data.ProjectData;
 import net.covers1624.wt.api.data.PluginData;
 
 /**
@@ -11,13 +11,8 @@ import net.covers1624.wt.api.data.PluginData;
 public interface GradleBackedModule extends Module {
 
     /**
-     * @return The {@link PluginData} from gradle.
+     * @return The {@link ProjectData} from gradle.
      */
-    PluginData getPluginData();
-
-    /**
-     * @return The {@link GradleData} from gradle.
-     */
-    GradleData getGradleData();
+    ProjectData getProjectData();
 
 }

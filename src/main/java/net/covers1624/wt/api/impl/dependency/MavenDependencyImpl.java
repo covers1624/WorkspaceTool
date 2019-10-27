@@ -5,6 +5,7 @@ import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.util.MavenNotation;
 
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * Created by covers1624 on 30/6/19.
@@ -90,6 +91,38 @@ public class MavenDependencyImpl extends AbstractDependency implements MavenDepe
     public MavenDependency setSources(Path path) {
         this.sources = path;
         return this;
+    }
+
+    @Override
+    public int hashCode() {
+        int i = 0;
+        i = 31 * i + getNotation().hashCode();
+        i = 31 * i + (getExport() ? 1 : 0);
+        i = 31 * i + (getSources() != null ? getSources().hashCode() : 0);
+        i = 31 * i + (getJavadoc() != null ? getJavadoc().hashCode() : 0);
+        i = 31 * i + (getSources() != null ? getSources().hashCode() : 0);
+        return i;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (super.equals(obj)) {
+            return true;
+        }
+        if (!(obj instanceof MavenDependency)) {
+            return false;
+        }
+        MavenDependency other = (MavenDependency) obj;
+        return other.getNotation().equals(getNotation())//
+                && other.getExport() == getExport()//
+                && Objects.equals(other.getClasses(), getClasses())//
+                && Objects.equals(other.getJavadoc(), getJavadoc())//
+                && Objects.equals(other.getSources(), getSources());
+    }
+
+    @Override
+    public String toString() {
+        return "MavenDependency: " + getNotation().toString();
     }
 
     @Override

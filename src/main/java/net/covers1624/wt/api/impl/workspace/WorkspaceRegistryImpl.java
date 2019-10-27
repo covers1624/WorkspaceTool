@@ -1,14 +1,15 @@
 package net.covers1624.wt.api.impl.workspace;
 
-import net.covers1624.wt.api.dependency.DependencyLibrary;
-import net.covers1624.wt.api.workspace.Workspace;
+import net.covers1624.wt.api.WorkspaceToolContext;
+import net.covers1624.wt.api.mixin.MixinInstantiator;
+import net.covers1624.wt.api.script.Workspace;
+import net.covers1624.wt.api.workspace.WorkspaceHandler;
 import net.covers1624.wt.api.workspace.WorkspaceRegistry;
 import net.covers1624.wt.api.workspace.WorkspaceWriter;
-import net.covers1624.wt.util.scala.ScalaSdk;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -16,18 +17,34 @@ import java.util.function.Supplier;
  */
 public class WorkspaceRegistryImpl implements WorkspaceRegistry {
 
-    private Map<Class<? extends Workspace>, Supplier<? extends Workspace>> scriptFactories = new HashMap<>();
-    private final Map<Class<? extends Workspace>, WorkspaceRegistry.WorkspaceWriterFactory<?>> writerFactories = new HashMap<>();
+    private final Map<Class<? extends Workspace>, Function<MixinInstantiator, ? extends Workspace>> scriptFactories = new HashMap<>();
+    private final Map<Class<? extends Workspace>, Supplier<? extends WorkspaceHandler>> handlerFactories = new HashMap<>();
+    private final Map<Class<? extends Workspace>, Function<WorkspaceToolContext, ? extends WorkspaceWriter>> writerFactories = new HashMap<>();
 
     @Override
-    public <T extends Workspace> void registerScriptImpl(Class<T> apiClazz, Supplier<T> factory) {
+    public <T extends Workspace> void registerScriptImpl(Class<T> apiClazz, Function<MixinInstantiator, T> factory) {
         scriptFactories.put(apiClazz, factory);
     }
 
     @Override
     @SuppressWarnings ("unchecked")
-    public <T extends Workspace> T constructScriptImpl(Class<T> apiClazz) {
-        Supplier<T> factory = (Supplier<T>) scriptFactories.get(apiClazz);
+    public <T extends Workspace> T constructScriptImpl(Class<T> apiClazz, MixinInstantiator mixinInstantiator) {
+        Function<MixinInstantiator, T> factory = (Function<MixinInstantiator, T>) scriptFactories.get(apiClazz);
+        if (factory == null) {
+            throw new RuntimeException("No factory registered for type: " + apiClazz);
+        }
+        return factory.apply(mixinInstantiator);
+    }
+
+    @Override
+    public <T extends Workspace> void registerWorkspaceHandler(Class<T> apiClazz, Supplier<WorkspaceHandler<T>> factory) {
+        handlerFactories.put(apiClazz, factory);
+    }
+
+    @Override
+    @SuppressWarnings ("unchecked")
+    public <T extends Workspace> WorkspaceHandler<T> constructWorkspaceHandlerImpl(Class<T> apiClazz) {
+        Supplier<WorkspaceHandler<T>> factory = (Supplier<WorkspaceHandler<T>>) handlerFactories.get(apiClazz);
         if (factory == null) {
             throw new RuntimeException("No factory registered for type: " + apiClazz);
         }
@@ -35,18 +52,18 @@ public class WorkspaceRegistryImpl implements WorkspaceRegistry {
     }
 
     @Override
-    public <T extends Workspace> void registerWorkspaceWriter(Class<T> apiClazz, WorkspaceWriterFactory<T> factory) {
+    public <T extends Workspace> void registerWorkspaceWriter(Class<T> apiClazz, Function<WorkspaceToolContext, WorkspaceWriter<T>> factory) {
         writerFactories.put(apiClazz, factory);
     }
 
     @Override
     @SuppressWarnings ("unchecked")
-    public <T extends Workspace> WorkspaceWriter<T> getWorkspaceWriter(Class<T> apiClazz, Path projectDir, DependencyLibrary library, ScalaSdk scalaSdk) {
-        WorkspaceWriterFactory<T> factory = (WorkspaceWriterFactory<T>) writerFactories.get(apiClazz);
+    public <T extends Workspace> WorkspaceWriter<T> getWorkspaceWriter(Class<T> apiClazz, WorkspaceToolContext context) {
+        Function<WorkspaceToolContext, ? extends WorkspaceWriter> factory = writerFactories.get(apiClazz);
         if (factory == null) {
             throw new IllegalArgumentException("No writer registered for type: " + apiClazz);
         }
-        return factory.create(projectDir, library, scalaSdk);
+        return factory.apply(context);
     }
 
 }

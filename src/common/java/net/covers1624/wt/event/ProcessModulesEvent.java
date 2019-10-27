@@ -1,7 +1,6 @@
 package net.covers1624.wt.event;
 
-import net.covers1624.wt.api.module.ModuleList;
-import net.covers1624.wt.api.script.WorkspaceScript;
+import net.covers1624.wt.api.WorkspaceToolContext;
 
 /**
  * Called after Modules have been constructed and Dependencies have been processed.
@@ -14,19 +13,13 @@ public class ProcessModulesEvent extends Event {
 
     public static final EventRegistry<ProcessModulesEvent> REGISTRY = new EventRegistry<>(ProcessModulesEvent.class);
 
-    private final ModuleList moduleList;
-    private final WorkspaceScript script;
+    private final WorkspaceToolContext context;
 
-    public ProcessModulesEvent(ModuleList moduleList, WorkspaceScript script) {
-        this.moduleList = moduleList;
-        this.script = script;
+    public ProcessModulesEvent(WorkspaceToolContext context) {
+        this.context = context;
     }
 
-    public WorkspaceScript getScript() {
-        return script;
-    }
-
-    public ModuleList getModuleList() {
-        return moduleList;
+    public WorkspaceToolContext getContext() {
+        return context;
     }
 }

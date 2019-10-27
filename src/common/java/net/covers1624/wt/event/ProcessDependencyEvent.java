@@ -1,11 +1,9 @@
 package net.covers1624.wt.event;
 
+import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
-import net.covers1624.wt.api.module.ModuleList;
-
-import java.nio.file.Path;
 
 /**
  * Called to process the dependency on a Module's Configuration.
@@ -18,21 +16,19 @@ public class ProcessDependencyEvent extends ResultEvent<Dependency> {
 
     public static final EventRegistry<ProcessDependencyEvent> REGISTRY = new EventRegistry<>(ProcessDependencyEvent.class);
 
-    private final Path cacheDir;
+    private final WorkspaceToolContext context;
     private final Module module;
     private final Configuration sourceSetConfig;
     private final Configuration dependencyConfig;
     private final Dependency dependency;
-    private final ModuleList modules;
 
-    public ProcessDependencyEvent(Path cacheDir, Module module, Configuration sourceSetConfig, Configuration dependencyConfig, Dependency dependency, ModuleList modules) {
+    public ProcessDependencyEvent(WorkspaceToolContext context, Module module, Configuration sourceSetConfig, Configuration dependencyConfig, Dependency dependency) {
         super(false);
-        this.cacheDir = cacheDir;
+        this.context = context;
         this.module = module;
         this.sourceSetConfig = sourceSetConfig;
         this.dependencyConfig = dependencyConfig;
         this.dependency = dependency;
-        this.modules = modules;
     }
 
     @Override
@@ -43,27 +39,23 @@ public class ProcessDependencyEvent extends ResultEvent<Dependency> {
         return super.getResult();
     }
 
-    public Dependency getDependency() {
-        return dependency;
-    }
-
-    public Configuration getDependencyConfig() {
-        return dependencyConfig;
+    public WorkspaceToolContext getContext() {
+        return context;
     }
 
     public Module getModule() {
         return module;
     }
 
-    public ModuleList getModuleList() {
-        return modules;
-    }
-
     public Configuration getSourceSetConfig() {
         return sourceSetConfig;
     }
 
-    public Path getCacheDir() {
-        return cacheDir;
+    public Configuration getDependencyConfig() {
+        return dependencyConfig;
+    }
+
+    public Dependency getDependency() {
+        return dependency;
     }
 }

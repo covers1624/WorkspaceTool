@@ -3,6 +3,7 @@ package net.covers1624.wt.api.impl.script.runconfig;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingMethodException;
+import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.script.runconfig.RunConfig;
 import net.covers1624.wt.api.script.runconfig.RunConfigContainer;
 import org.codehaus.groovy.runtime.InvokerHelper;
@@ -16,7 +17,12 @@ import java.util.Map;
  */
 public class DefaultRunConfigContainer extends GroovyObjectSupport implements RunConfigContainer {
 
+    private final MixinInstantiator mixinInstantiator;
     private Map<String, RunConfig> runConfigs = new HashMap<>();
+
+    public DefaultRunConfigContainer(MixinInstantiator mixinInstantiator) {
+        this.mixinInstantiator = mixinInstantiator;
+    }
 
     @Override
     public Object invokeMethod(String name, Object args) {
@@ -28,7 +34,7 @@ public class DefaultRunConfigContainer extends GroovyObjectSupport implements Ru
         if (!(arg0 instanceof Closure)) {
             throw new MissingMethodException(name, getClass(), list.toArray(), false);
         }
-        RunConfig runConfig = runConfigs.computeIfAbsent(name, e -> new DefaultRunConfig());
+        RunConfig runConfig = runConfigs.computeIfAbsent(name, e -> mixinInstantiator.instantiate(RunConfig.class));
         Closure closure = (Closure) ((Closure) arg0).clone();//Eww
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.setDelegate(runConfig);

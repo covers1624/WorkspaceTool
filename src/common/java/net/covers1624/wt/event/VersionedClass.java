@@ -19,13 +19,4 @@ public @interface VersionedClass {
      * @return An incrementing number, indicating version.
      */
     int value();
-
-    /**
-     * Classes marked with this will have their super classes not considered for version hashing.
-     */
-    @Target (ElementType.TYPE)
-    @Retention (RetentionPolicy.RUNTIME)
-    @interface IgnoreSuper {
-
-    }
 }

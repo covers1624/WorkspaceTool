@@ -52,8 +52,22 @@ public class SourceSetImpl implements SourceSet {
     }
 
     @Override
+    public void setSource(String name, List<Path> paths) {
+        List<Path> ssPaths = sourceMap.computeIfAbsent(name, e -> new ArrayList<>());
+        ssPaths.clear();
+        ssPaths.addAll(paths);
+    }
+
+    @Override
     public void addSource(String name, List<Path> paths) {
-        this.sourceMap.put(name, new ArrayList<>(paths));
+        List<Path> ssPaths = sourceMap.computeIfAbsent(name, e -> new ArrayList<>());
+        ssPaths.addAll(paths);
+    }
+
+    @Override
+    public void addSource(String name, Path path) {
+        List<Path> ssPaths = sourceMap.computeIfAbsent(name, e -> new ArrayList<>());
+        ssPaths.add(path);
     }
 
     @Override

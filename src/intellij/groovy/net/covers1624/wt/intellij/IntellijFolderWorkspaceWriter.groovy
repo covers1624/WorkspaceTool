@@ -1,20 +1,17 @@
 package net.covers1624.wt.intellij
 
 import groovy.xml.MarkupBuilder
-import net.covers1624.wt.api.dependency.DependencyLibrary
+import net.covers1624.wt.api.WorkspaceToolContext
 import net.covers1624.wt.api.dependency.LibraryDependency
 import net.covers1624.wt.api.dependency.MavenDependency
 import net.covers1624.wt.api.dependency.SourceSetDependency
 import net.covers1624.wt.api.impl.module.ConfigurationImpl
 import net.covers1624.wt.api.module.Configuration
 import net.covers1624.wt.api.module.Module
-import net.covers1624.wt.api.module.ModuleList
-import net.covers1624.wt.api.script.runconfig.RunConfig
 import net.covers1624.wt.api.workspace.WorkspaceWriter
-import net.covers1624.wt.event.RunConfigModuleEvent
 import net.covers1624.wt.intellij.api.script.Intellij
+import net.covers1624.wt.intellij.api.script.IntellijRunConfig
 import net.covers1624.wt.util.Utils
-import net.covers1624.wt.util.scala.ScalaSdk
 import org.apache.commons.lang3.StringUtils
 
 import java.nio.file.Files
@@ -25,20 +22,15 @@ import java.nio.file.Path
  */
 class IntellijFolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
 
-    private final ScalaSdk scalaSdk
-    private final DependencyLibrary dependencyLibrary
-    private final Path projectDir
+    private final WorkspaceToolContext context
 
-    IntellijFolderWorkspaceWriter(Path projectDir, DependencyLibrary dependencyLibrary, ScalaSdk scalaSdk) {
-        this.projectDir = projectDir
-        this.dependencyLibrary = dependencyLibrary
-        this.scalaSdk = scalaSdk
+    IntellijFolderWorkspaceWriter(WorkspaceToolContext context) {
+        this.context = context
     }
 
-
     @Override
-    void write(Intellij frameworkImpl, ModuleList moduleList, Map<String, RunConfig> runConfigs) {
-        Path dotIdea = projectDir.resolve(".idea")
+    void write(Intellij frameworkImpl) {
+        Path dotIdea = context.projectDir.resolve(".idea")
         //Extract some stuff.
         Utils.maybeExtractResource("/templates/idea/encodings.xml", dotIdea.resolve("encodings.xml"))
         Utils.maybeExtractResource("/templates/idea/inspections.xml", dotIdea.resolve("inspections.xml"))
@@ -53,7 +45,7 @@ class IntellijFolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
             }
             def xml = markupXml {
                 component(name: 'ProjectRootManager', version: '2', languageLevel: 'JDK_1_8', 'project-jdk-name': '1.8', 'project-jdk-type': 'JavaSDK') {
-                    output(url: "file://${projectDir.resolve("out").normalize().toString()}")
+                    output(url: "file://${context.projectDir.resolve("out").normalize().toString()}")
                 }
             }
             node.append(xml.parseXml())
@@ -61,7 +53,7 @@ class IntellijFolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
         }
         //Write libraries.
         def libraries = dotIdea.resolve("libraries")
-        dependencyLibrary.dependencies.values().each { lib ->
+        context.dependencyLibrary.dependencies.values().each { lib ->
             def dep = lib.mavenDependency
             def xml = markupXml {
                 component(name: 'libraryTable') {
@@ -76,44 +68,46 @@ class IntellijFolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
         }
         //Write scalaSdk.
         block {
-            def xml = markupXml {
-                component(name: "libraryTable") {
-                    library(name: scalaSdk.sdkName, type: "Scala") {
-                        'properties' {
-                            'language-level'(scalaSdk.scalaVersion.name())
-                            'compiler-classpath' {
-                                scalaSdk.classpath.each {
-                                    if (it.classes != null) {
-                                        root(url: "file://${it.classes.absolutePath}")
+            if (context.scalaSdk.scalac != null) {
+                def xml = markupXml {
+                    component(name: "libraryTable") {
+                        library(name: context.scalaSdk.sdkName, type: "Scala") {
+                            'properties' {
+                                'language-level'(context.scalaSdk.scalaVersion.name())
+                                'compiler-classpath' {
+                                    context.scalaSdk.classpath.each {
+                                        if (it.classes != null) {
+                                            root(url: "file://${it.classes.absolutePath}")
+                                        }
                                     }
                                 }
                             }
-                        }
-                        CLASSES {
-                            scalaSdk.libraries.each {
-                                if (it.classes != null) root(url: toIdeaURL(it.classes))
+                            CLASSES {
+                                context.scalaSdk.libraries.each {
+                                    if (it.classes != null) root(url: toIdeaURL(it.classes))
+                                }
                             }
-                        }
-                        JAVADOC {
-                            scalaSdk.libraries.each {
-                                if (it.javadoc != null) root(url: toIdeaURL(it.javadoc))
+                            JAVADOC {
+                                context.scalaSdk.libraries.each {
+                                    if (it.javadoc != null) root(url: toIdeaURL(it.javadoc))
+                                }
                             }
-                        }
-                        SOURCES {
-                            scalaSdk.libraries.each {
-                                if (it.sources != null) root(url: toIdeaURL(it.sources))
+                            SOURCES {
+                                context.scalaSdk.libraries.each {
+                                    if (it.sources != null) root(url: toIdeaURL(it.sources))
+                                }
                             }
                         }
                     }
                 }
+                libraries.resolve("${context.scalaSdk.sdkName.replaceAll("[.-]", "_")}.xml").write(xml)
             }
-            libraries.resolve("${scalaSdk.sdkName.replaceAll("[.-]", "_")}.xml").write(xml)
         }
         //WriteModules
         block {
             def modulesDir = dotIdea.resolve("modules")
             def generatedModules = [] as List<GeneratedModule>
-            moduleList.allModules.each {
+            context.allModules.each {
                 generatedModules += writeModule(modulesDir, it)
             }
             def modulesXml = markupXml {
@@ -136,40 +130,38 @@ class IntellijFolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
 
         //Write RunConfigs
         block {
-            def classpathModule = RunConfigModuleEvent.REGISTRY.fireEvent(new RunConfigModuleEvent(moduleList)).getResult()
-            if (classpathModule == null) {
-                throw new RuntimeException("No Classpath module selected by framework.")
-            }
-            def runConfigsPath = dotIdea.resolve("runConfigurations")
-            runConfigs.each {
-                def name = it.key
-                def config = it.value
-                def escape = { it.contains(" ") ? "\"$it\"" : it }
-                def vmArgs = []
-                vmArgs += config.vmArgs
-                vmArgs += config.sysProps.collect { "-D${it.key}=${it.value}" }
-                if (!config.runDir.exists) {
-                    Files.createDirectories(config.runDir)
-                }
-                def xml = markupXml {
-                    component(name: 'ProjectRunConfigurationManager') {
-                        configuration(name: name, type: 'Application', facroryName: 'Application') {
-                            option(name: 'MAIN_CLASS_NAME', value: config.mainClass)
-                            module(name: classpathModule.name)
-                            option(name: 'PROGRAM_PARAMETERS', value: config.progArgs.collect(escape).join(" "))
-                            option(name: 'VM_PARAMETERS', value: vmArgs.collect(escape).join(" "))
-                            option(name: 'WORKING_DIRECTORY', value: config.runDir.absolutePath)
-                            if (!config.envVars.isEmpty()) {
-                                envs {
-                                    config.envVars.each {
-                                        env(name: it.key, value: it.value)
+            if (!frameworkImpl.runConfigContainer.runConfigs.isEmpty()) {
+                def runConfigsPath = dotIdea.resolve("runConfigurations")
+                frameworkImpl.runConfigContainer.runConfigs.each {
+                    def name = it.key
+                    def config = it.value
+                    def escape = { it.contains(" ") ? "\"$it\"" : it }
+                    def vmArgs = []
+                    vmArgs += config.vmArgs
+                    vmArgs += config.sysProps.collect { "-D${it.key}=${it.value}" }
+                    if (!config.runDir.exists) {
+                        Files.createDirectories(config.runDir)
+                    }
+                    def xml = markupXml {
+                        component(name: 'ProjectRunConfigurationManager') {
+                            configuration(name: name, type: 'Application', facroryName: 'Application') {
+                                option(name: 'MAIN_CLASS_NAME', value: config.mainClass)
+                                module(name: (config as IntellijRunConfig).classpathModule)
+                                option(name: 'PROGRAM_PARAMETERS', value: config.progArgs.collect(escape).join(" "))
+                                option(name: 'VM_PARAMETERS', value: vmArgs.collect(escape).join(" "))
+                                option(name: 'WORKING_DIRECTORY', value: config.runDir.absolutePath)
+                                if (!config.envVars.isEmpty()) {
+                                    envs {
+                                        config.envVars.each {
+                                            env(name: it.key, value: it.value)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    runConfigsPath.resolve(name + ".xml").write(xml)
                 }
-                runConfigsPath.resolve(name + ".xml").write(xml)
             }
         }
     }
@@ -198,6 +190,7 @@ class IntellijFolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
         }
 
         def genXml = markupModule(
+                moduleToWrite.compileOutput,
                 moduleToWrite.path,
                 allSource,
                 resources,
@@ -250,11 +243,12 @@ class IntellijFolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
 //        generatedModules
 //    }
 
-    def markupModule(Path modulePath, List<Path> allSource, List<Path> resources, String ssName, Configuration compile, Configuration runtime, Configuration compileOnly) {
+    def markupModule(Path compileOutput, Path modulePath, List<Path> allSource, List<Path> resources, String ssName, Configuration compile, Configuration runtime, Configuration compileOnly) {
         markupXml {
             module(type: 'JAVA_MODULE', version: '4') {
                 component(name: 'NewModuleRootManager', 'inherit-compiler-output': 'true') {
                     'exclude-output'()
+                    output(url: "file://${compileOutput.absolutePath}")
                     //TODO, This module root might not be correct in all cases.
                     // This should be changed to find the common root directory of all sources and resources in the SS.
                     def all = []

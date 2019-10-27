@@ -23,6 +23,8 @@ class XmlExtensions {
     }
 
     static void write(Path self, Node node) {
-        self.write(XmlUtil.serialize(node))
+        StringWriter sw = new StringWriter()
+        XmlUtil.serialize(node, sw)
+        self.write(sw.toString())
     }
 }

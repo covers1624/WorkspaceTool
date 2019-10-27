@@ -14,12 +14,12 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.Convention;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.PluginContainer;
 import org.gradle.api.tasks.ScalaSourceSet;
 import org.gradle.api.tasks.SourceSet;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -31,11 +31,11 @@ import java.util.stream.Collectors;
 /**
  * Created by covers1624 on 15/6/19.
  */
-@VersionedClass (4)
+@VersionedClass (5)
 @SuppressWarnings ("UnstableApiUsage")
 public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToolModel> {
 
-    private static Logger logger = (Logger) LoggerFactory.getLogger("WorkspaceToolModelBuilder");
+    private static final Logger logger = LoggerFactory.getLogger(WorkspaceToolModelBuilder.class);
 
     public WorkspaceToolModelBuilder() {
         super(WorkspaceToolModel.class);
@@ -54,19 +54,27 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
                     }
                 })//
                 .collect(Collectors.toList());
+
+        return new WorkspaceToolModelImpl(buildProject(project, null, dataBuilders));
+    }
+
+    public ProjectData buildProject(Project project, ProjectData root, List<ExtraDataBuilder> dataBuilders) throws Exception {
+        logger.debug("Building project: {}", project.getName());
         PluginData pluginData = buildPluginData(project);
+        for (ExtraDataBuilder e : dataBuilders) {
+            e.preBuild(project, pluginData);
+        }
+
+        ProjectData projectData = buildProjectData(project);
+        projectData.pluginData = pluginData;
 
         for (ExtraDataBuilder e : dataBuilders) {
-            e.preGradleData(project, pluginData);
+            e.build(project, projectData, root == null ? projectData : root);
         }
-
-        GradleData gradleData = buildGradleData(project);
-
-        for (ExtraDataBuilder b : dataBuilders) {
-            b.build(project, pluginData, gradleData);
+        for (Project subProject : project.getSubprojects()) {
+            projectData.subProjects.add(buildProject(subProject, root == null ? projectData : root, dataBuilders));
         }
-
-        return new WorkspaceToolModelImpl(pluginData, gradleData);
+        return projectData;
     }
 
     private PluginData buildPluginData(Project project) throws Exception {
@@ -93,16 +101,27 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
         return pluginData;
     }
 
-    private GradleData buildGradleData(Project project) {
-        GradleData gradleData = new GradleData();
-        gradleData.group = String.valueOf(project.getGroup());
-        gradleData.archivesBaseName = String.valueOf(project.getProperties().get("archivesBaseName"));
-        buildConfigurationData(project, gradleData);
+    private ProjectData buildProjectData(Project project) {
+        ProjectData projectData = new ProjectData();
+        projectData.name = project.getName();
+        projectData.rootProject = project.getRootProject().getName();
+        projectData.version = String.valueOf(project.getVersion());
+        projectData.group = String.valueOf(project.getGroup());
+        projectData.archivesBaseName = String.valueOf(project.findProperty("archivesBaseName"));
+
+        Map<String, ?> properties = project.getExtensions().getExtraProperties().getProperties();
+        properties.forEach((k, v) -> {
+            if (v instanceof CharSequence) {
+                projectData.extraProperties.put(k, v.toString());
+            }
+        });
+
+        buildConfigurationData(project, projectData);
         JavaPluginConvention javaConvention = project.getConvention().findPlugin(JavaPluginConvention.class);
         if (javaConvention != null) {
             for (SourceSet sourceSet : javaConvention.getSourceSets()) {
                 SourceSetData data = new SourceSetData();
-                gradleData.sourceSets.put(sourceSet.getName(), data);
+                projectData.sourceSets.put(sourceSet.getName(), data);
                 data.name = sourceSet.getName();
                 data.resources.addAll(getDirs(sourceSet.getResources()));
                 data.getOrComputeSrc("java").addAll(getDirs(sourceSet.getJava()));
@@ -120,26 +139,26 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
             }
         }
 
-        return gradleData;
+        return projectData;
     }
 
     private Set<File> getDirs(SourceDirectorySet dirSet) {
         return dirSet.getSrcDirs().stream().map(File::getAbsoluteFile).collect(Collectors.toSet());
     }
 
-    private void buildConfigurationData(Project project, GradleData gradleData) {
+    private void buildConfigurationData(Project project, ProjectData projectData) {
         ConfigurationWalker walker = new ConfigurationWalker(project.getDependencies());
-        Visitor visitor = new Visitor(gradleData);
+        Visitor visitor = new Visitor(projectData);
         walker.walk(project.getConfigurations(), visitor);
     }
 
     private static class Visitor implements ConfigurationVisitor {
 
-        private final GradleData gradleData;
+        private final ProjectData projectData;
         private ConfigurationData data;
 
-        private Visitor(GradleData gradleData) {
-            this.gradleData = gradleData;
+        private Visitor(ProjectData projectData) {
+            this.projectData = projectData;
         }
 
         @Override
@@ -148,7 +167,7 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
                 throw new RuntimeException("Already visiting.");
             }
             data = new ConfigurationData();
-            gradleData.configurations.put(configuration.getName(), data);
+            projectData.configurations.put(configuration.getName(), data);
             data.name = configuration.getName();
             data.transitive = configuration.isTransitive();
             data.extendsFrom = configuration.getExtendsFrom().stream().map(Configuration::getName).collect(Collectors.toSet());

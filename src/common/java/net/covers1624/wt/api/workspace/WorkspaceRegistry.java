@@ -1,9 +1,13 @@
 package net.covers1624.wt.api.workspace;
 
+import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.DependencyLibrary;
+import net.covers1624.wt.api.mixin.MixinInstantiator;
+import net.covers1624.wt.api.script.Workspace;
 import net.covers1624.wt.util.scala.ScalaSdk;
 
 import java.nio.file.Path;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -18,15 +22,20 @@ public interface WorkspaceRegistry {
      * @param apiClazz The Api-Class.
      * @param factory  The factory to construct the Api-Classes Implementation.
      */
-    <T extends Workspace> void registerScriptImpl(Class<T> apiClazz, Supplier<T> factory);
+    <T extends Workspace> void registerScriptImpl(Class<T> apiClazz, Function<MixinInstantiator, T> factory);
 
     /**
      * Called to invoke the factory associated with the supplied Api-Class.
      *
-     * @param apiClazz The Api-Class.
+     * @param apiClazz          The Api-Class.
+     * @param mixinInstantiator The MixinInstantiator.
      * @return An instance of the supplied Api-Classes implementation.
      */
-    <T extends Workspace> T constructScriptImpl(Class<T> apiClazz);
+    <T extends Workspace> T constructScriptImpl(Class<T> apiClazz, MixinInstantiator mixinInstantiator);
+
+    <T extends Workspace> void registerWorkspaceHandler(Class<T> apiClazz, Supplier<WorkspaceHandler<T>> factory);
+
+    <T extends Workspace> WorkspaceHandler<T> constructWorkspaceHandlerImpl(Class<T> apiClazz);
 
     /**
      * Registers a {@link WorkspaceWriter} for the provided {@link Workspace} Api class.
@@ -34,18 +43,16 @@ public interface WorkspaceRegistry {
      * @param apiClazz The Api-Class.
      * @param factory  The Factory to construct the {@link WorkspaceWriter}
      */
-    <T extends Workspace> void registerWorkspaceWriter(Class<T> apiClazz, WorkspaceWriterFactory<T> factory);
+    <T extends Workspace> void registerWorkspaceWriter(Class<T> apiClazz, Function<WorkspaceToolContext, WorkspaceWriter<T>> factory);
 
     /**
      * Called to construct a {@link WorkspaceWriter} for the given Api-Class.
      *
-     * @param apiClazz   The Api-Class.
-     * @param projectDir The Project root directory.
-     * @param library    The {@link DependencyLibrary}.
-     * @param scalaSdk   The {@link ScalaSdk}.
+     * @param apiClazz The Api-Class.
+     * @param context  The Context
      * @return The new {@link WorkspaceWriter}
      */
-    <T extends Workspace> WorkspaceWriter<T> getWorkspaceWriter(Class<T> apiClazz, Path projectDir, DependencyLibrary library, ScalaSdk scalaSdk);
+    <T extends Workspace> WorkspaceWriter<T> getWorkspaceWriter(Class<T> apiClazz, WorkspaceToolContext context);
 
     /**
      * A factory to construct {@link WorkspaceWriter} instances.
@@ -53,7 +60,7 @@ public interface WorkspaceRegistry {
     interface WorkspaceWriterFactory<T extends Workspace> {
 
         /**
-         * See {@link #getWorkspaceWriter(Class, Path, DependencyLibrary, ScalaSdk)}
+         * See {@link #getWorkspaceWriter}
          */
         WorkspaceWriter<T> create(Path projectDir, DependencyLibrary library, ScalaSdk scalaSdk);
     }

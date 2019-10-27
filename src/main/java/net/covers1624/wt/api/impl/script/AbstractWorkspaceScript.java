@@ -3,14 +3,14 @@ package net.covers1624.wt.api.impl.script;
 import groovy.lang.Binding;
 import groovy.lang.Script;
 import net.covers1624.wt.api.framework.FrameworkRegistry;
-import net.covers1624.wt.api.framework.ModdingFramework;
 import net.covers1624.wt.api.impl.script.module.ModuleContainerImpl;
-import net.covers1624.wt.api.impl.script.runconfig.DefaultRunConfigContainer;
+import net.covers1624.wt.api.mixin.MixinInstantiator;
+import net.covers1624.wt.api.script.ModdingFramework;
+import net.covers1624.wt.api.script.Workspace;
 import net.covers1624.wt.api.script.WorkspaceScript;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
-import net.covers1624.wt.api.script.runconfig.RunConfigContainer;
-import net.covers1624.wt.api.workspace.Workspace;
 import net.covers1624.wt.api.workspace.WorkspaceRegistry;
+import net.covers1624.wt.event.ScriptWorkspaceEvalEvent;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,18 +26,19 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
 
     public static final String FR_PROP = "frameworkRegistry";
     public static final String WR_PROP = "workspaceRegistry";
+    public static final String MI_PROP = "mixinInstantiator";
 
     private boolean firstPass;
     private DefaultScriptDepsContainer scriptDeps = new DefaultScriptDepsContainer();
     private FrameworkRegistry frameworkRegistry;
     private WorkspaceRegistry workspaceRegistry;
+    private MixinInstantiator mixinInstantiator;
     private Class<? extends ModdingFramework> frameworkClass;
     private Class<? extends Workspace> workspaceType;
     private ModdingFramework framework;
     private Workspace workspace;
-    private ModuleContainerImpl workspaceModules;
+    private ModuleContainerSpec moduleContainer;
     private Map<String, String> depOverrides = new HashMap<>();
-    private RunConfigContainer runConfigContainer = new DefaultRunConfigContainer();
 
     public AbstractWorkspaceScript() {
         super();
@@ -54,6 +55,7 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
         if (!firstPass) {
             frameworkRegistry = getProp(FR_PROP);
             workspaceRegistry = getProp(WR_PROP);
+            mixinInstantiator = getProp(MI_PROP);
         }
     }
 
@@ -95,10 +97,10 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
 
     @Override
     public void modules(Consumer<ModuleContainerSpec> consumer) {
-        if (workspaceModules == null) {
-            workspaceModules = new ModuleContainerImpl();
+        if (moduleContainer == null) {
+            moduleContainer = new ModuleContainerImpl(mixinInstantiator);
         }
-        consumer.accept(workspaceModules);
+        consumer.accept(moduleContainer);
     }
 
     @Override
@@ -109,8 +111,9 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
         }
         if (workspaceType == null) {
             workspaceType = clazz;
-            workspace = workspaceRegistry.constructScriptImpl(workspaceType);
+            workspace = workspaceRegistry.constructScriptImpl(workspaceType, mixinInstantiator);
         }
+        ScriptWorkspaceEvalEvent.REGISTRY.fireEvent(new ScriptWorkspaceEvalEvent(this, mixinInstantiator));
         consumer.accept((T) workspace);
     }
 
@@ -121,45 +124,43 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     }
 
     @Override
-    public void runConfigs(Consumer<RunConfigContainer> consumer) {
-        consumer.accept(runConfigContainer);
-    }
-
     public List<String> getRepos() {
         return scriptDeps.getRepos();
     }
 
+    @Override
     public List<String> getClasspathDeps() {
         return scriptDeps.getClasspathDeps();
     }
 
+    @Override
     public Class<? extends ModdingFramework> getFrameworkClass() {
         return frameworkClass;
     }
 
+    @Override
     public ModdingFramework getFramework() {
         return framework;
     }
 
+    @Override
     public Class<? extends Workspace> getWorkspaceType() {
         return workspaceType;
     }
 
+    @Override
     public Workspace getWorkspace() {
         return workspace;
     }
 
+    @Override
     public Map<String, String> getDepOverrides() {
         return depOverrides;
     }
 
-    public ModuleContainerImpl getWorkspaceModules() {
-        return workspaceModules;
-    }
-
     @Override
-    public RunConfigContainer getRunConfigContainer() {
-        return runConfigContainer;
+    public ModuleContainerSpec getModuleContainer() {
+        return moduleContainer;
     }
 
     @SuppressWarnings ("unchecked")

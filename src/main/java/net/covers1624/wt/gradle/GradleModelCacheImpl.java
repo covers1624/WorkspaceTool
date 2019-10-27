@@ -6,11 +6,14 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.gradle.GradleManager;
 import net.covers1624.wt.api.gradle.GradleModelCache;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.event.ModuleHashCheckEvent;
 import net.covers1624.wt.util.HashContainer;
+import net.covers1624.wt.util.LoggingOutputStream;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gradle.tooling.GradleConnector;
@@ -26,10 +29,7 @@ import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -61,22 +61,20 @@ public class GradleModelCacheImpl implements GradleModelCache {
             "settings.gradle"//
     );
 
-    private final GradleManager gradleManager;
-    private final Path projectDir;
+    private final WorkspaceToolContext context;
     private final Path dataDir;
 
-    public GradleModelCacheImpl(GradleManager gradleManager, Path projectDir, Path cacheDir) {
-        this.gradleManager = gradleManager;
-        this.projectDir = projectDir;
-        this.dataDir = cacheDir.resolve("gradle_data");
+    public GradleModelCacheImpl(WorkspaceToolContext context) {
+        this.context = context;
+        this.dataDir = context.cacheDir.resolve("gradle_data");
         if (!Files.exists(dataDir)) {
             sneaky(() -> Files.createDirectories(dataDir));
         }
     }
 
     @Override
-    public WorkspaceToolModel getModel(Path modulePath, Set<String> extraHash) {
-        String relPath = projectDir.relativize(modulePath).toString();
+    public WorkspaceToolModel getModel(Path modulePath, Set<String> extraHash, Set<String> extraTasks) {
+        String relPath = context.projectDir.relativize(modulePath).toString();
         logger.info("Processing module: {}", relPath);
         HashContainer hashContainer = new HashContainer(dataDir.resolve(relPath.replace("/", "_") + "_cache.json"));
 
@@ -107,7 +105,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
 
         if (isOutOfDate || isMissingCache) {
             logger.info("Update triggered, {}.", isMissingCache ? "missing cache" : "out-of-date");
-            WorkspaceToolModel proxyModel = getModelFromGradle(modulePath);
+            WorkspaceToolModel proxyModel = getModelFromGradle(modulePath, extraTasks);
             try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(dataFile, StandardOpenOption.CREATE))) {
                 oos.writeObject(getNonProxyModel(proxyModel));
             } catch (IOException e) {
@@ -133,13 +131,15 @@ public class GradleModelCacheImpl implements GradleModelCache {
         }
     }
 
-    private WorkspaceToolModel getModelFromGradle(Path modulePath) {
+    private WorkspaceToolModel getModelFromGradle(Path modulePath, Set<String> extraTasks) {
         try (ProjectConnection connection = GradleConnector.newConnector()//
                 .useGradleVersion(GRADLE_VERSION)//
                 .forProjectDirectory(modulePath.toFile())//
                 .connect()) {
             GradleProject project = connection.getModel(GradleProject.class);
-            Set<String> executeBefore = gradleManager.getExecuteBefore();
+            Set<String> executeBefore = new HashSet<>();
+            executeBefore.addAll(context.gradleManager.getExecuteBefore());
+            executeBefore.addAll(extraTasks);
             Set<String> availableTasks = project.getTasks().stream()//
                     .map(Task::getName)//
                     .collect(Collectors.toSet());
@@ -154,10 +154,10 @@ public class GradleModelCacheImpl implements GradleModelCache {
                 logger.info("The following tasks will not be executed: {}", String.join(", ", notExecuting));
             }
             return connection//
-                    .action(new SimpleBuildAction<>(WorkspaceToolModel.class, gradleManager.getDataBuilders()))//
-                    .setStandardOutput(System.out)//
-                    .setStandardError(System.err)//
-                    .withArguments("-si", "-I", gradleManager.getInitScript().toAbsolutePath().toString())//
+                    .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))//
+                    .setStandardOutput(new LoggingOutputStream(logger, Level.INFO))//
+                    .setStandardError(new LoggingOutputStream(logger, Level.ERROR))//
+                    .withArguments("-si", "-I", context.gradleManager.getInitScript().toAbsolutePath().toString())//
                     .forTasks(toExecute).run();
         }
     }

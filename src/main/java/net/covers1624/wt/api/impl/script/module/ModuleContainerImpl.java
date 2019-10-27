@@ -1,25 +1,90 @@
 package net.covers1624.wt.api.impl.script.module;
 
+import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
-import net.covers1624.wt.api.script.module.ModuleGroupSpec;
+import net.covers1624.wt.api.script.module.ModuleSpec;
+import net.covers1624.wt.util.PredicateCollectors;
+import net.covers1624.wt.util.pattern.PatternMatcherFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Created by covers1624 on 23/05/19.
  */
 public class ModuleContainerImpl implements ModuleContainerSpec {
 
-    private Map<String, ModuleGroupImpl> groups = new HashMap<>();
+    private final Set<String> includes = new HashSet<>();
+    private final Set<String> excludes = new HashSet<>();
+    private final Map<String, ModuleSpec> customModules = new HashMap<>();
+    private boolean caseSensitive;
+
+    private final MixinInstantiator mixinInstantiator;
+
+    public ModuleContainerImpl(MixinInstantiator mixinInstantiator) {
+        this.mixinInstantiator = mixinInstantiator;
+    }
 
     @Override
-    public void group(String name, Consumer<ModuleGroupSpec> consumer) {
-        consumer.accept(groups.computeIfAbsent(name, ModuleGroupImpl::new));
+    public void setCaseSensitive(boolean caseSensitive) {
+        this.caseSensitive = caseSensitive;
     }
 
-    public Map<String, ModuleGroupImpl> getGroups() {
-        return groups;
+    @Override
+    public void include(String... includes) {
+        Collections.addAll(this.includes, includes);
     }
+
+    @Override
+    public void include(String include, Consumer<ModuleSpec> consumer) {
+        include(include);
+        ModuleSpec spec = customModules.get(include);
+        if (spec == null) {
+            spec = mixinInstantiator.instantiate(ModuleSpec.class);
+            customModules.put(include, spec);
+        }
+        consumer.accept(spec);
+    }
+
+    @Override
+    public void exclude(String... excludes) {
+        Collections.addAll(this.excludes, excludes);
+    }
+
+    @Override
+    public boolean getCaseSensitive() {
+        return caseSensitive;
+    }
+
+    @Override
+    public Set<String> getIncludes() {
+        return Collections.unmodifiableSet(includes);
+    }
+
+    @Override
+    public Set<String> getExcludes() {
+        return Collections.unmodifiableSet(excludes);
+    }
+
+    @Override
+    public Map<String, ModuleSpec> getCustomModules() {
+        return customModules;
+    }
+
+    @Override
+    public Predicate<Path> createMatcher() {
+        return makePredicate(includes, true).and(makePredicate(excludes, false).negate());
+    }
+
+    private Predicate<Path> makePredicate(Set<String> patterns, boolean include) {
+        if (patterns.isEmpty()) {
+            return include ? path -> true : path -> false;
+        }
+        return patterns.stream()//
+                .map(pattern -> PatternMatcherFactory.getPatternMatcher(include, caseSensitive, pattern))//
+                .collect(PredicateCollectors.union());
+    }
+
 }

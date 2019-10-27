@@ -14,6 +14,12 @@ public class SourceSetDependencyImpl extends AbstractDependency implements Sourc
     public SourceSetDependencyImpl() {
     }
 
+    public SourceSetDependencyImpl(Module module, String sourceSet) {
+        this();
+        setModule(module);
+        setSourceSet(sourceSet);
+    }
+
     SourceSetDependencyImpl(SourceSetDependency other) {
         this();
         setModule(other.getModule());
@@ -46,6 +52,27 @@ public class SourceSetDependencyImpl extends AbstractDependency implements Sourc
     public SourceSetDependency setSourceSet(String sourceSet) {
         this.sourceSet = sourceSet;
         return this;
+    }
+
+    @Override
+    public int hashCode() {
+        int i = 0;
+        i = 31 * i + module.getName().hashCode();
+        i = 31 * i + sourceSet.hashCode();
+        return i;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (super.equals(obj)) {
+            return true;
+        }
+        if (!(obj instanceof SourceSetDependency)) {
+            return false;
+        }
+        SourceSetDependency other = (SourceSetDependency) obj;
+        return other.getModule().getName().equals(getModule().getName())//
+                && other.getSourceSet().equals(getSourceSet());
     }
 
     @Override

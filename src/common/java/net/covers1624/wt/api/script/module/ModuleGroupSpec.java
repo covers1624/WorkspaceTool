@@ -3,11 +3,14 @@ package net.covers1624.wt.api.script.module;
 import groovy.lang.Closure;
 import net.covers1624.wt.util.ClosureBackedConsumer;
 
+import java.nio.file.Path;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Created by covers1624 on 23/05/19.
  */
+@Deprecated
 public interface ModuleGroupSpec {
 
     void caseSensitive(boolean caseSensitive);
@@ -21,4 +24,6 @@ public interface ModuleGroupSpec {
     }
 
     void module(String name, Consumer<ModuleSpec> consumer);
+
+    Predicate<Path> createMatcher();
 }

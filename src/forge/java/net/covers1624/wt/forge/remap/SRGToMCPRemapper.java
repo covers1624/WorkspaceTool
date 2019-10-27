@@ -23,7 +23,7 @@
 
 package net.covers1624.wt.forge.remap;
 
-import net.covers1624.wt.forge.gradle.data.McpMappingData;
+import net.covers1624.wt.forge.gradle.data.FG2McpMappingData;
 import net.covers1624.wt.forge.util.SrgReader;
 import org.objectweb.asm.commons.Remapper;
 
@@ -39,7 +39,7 @@ public class SRGToMCPRemapper extends Remapper {
     private Map<String, String> fieldMap = new HashMap<>();
     private Map<String, String> methodMap = new HashMap<>();
 
-    public SRGToMCPRemapper(McpMappingData data) {
+    public SRGToMCPRemapper(FG2McpMappingData data) {
         SrgReader.readSrg(data.srgToMcp, (type, args) -> {
             switch (type) {
                 case FIELD:

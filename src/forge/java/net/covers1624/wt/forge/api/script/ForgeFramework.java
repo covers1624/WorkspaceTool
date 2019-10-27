@@ -1,6 +1,6 @@
 package net.covers1624.wt.forge.api.script;
 
-import net.covers1624.wt.api.framework.ModdingFramework;
+import net.covers1624.wt.api.script.ModdingFramework;
 
 /**
  * See: {@link Forge112}

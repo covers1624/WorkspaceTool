@@ -1,14 +1,8 @@
 package net.covers1624.wt.gradle;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import net.covers1624.wt.api.data.GradleData;
 import net.covers1624.wt.api.gradle.GradleManager;
 import net.covers1624.wt.util.CopyingFileVisitor;
 import net.covers1624.wt.util.Utils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.Closeable;
@@ -27,18 +21,8 @@ import static net.covers1624.wt.util.Utils.*;
  */
 public class GradleManagerImpl implements Closeable, GradleManager {
 
-    private Set<Object> scriptClasspathMarkerClasses = Sets.newHashSet(//
-            "net.covers1624.wt.gradle.WorkspaceToolGradlePlugin",//
-            "net.covers1624.gradlestuff.sourceset.SourceSetDependencyPlugin",//
-            GradleData.class,//
-            ImmutableMap.class,//
-            Gson.class,//
-            StringUtils.class,//
-            StringSubstitutor.class//
-    );
-    private Set<String> scriptClasspathMarkerResources = Sets.newHashSet(//
-            "gradle_plugin.marker"//
-    );
+    private Set<Object> scriptClasspathMarkerClasses = new HashSet<>();
+    private Set<String> scriptClasspathMarkerResources = new HashSet<>();
 
     private Set<String> dataBuilders = new HashSet<>();
     private Set<String> executeBefore = new HashSet<>();

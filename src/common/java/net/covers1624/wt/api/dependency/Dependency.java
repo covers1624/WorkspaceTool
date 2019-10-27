@@ -15,7 +15,7 @@ public interface Dependency extends Cloneable {
      *
      * @return If the dependency should be exported by modules.
      */
-    boolean isExport();
+    boolean getExport();
 
     /**
      * Set whether the dependency should be exported down the hierarchy.

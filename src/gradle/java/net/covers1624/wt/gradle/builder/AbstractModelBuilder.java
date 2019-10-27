@@ -10,7 +10,6 @@ import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
  * Created by covers1624 on 15/6/19.
  */
 @VersionedClass (1)
-@VersionedClass.IgnoreSuper
 public abstract class AbstractModelBuilder<T> implements ParameterizedToolingModelBuilder<BuildProperties> {
 
     private final Class<T> clazz;

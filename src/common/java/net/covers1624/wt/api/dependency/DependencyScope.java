@@ -26,7 +26,7 @@ package net.covers1624.wt.api.dependency;
 import java.io.Serializable;
 
 /**
- * Represents the basic scopes provided by Intellij / Maven.
+ * Represents the basic scopes provided by Intellij.
  *
  * Created by covers1624 on 8/01/19.
  */

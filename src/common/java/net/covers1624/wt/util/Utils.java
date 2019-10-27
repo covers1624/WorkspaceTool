@@ -23,19 +23,20 @@
 
 package net.covers1624.wt.util;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+import org.apache.commons.io.IOCase;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -69,6 +70,7 @@ import static java.nio.file.StandardOpenOption.WRITE;
 @SuppressWarnings ({ "ResultOfMethodCallIgnored", "UnstableApiUsage" })
 public class Utils {
 
+    //REEEEEE Gradle.
     private static final Logger logger = LoggerFactory.getLogger("Utils");
 
     //32k buffer.
@@ -80,23 +82,13 @@ public class Utils {
     public static final Gson gson = sneaky(() -> {
         GsonBuilder builder = new GsonBuilder()//
                 .registerTypeAdapter(File.class, new FileAdapter())//
-                .registerTypeAdapter(HashCode.class, new HashCodeAdapter());//
+                .registerTypeAdapter(HashCode.class, new HashCodeAdapter())//
+                .registerTypeAdapterFactory(new LowerCaseEnumAdapterFactory());//
         if (PRETTY_JSON) {
             builder = builder.setPrettyPrinting();
         }
         return builder.create();
     });
-
-    /**
-     * Makes a ProcessExecutor.
-     * Blank executor with a callback for logging.
-     *
-     * @return The Executor.
-     */
-    public static ProcessExecutor makeExecutor() {
-        Logger logger = LoggerFactory.getLogger("ProcessExecutor");
-        return new ProcessExecutor().addPreStartCallback(e -> logger.debug("Executing '{}' in '{}'.", Joiner.on(' ').join(e.getCmd()), e.getWorkingDir()));
-    }
 
     public static Runnable sneak(ThrowingRunnable<Throwable> tr) {
         return () -> sneaky(tr);
@@ -622,6 +614,51 @@ public class Utils {
         }
     }
 
+    public static boolean isAncestor(Path path, Path prefix, boolean strict) {
+        return startsWith(path, prefix, strict, IOCase.SYSTEM, true);
+    }
+
+    public static boolean startsWith(Path _path, Path _prefix, boolean strict, IOCase ioCase, boolean checkImmediateParent) {
+        String path = _path.normalize().toAbsolutePath().toString();
+        String prefix = _prefix.normalize().toAbsolutePath().toString();
+        int pathLength = path.length();
+        int prefixLength = prefix.length();
+        if (prefixLength == 0) {
+            return pathLength == 0;
+        }
+        if (prefixLength > pathLength) {
+            return false;
+        }
+        if (!path.regionMatches(!ioCase.isCaseSensitive(), 0, prefix, 0, prefixLength)) {
+            return false;
+        }
+        if (pathLength == prefixLength) {
+            return !strict;
+        }
+
+        char lastPrefixChar = prefix.charAt(prefixLength - 1);
+        int slashOrSeparatorIdx = prefixLength;
+        if (lastPrefixChar == '/' || lastPrefixChar == File.separatorChar) {
+            slashOrSeparatorIdx = prefixLength - 1;
+        }
+        char next1 = path.charAt(slashOrSeparatorIdx);
+        if (next1 == '/' || next1 == File.separatorChar) {
+            if (!checkImmediateParent) {
+                return true;
+            }
+
+            if (slashOrSeparatorIdx == pathLength - 1) {
+                return true;
+            }
+            int idxNext = path.indexOf(next1, slashOrSeparatorIdx + 1);
+            idxNext = idxNext == -1 ? path.indexOf(next1 == '/' ? '\\' : '/', slashOrSeparatorIdx + 1) : idxNext;
+            return idxNext == -1;
+        } else {
+            return false;
+        }
+
+    }
+
     public static Path getResourcePath(String resource) {
         return sneaky(() -> Paths.get(Utils.class.getResource(resource).toURI()));
     }
@@ -674,97 +711,6 @@ public class Utils {
     }
 
     /**
-     * Splits a string into segments for a command.
-     * Supports escaping.
-     *
-     * @param toProcess The string.
-     * @return The arguments.
-     */
-    public static String[] cmdSplit(String toProcess) {
-        if (toProcess == null || toProcess.length() == 0) {
-            //no command? no string
-            return new String[0];
-        }
-        // parse with a simple finite state machine
-
-        final int normal = 0;
-        final int inQuote = 1;
-        final int inDoubleQuote = 2;
-        int state = normal;
-        final StringTokenizer tok = new StringTokenizer(toProcess, "\"\' ", true);
-        final ArrayList<String> result = new ArrayList<>();
-        final StringBuilder current = new StringBuilder();
-        boolean lastTokenHasBeenQuoted = false;
-
-        while (tok.hasMoreTokens()) {
-            String nextTok = tok.nextToken();
-            switch (state) {
-                case inQuote:
-                    if ("\'".equals(nextTok)) {
-                        lastTokenHasBeenQuoted = true;
-                        state = normal;
-                    } else {
-                        current.append(nextTok);
-                    }
-                    break;
-                case inDoubleQuote:
-                    if ("\"".equals(nextTok)) {
-                        lastTokenHasBeenQuoted = true;
-                        state = normal;
-                    } else {
-                        current.append(nextTok);
-                    }
-                    break;
-                default:
-                    if ("\'".equals(nextTok)) {
-                        state = inQuote;
-                    } else if ("\"".equals(nextTok)) {
-                        state = inDoubleQuote;
-                    } else if (" ".equals(nextTok)) {
-                        if (lastTokenHasBeenQuoted || current.length() != 0) {
-                            result.add(current.toString());
-                            current.setLength(0);
-                        }
-                    } else {
-                        current.append(nextTok);
-                    }
-                    lastTokenHasBeenQuoted = false;
-                    break;
-            }
-        }
-        if (lastTokenHasBeenQuoted || current.length() != 0) {
-            result.add(current.toString());
-        }
-        if (state == inQuote || state == inDoubleQuote) {
-            throw new RuntimeException("unbalanced quotes in " + toProcess);
-        }
-        return result.toArray(new String[0]);
-    }
-
-    /**
-     * Sets up a ProcessBuilder for invoking a gradle wrapper.
-     * The Process will be executed in 'projectDir' using the wrapper
-     * from 'wrapperFrom'.
-     *
-     * @param projectDir  The project folder to execute in.
-     * @param wrapperFrom The wrapper to use.
-     * @return The ProcessBuilder
-     */
-    public static ProcessExecutor buildGradlewInvoke(File projectDir, File wrapperFrom) {
-        ProcessExecutor executor = makeExecutor();
-        executor.setWorkingDir(projectDir);
-        List<String> cmd = Lists.newArrayList(//
-                System.getProperty("wt.java", "java"),//
-                "-classpath",//
-                new File(wrapperFrom, "gradle/wrapper/gradle-wrapper.jar").getAbsolutePath(),//
-                "org.gradle.wrapper.GradleWrapperMain"//
-        );
-        executor.setCmd(cmd);
-        executor.addEnvVar("org.gradle.appname", "gradlew");
-        return executor;
-    }
-
-    /**
      * Generates a Random Hex string with the provided length.
      * Uses SecureRandom, because reasons, probably not secure.
      *
@@ -796,7 +742,7 @@ public class Utils {
 
     @SuppressWarnings ("unchecked")
     public static <T> T getField(Field field, Object instance) {
-        return (T) sneaky(() -> field.get(instance));
+        return (T) sneaky(() -> makeAccessible(field).get(instance));
     }
 
     /**
@@ -842,6 +788,41 @@ public class Utils {
                 return null;
             }
             return HashCode.fromString(in.nextString());
+        }
+    }
+
+    @SuppressWarnings ("unchecked")
+    private static class LowerCaseEnumAdapterFactory implements TypeAdapterFactory {
+
+        @Override
+        public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+            if (!type.getRawType().isEnum()) {
+                return null;
+            }
+            Map<String, T> lookup = new HashMap<>();
+            for (T e : (T[]) type.getRawType().getEnumConstants()) {
+                lookup.put(e.toString().toLowerCase(Locale.ROOT), e);
+            }
+            return new TypeAdapter<T>() {
+                @Override
+                public void write(JsonWriter out, T value) throws IOException {
+                    if (value == null) {
+                        out.nullValue();
+                    } else {
+                        out.value(value.toString().toLowerCase());
+                    }
+                }
+
+                @Override
+                public T read(JsonReader in) throws IOException {
+                    if (in.peek() == JsonToken.NULL) {
+                        in.nextNull();
+                        return null;
+                    }
+                    String name = in.nextString();
+                    return name == null ? null : lookup.get(name.toLowerCase(Locale.ROOT));
+                }
+            };
         }
     }
 }

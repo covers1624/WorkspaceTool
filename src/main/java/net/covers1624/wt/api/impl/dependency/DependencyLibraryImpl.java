@@ -10,6 +10,7 @@ import net.covers1624.wt.util.MavenNotation;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by covers1624 on 10/7/19.
@@ -36,12 +37,15 @@ public class DependencyLibraryImpl implements DependencyLibrary {
         if (config == null) {
             return;
         }
-        config.walkHierarchy(c -> c.getDependencies().replaceAll(d -> {
-            if (d instanceof MavenDependency) {
-                return resolve((MavenDependency) d);
-            }
-            return d;
-        }));
+        config.walkHierarchy(c -> c.setDependencies(c.getDependencies().stream()//
+                .map(e -> {
+                    if (e instanceof MavenDependency) {
+                        return resolve((MavenDependency) e);
+                    }
+                    return e;
+                })//
+                .collect(Collectors.toSet())//
+        ));
     }
 
     @Override

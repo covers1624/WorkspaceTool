@@ -60,7 +60,7 @@ public class DependencyRemapper {
         public File javadoc;
     }
 
-    public class RemappedMavenDependency extends MavenDependencyImpl {
+    public static class RemappedMavenDependency extends MavenDependencyImpl {
 
         private final RemappedData data;
 

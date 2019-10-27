@@ -1,9 +1,12 @@
 package net.covers1624.wt.api.framework;
 
+import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.gradle.GradleManager;
 import net.covers1624.wt.api.gradle.GradleModelCache;
+import net.covers1624.wt.api.script.ModdingFramework;
 
 import java.nio.file.Path;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -34,31 +37,15 @@ public interface FrameworkRegistry {
      * Registers the Api-Class to the supplied FrameworkHandlerFactory.
      *
      * @param apiClass The Api-Class
-     * @param handler  The Factory to construct the {@link FrameworkHandler}
+     * @param factory  The Factory to construct the {@link FrameworkHandler}
      */
-    <T extends ModdingFramework> void registerFrameworkHandler(Class<T> apiClass, FrameworkHandlerFactory<T> handler);
+    <T extends ModdingFramework> void registerFrameworkHandler(Class<T> apiClass, Function<WorkspaceToolContext, FrameworkHandler<T>> factory);
 
     /**
      * Called to construct the {@link FrameworkHandler} associated with supplied the Api-Class.
      *
      * @param apiClazz      The Api-Class.
-     * @param projectDir    The Path to the root of the Project.
-     * @param cacheDir      The Path to WorkspaceTools' Cache directory.
-     * @param gradleManager An instance of {@link GradleManager}.
-     * @param modelCache    An instance of {@link GradleModelCache}
      * @return The {@link FrameworkHandler} instance..
      */
-    <T extends ModdingFramework> FrameworkHandler<T> getFrameworkHandler(Class<T> apiClazz, Path projectDir, Path cacheDir, GradleManager gradleManager, GradleModelCache modelCache);
-
-    /**
-     * A Factory to construct {@link FrameworkHandler} instances.
-     */
-    interface FrameworkHandlerFactory<T extends ModdingFramework> {
-
-        /**
-         * See {@link FrameworkRegistry#getFrameworkHandler(Class, Path, Path, GradleManager, GradleModelCache)}
-         */
-        FrameworkHandler<T> create(Path workspaceDir, Path projectDir, GradleManager gradleManager, GradleModelCache modelCache);
-    }
-
+    <T extends ModdingFramework> FrameworkHandler<T> getFrameworkHandler(Class<T> apiClazz, WorkspaceToolContext context);
 }
