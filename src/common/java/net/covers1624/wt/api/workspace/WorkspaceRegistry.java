@@ -1,12 +1,9 @@
 package net.covers1624.wt.api.workspace;
 
 import net.covers1624.wt.api.WorkspaceToolContext;
-import net.covers1624.wt.api.dependency.DependencyLibrary;
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.script.Workspace;
-import net.covers1624.wt.util.scala.ScalaSdk;
 
-import java.nio.file.Path;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -53,16 +50,4 @@ public interface WorkspaceRegistry {
      * @return The new {@link WorkspaceWriter}
      */
     <T extends Workspace> WorkspaceWriter<T> getWorkspaceWriter(Class<T> apiClazz, WorkspaceToolContext context);
-
-    /**
-     * A factory to construct {@link WorkspaceWriter} instances.
-     */
-    interface WorkspaceWriterFactory<T extends Workspace> {
-
-        /**
-         * See {@link #getWorkspaceWriter}
-         */
-        WorkspaceWriter<T> create(Path projectDir, DependencyLibrary library, ScalaSdk scalaSdk);
-    }
-
 }

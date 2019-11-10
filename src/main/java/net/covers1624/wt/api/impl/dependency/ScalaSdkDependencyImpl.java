@@ -3,7 +3,7 @@ package net.covers1624.wt.api.impl.dependency;
 import com.google.common.base.MoreObjects;
 import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.api.dependency.ScalaSdkDependency;
-import net.covers1624.wt.util.scala.ScalaVersion;
+import net.covers1624.wt.util.ScalaVersion;
 
 import java.util.ArrayList;
 import java.util.List;

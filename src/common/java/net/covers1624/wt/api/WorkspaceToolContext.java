@@ -12,7 +12,6 @@ import net.covers1624.wt.api.tail.AnsiTailConsole;
 import net.covers1624.wt.api.workspace.WorkspaceModule;
 import net.covers1624.wt.api.workspace.WorkspaceRegistry;
 import net.covers1624.wt.util.TypedMap;
-import net.covers1624.wt.util.scala.ScalaSdk;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -50,9 +49,6 @@ public class WorkspaceToolContext {
     public List<Module> frameworkModules = new ArrayList<>();
 
     //FrameworkHandler.constructFrameworkModules
-
-//    @Deprecated
-//    public ScalaSdk oldScalaSdk;
 
     //ProcessDependencyEvent
 

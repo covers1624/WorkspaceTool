@@ -45,7 +45,7 @@ import net.covers1624.wt.util.DependencyAggregator;
 import net.covers1624.wt.util.MavenNotation;
 import net.covers1624.wt.util.ParameterFormatter;
 import net.covers1624.wt.util.SimpleServiceLoader;
-import net.covers1624.wt.util.scala.ScalaVersion;
+import net.covers1624.wt.util.ScalaVersion;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
@@ -203,9 +203,6 @@ public class WorkspaceTool {
 
         logger.info("Processing modules..");
 
-        //TODO, Detect multiple scala SDK's, aggregate them and support multiple.
-        //        context.oldScalaSdk = new ScalaSdk();
-        //        context.getAllModules().forEach(context.oldScalaSdk::consume);
         Iterable<Module> allModules = context.getAllModules();
         //Attempt to build a ScalaSdkDependency from the modules 'main' SourceSet.
         allModules.forEach(module -> {
@@ -256,9 +253,6 @@ public class WorkspaceTool {
                             });
                 });
 
-        //        LibraryDependency scalaDep = new LibraryDependencyImpl()//
-        //                .setLibraryName(context.oldScalaSdk.getSdkName());
-
         //Replace maven dependencies with module dependencies.
         context.modules.forEach(module -> {
             for (Configuration config : module.getConfigurations().values()) {
@@ -284,13 +278,6 @@ public class WorkspaceTool {
                 module.getSourceSets().get("main").getCompileConfiguration().addDependency(//
                         new SourceSetDependencyImpl().setModule(module).setSourceSet("api"));
             }
-            //            module.getSourceSets().values().forEach(ss -> {
-            //                Configuration compileConfig = ss.getCompileConfiguration();
-            //                //TODO, scalac is null.
-            //                if (compileConfig != null && context.oldScalaSdk.getScalac() != null) {
-            //                    compileConfig.addDependency(scalaDep);
-            //                }
-            //            });
         });
 
         ProcessModulesEvent.REGISTRY.fireEvent(new ProcessModulesEvent(context));
@@ -374,5 +361,4 @@ public class WorkspaceTool {
             }
         }
     }
-
 }

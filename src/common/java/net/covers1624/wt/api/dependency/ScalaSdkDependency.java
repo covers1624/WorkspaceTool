@@ -1,7 +1,7 @@
 package net.covers1624.wt.api.dependency;
 
 import com.google.common.collect.Iterables;
-import net.covers1624.wt.util.scala.ScalaVersion;
+import net.covers1624.wt.util.ScalaVersion;
 
 import java.util.Collections;
 import java.util.List;

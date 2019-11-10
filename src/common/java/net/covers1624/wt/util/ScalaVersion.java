@@ -21,7 +21,7 @@
  *
  */
 
-package net.covers1624.wt.util.scala;
+package net.covers1624.wt.util;
 
 import org.jetbrains.annotations.NotNull;
 

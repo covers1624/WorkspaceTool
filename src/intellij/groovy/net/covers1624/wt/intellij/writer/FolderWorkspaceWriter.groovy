@@ -42,7 +42,7 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
 
         IJLibraryTable libTable = new IJLibraryTable()
         context.dependencyLibrary.dependencies.each {
-            def dep = it.dependency //Prep for LibraryDependency supporting all Dependencies.
+            def dep = it.dependency
             IJLibrary lib
             if (dep instanceof MavenDependency) {
                 lib = new IJMavenLibrary()
@@ -70,30 +70,6 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
             lib.libraryName = it.libraryName
             libTable.libraries.put(it.libraryFileName, lib)
         }
-//        if (context.oldScalaSdk.scalac != null) {
-//            IJScalaLibrary scalaLib = new IJScalaLibrary()
-//            scalaLib.libraryName = context.oldScalaSdk.sdkName
-//            scalaLib.languageLevel = context.oldScalaSdk.scalaVersion.name()
-//            scalaLib.attributes << [type: 'Scala']
-//            context.oldScalaSdk.classpath.each {
-//                if (it.classes != null) {
-//                    scalaLib.classpath << it.classes
-//                }
-//            }
-//            context.oldScalaSdk.libraries.each {
-//                if (it.classes != null) {
-//                    scalaLib.classes << it.classes
-//                }
-//                if (it.javadoc != null) {
-//                    scalaLib.javadoc << it.javadoc
-//                }
-//                if (it.sources != null) {
-//                    scalaLib.sources << it.sources
-//                }
-//            }
-//
-//            libTable.libraries.put(context.oldScalaSdk.sdkName.replaceAll("[.-]", "_"), scalaLib)
-//        }
         libTable.write(dotIdea.resolve("libraries"))
 
         def ijModules = new IJModules()
@@ -157,7 +133,6 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
                 def scope = it.key
                 def deps = it.value
                 deps.each { dep_ ->
-
                     if (dep_ instanceof MavenDependency) {
                         MavenDependency dep = dep_ as MavenDependency
                         ijModule.entries << new IJLibraryOrderEntry().with {

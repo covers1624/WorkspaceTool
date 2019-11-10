@@ -5,7 +5,6 @@ import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.api.dependency.ScalaSdkDependency;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
-import net.covers1624.wt.util.scala.ScalaVersion;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
