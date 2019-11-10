@@ -1,7 +1,7 @@
 package net.covers1624.wt.api.impl.dependency;
 
+import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.dependency.LibraryDependency;
-import net.covers1624.wt.api.dependency.MavenDependency;
 
 /**
  * Created by covers1624 on 30/6/19.
@@ -9,7 +9,7 @@ import net.covers1624.wt.api.dependency.MavenDependency;
 public class LibraryDependencyImpl extends AbstractDependency implements LibraryDependency {
 
     private String libraryName;
-    private MavenDependency mavenDependency;
+    private Dependency dependency;
 
     public LibraryDependencyImpl() {
     }
@@ -17,7 +17,7 @@ public class LibraryDependencyImpl extends AbstractDependency implements Library
     public LibraryDependencyImpl(LibraryDependency other) {
         this();
         setLibraryName(other.getLibraryName());
-        setMavenDependency(other.getMavenDependency());
+        setDependency(other.getDependency());
     }
 
     @Override
@@ -32,8 +32,8 @@ public class LibraryDependencyImpl extends AbstractDependency implements Library
     }
 
     @Override
-    public MavenDependency getMavenDependency() {
-        return mavenDependency;
+    public Dependency getDependency() {
+        return dependency;
     }
 
     @Override
@@ -43,15 +43,15 @@ public class LibraryDependencyImpl extends AbstractDependency implements Library
     }
 
     @Override
-    public LibraryDependency setMavenDependency(MavenDependency dependency) {
-        this.mavenDependency = dependency;
+    public LibraryDependency setDependency(Dependency dependency) {
+        this.dependency = dependency;
         return this;
     }
 
     @Override
     public int hashCode() {
         int i = 0;
-        i = 31 * i + getMavenDependency().hashCode();
+        i = 31 * i + getDependency().hashCode();
         i = 31 * i + getLibraryName().hashCode();
         i = 31 * i + (getExport() ? 1 : 0);
         return i;
@@ -66,14 +66,14 @@ public class LibraryDependencyImpl extends AbstractDependency implements Library
             return false;
         }
         LibraryDependency other = (LibraryDependency) obj;
-        return other.getMavenDependency().equals(getMavenDependency())//
+        return other.getDependency().equals(getDependency())//
                 && other.getLibraryName().equals(getLibraryName())//
                 && other.getExport() == getExport();
     }
 
     @Override
     public String toString() {
-        return "LibraryDependency: " + mavenDependency.toString();
+        return "LibraryDependency: " + dependency.toString();
     }
 
     @Override

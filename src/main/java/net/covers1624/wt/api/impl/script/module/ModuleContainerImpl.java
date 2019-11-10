@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Created by covers1624 on 23/05/19.
@@ -82,9 +83,22 @@ public class ModuleContainerImpl implements ModuleContainerSpec {
         if (patterns.isEmpty()) {
             return include ? path -> true : path -> false;
         }
-        return patterns.stream()//
+        List<Predicate<Path>> predicates = patterns.stream()//
                 .map(pattern -> PatternMatcherFactory.getPatternMatcher(include, caseSensitive, pattern))//
-                .collect(PredicateCollectors.union());
+                .collect(Collectors.toList());
+        if (predicates.size() == 1) {
+            return predicates.get(0);
+        } else {
+            Predicate<Path> predicate = predicates.get(0);
+            for (int i = 1; i < predicates.size(); i++) {
+                predicate = predicate.or(predicates.get(i));
+
+            }
+            return predicate;
+        }
+//        return patterns.stream()//
+//                .map(pattern -> PatternMatcherFactory.getPatternMatcher(include, caseSensitive, pattern))//
+//                .collect(PredicateCollectors.union());
     }
 
 }

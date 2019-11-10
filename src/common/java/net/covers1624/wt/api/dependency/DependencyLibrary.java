@@ -3,6 +3,7 @@ package net.covers1624.wt.api.dependency;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.util.MavenNotation;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,7 +16,7 @@ public interface DependencyLibrary {
     /**
      * @return All the dependencies contained in this library.
      */
-    Map<MavenNotation, LibraryDependency> getDependencies();
+    Iterable<LibraryDependency> getDependencies();
 
     void consume(Module module);
 
@@ -27,4 +28,7 @@ public interface DependencyLibrary {
      * @return
      */
     LibraryDependency resolve(MavenDependency mavenDep);
+
+    LibraryDependency resolve(ScalaSdkDependency version);
+
 }

@@ -10,13 +10,13 @@ import net.covers1624.wt.api.ExtensionDetails;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.data.*;
 import net.covers1624.wt.api.dependency.Dependency;
-import net.covers1624.wt.api.dependency.LibraryDependency;
 import net.covers1624.wt.api.dependency.MavenDependency;
+import net.covers1624.wt.api.dependency.ScalaSdkDependency;
 import net.covers1624.wt.api.framework.FrameworkHandler;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.gradle.model.impl.WorkspaceToolModelImpl;
 import net.covers1624.wt.api.impl.dependency.DependencyLibraryImpl;
-import net.covers1624.wt.api.impl.dependency.LibraryDependencyImpl;
+import net.covers1624.wt.api.impl.dependency.ScalaSdkDependencyImpl;
 import net.covers1624.wt.api.impl.dependency.SourceSetDependencyImpl;
 import net.covers1624.wt.api.impl.mixin.DefaultMixinInstantiator;
 import net.covers1624.wt.api.impl.module.ModuleImpl;
@@ -28,6 +28,7 @@ import net.covers1624.wt.api.impl.workspace.WorkspaceRegistryImpl;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;
 import net.covers1624.wt.api.module.Module;
+import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.api.script.ModdingFramework;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.script.module.ModuleSpec;
@@ -44,7 +45,7 @@ import net.covers1624.wt.util.DependencyAggregator;
 import net.covers1624.wt.util.MavenNotation;
 import net.covers1624.wt.util.ParameterFormatter;
 import net.covers1624.wt.util.SimpleServiceLoader;
-import net.covers1624.wt.util.scala.ScalaSdk;
+import net.covers1624.wt.util.scala.ScalaVersion;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
@@ -56,7 +57,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -166,7 +170,7 @@ public class WorkspaceTool {
             logger.error("No workspace specified in script.");
         }
 
-        DependencyAggregator dependencyResolver = new DependencyAggregator(context);
+        DependencyAggregator dependencyAggregator = new DependencyAggregator(context);
         context.dependencyLibrary = new DependencyLibraryImpl();
 
         logger.info("Constructing module representation..");
@@ -200,61 +204,98 @@ public class WorkspaceTool {
         logger.info("Processing modules..");
 
         //TODO, Detect multiple scala SDK's, aggregate them and support multiple.
-        context.scalaSdk = new ScalaSdk();
-        context.getAllModules().forEach(context.scalaSdk::consume);
-        //Resolve all dependencies, and remove duplicates.
+        //        context.oldScalaSdk = new ScalaSdk();
+        //        context.getAllModules().forEach(context.oldScalaSdk::consume);
         Iterable<Module> allModules = context.getAllModules();
-        allModules.forEach(dependencyResolver::consume);
-        stream(allModules.spliterator(), true).forEach(module -> {
-            module.getConfigurations().values().parallelStream().forEach(config -> {
-                config.setDependencies(config.getDependencies().stream()//
-                        .map(e -> {
-                            if (e instanceof MavenDependency) {
-                                return dependencyResolver.resolve(((MavenDependency) e).getNotation());
+        //Attempt to build a ScalaSdkDependency from the modules 'main' SourceSet.
+        allModules.forEach(module -> {
+            ScalaSdkDependency sdkCandidate = new ScalaSdkDependencyImpl();
+            Configuration config = module.getSourceSets().get("main").getCompileConfiguration();
+            config.getAllDependencies()//
+                    .stream()//
+                    .filter(e -> e instanceof MavenDependency).map(e -> (MavenDependency) e)//
+                    .forEach(dep -> {
+                        MavenNotation notation = dep.getNotation();
+                        if (notation.group.startsWith("org.scala-lang")) {
+                            if (notation.module.equals("scala-compiler")) {
+                                sdkCandidate.setScalac(dep);
+                            } else {
+                                sdkCandidate.addLibrary(dep);
                             }
-                            return e;
-                        })//
-                        .collect(Collectors.toSet())//
-                );
-            });
+                        }
+                    });
+            if (sdkCandidate.getScalac() != null) {
+                sdkCandidate.setVersion(sdkCandidate.getScalac().getNotation().version);
+                ScalaVersion scalaVersion = ScalaVersion.findByVersion(sdkCandidate.getVersion())//
+                        .orElseThrow(() -> new RuntimeException("Unknown scala version: " + sdkCandidate.getVersion()));
+                sdkCandidate.setScalaVersion(scalaVersion);
+                config.addDependency(sdkCandidate);
+                //Attempt to nuke. boom.exe
+                config.walkHierarchy(e -> sdkCandidate.getClasspath().forEach(e.getDependencies()::remove));
+            }
         });
 
-        LibraryDependency scalaDep = new LibraryDependencyImpl()//
-                .setLibraryName(context.scalaSdk.getSdkName());
+        //Resolve all dependencies, and remove duplicates.
+        allModules.forEach(dependencyAggregator::consume);
+        stream(allModules.spliterator(), true)//
+                .forEach(module -> {
+                    module.getConfigurations().values()//
+                            .parallelStream()//
+                            .forEach(config -> {
+                                config.setDependencies(config.getDependencies().stream()//
+                                        .map(e -> {
+                                            if (e instanceof MavenDependency) {
+                                                return dependencyAggregator.resolve(((MavenDependency) e).getNotation());
+                                            } else if (e instanceof ScalaSdkDependency) {
+                                                return dependencyAggregator.resolveScala(((ScalaSdkDependency) e).getScalaVersion());
+                                            }
+                                            return e;
+                                        })//
+                                        .collect(Collectors.toSet())//
+                                );
+                            });
+                });
+
+        //        LibraryDependency scalaDep = new LibraryDependencyImpl()//
+        //                .setLibraryName(context.oldScalaSdk.getSdkName());
 
         //Replace maven dependencies with module dependencies.
         context.modules.forEach(module -> {
-            module.getSourceSets().values().forEach(ss -> {
-                for (Configuration config : Arrays.asList(//
-                        ss.getCompileConfiguration(), //
-                        ss.getCompileOnlyConfiguration(), //
-                        ss.getRuntimeConfiguration())) {
-                    if (config == null) {
-                        continue;
-                    }
-                    config.walkHierarchy(cfg -> {
-                        cfg.setDependencies(cfg.getDependencies().stream()//
-                                .map(e -> {
-                                    ProcessDependencyEvent event = new ProcessDependencyEvent(context, module, config, cfg, e);
-                                    ProcessDependencyEvent.REGISTRY.fireEvent(event);
-                                    return event.getResult();
-                                })//
-                                .filter(Objects::nonNull)//
-                                .collect(Collectors.toSet())//
-                        );
-                    });
-                }
-                Configuration compileConfig = ss.getCompileConfiguration();
-                //TODO, scalac is null.
-                if (compileConfig != null && context.scalaSdk.getScalac() != null) {
-                    compileConfig.addDependency(scalaDep);
-                }
-            });
+            for (Configuration config : module.getConfigurations().values()) {
+                config.setDependencies(config.getDependencies().stream()//
+                        .map(e -> {
+                            ProcessDependencyEvent event = new ProcessDependencyEvent(context, module, config, config, e);
+                            ProcessDependencyEvent.REGISTRY.fireEvent(event);
+                            return event.getResult();
+                        })//
+                        .filter(Objects::nonNull)//
+                        .collect(Collectors.toSet())//
+                );
+            }
+            SourceSet testSS = module.getSourceSets().get("test");
+            if (testSS != null) {
+                testSS.getCompileConfiguration().addDependency(new SourceSetDependencyImpl()//
+                        .setModule(module)//
+                        .setSourceSet("main")//
+                );
+            }
+            SourceSet apiSS = module.getSourceSets().get("api");
+            if (apiSS != null) {
+                module.getSourceSets().get("main").getCompileConfiguration().addDependency(//
+                        new SourceSetDependencyImpl().setModule(module).setSourceSet("api"));
+            }
+            //            module.getSourceSets().values().forEach(ss -> {
+            //                Configuration compileConfig = ss.getCompileConfiguration();
+            //                //TODO, scalac is null.
+            //                if (compileConfig != null && context.oldScalaSdk.getScalac() != null) {
+            //                    compileConfig.addDependency(scalaDep);
+            //                }
+            //            });
         });
 
-        stream(allModules.spliterator(), true).forEach(context.dependencyLibrary::consume);
-
         ProcessModulesEvent.REGISTRY.fireEvent(new ProcessModulesEvent(context));
+
+        stream(allModules.spliterator(), true).forEach(context.dependencyLibrary::consume);
 
         WorkspaceHandler<?> workspaceHandler = context.workspaceRegistry.constructWorkspaceHandlerImpl(context.workspaceScript.getWorkspaceType());
         workspaceHandler.buildWorkspaceModules(unsafeCast(context.workspaceScript.getWorkspace()), context);

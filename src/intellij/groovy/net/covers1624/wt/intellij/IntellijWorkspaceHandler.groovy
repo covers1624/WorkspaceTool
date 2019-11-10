@@ -32,7 +32,7 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
             def gName = ""
             if (groupSplit.length > 1) {
                 def lastGroup = null
-                for (int i = 0; i < groupSplit.length - 2; i++) {
+                for (int i = 0; i <= groupSplit.length - 2; i++) {
                     def name = groupSplit[i]
                     gName = gName.empty ? name : "$gName/$name"
                     def newGroup = modules[gName.replace("/", ".")]
@@ -69,7 +69,7 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
         context.allModules.each { module ->
             def wModule = modules[module.name]
             module.sourceSets.values().each { ss ->
-                def ssModule = modules[module.name + "." + ss.name]
+                def ssModule = modules[module.name.replace("/", ".") + "." + ss.name]
                 def configs = [:] as Map<DependencyScope, Configuration>
                 configs[DependencyScope.COMPILE] = ss.compileConfiguration
                 configs[DependencyScope.RUNTIME] = ss.runtimeConfiguration
@@ -81,9 +81,9 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
                     if (config != null) {
                         config.allDependencies.each {
                             if (it instanceof SourceSetDependency) {
-                                def depMod = modules[it.module.name + "." + it.sourceSet]
+                                def depMod = modules[it.module.name.replace("/", ".") + "." + it.sourceSet]
                                 if (depMod != null) {
-                                    dependencies << new WorkspaceModuleDependencyImpl().setModule(depMod)
+                                    dependencies << new WorkspaceModuleDependencyImpl().setModule(depMod).setExport(it.export)
                                 }
                             } else {
                                 dependencies << it

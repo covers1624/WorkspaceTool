@@ -116,6 +116,7 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         Configuration mainCompile = mainSS.getCompileConfiguration();
         //Configuration testCompile = testSS.getCompileConfiguration();
         Configuration userdevCompile = userdevSS.getCompileConfiguration();
+        Configuration userdevRuntume = userdevSS.getRuntimeConfiguration();
 
         SourceSetDependency fmllauncherDep = new SourceSetDependencyImpl(forgeModule, "fmllauncher");
         SourceSetDependency mainSSDep = new SourceSetDependencyImpl(forgeModule, "main");
@@ -136,6 +137,11 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             m.getSourceSets().values().forEach(ss -> {
                 ss.getCompileConfiguration().addDependency(forgeDep);
             });
+            userdevRuntume.addDependency(new SourceSetDependencyImpl()//
+                    .setModule(m)//
+                    .setSourceSet("main")//
+                    .setExport(false)//
+            );
         });
 
         if (needsSetup) {

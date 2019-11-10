@@ -95,6 +95,7 @@ dependencies {
     common 'commons-io:commons-io:2.6'
     common 'com.electronwill.night-config:core:3.6.0'
     common 'com.electronwill.night-config:toml:3.6.0'
+    common 'com.opencsv:opencsv:5.0'
     commonCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //mavenResolver
@@ -237,10 +238,11 @@ task makeShell() {
     doLast {
         def libs = new HashSet()
         sourceSets.each { libs += it.runtimeClasspath }
-        libs = libs.collect { it.absolutePath }.join(":")
+        libs = libs.collect { it.absolutePath }
+        libs.each {println it}
         def lines = []
         lines << "#!/bin/bash"
-        lines << "java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -classpath \"${libs}\" ${shellMain}"
+        lines << "java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -classpath \"${libs.join(":")}\" ${shellMain}"
         lines << "read -p \"Press enter to continue\""
         file('build/shell.sh').text = lines.join("\n")
     }

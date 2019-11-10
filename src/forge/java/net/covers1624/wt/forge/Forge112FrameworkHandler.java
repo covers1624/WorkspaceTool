@@ -119,20 +119,10 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             ss.setRuntimeConfiguration(runtime);
         });
         context.modules.forEach(m -> {
-            Map<String, Configuration> cfgs = m.getConfigurations();
             SourceSet main = m.getSourceSets().get("main");
-            Configuration deobfCompile = cfgs.get("deobfCompile");
-            Configuration deobfProvided = cfgs.get("deobfProvided");
             Configuration compileConfiguration = main.getCompileConfiguration();
-            Configuration compileOnlyConfiguration = main.getCompileOnlyConfiguration();
             if (compileConfiguration != null) {
-                if (deobfCompile != null) {
-                    compileConfiguration.addExtendsFrom(deobfCompile);
-                }
                 compileConfiguration.addDependency(new SourceSetDependencyImpl(forgeModule, "main"));
-            }
-            if (compileOnlyConfiguration != null && deobfProvided != null) {
-                compileOnlyConfiguration.addExtendsFrom(deobfProvided);
             }
 
             runtime.addDependency(new SourceSetDependencyImpl(m, "main").setExport(false));

@@ -3,6 +3,7 @@ package net.covers1624.wt.intellij.writer
 import net.covers1624.wt.api.WorkspaceToolContext
 import net.covers1624.wt.api.dependency.LibraryDependency
 import net.covers1624.wt.api.dependency.MavenDependency
+import net.covers1624.wt.api.dependency.ScalaSdkDependency
 import net.covers1624.wt.api.dependency.WorkspaceModuleDependency
 import net.covers1624.wt.api.workspace.WorkspaceWriter
 import net.covers1624.wt.intellij.api.script.Intellij
@@ -40,8 +41,8 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
         misc.write(miscNode)
 
         IJLibraryTable libTable = new IJLibraryTable()
-        context.dependencyLibrary.dependencies.values().each {
-            def dep = it.mavenDependency //Prep for LibraryDependency supporting all Dependencies.
+        context.dependencyLibrary.dependencies.each {
+            def dep = it.dependency //Prep for LibraryDependency supporting all Dependencies.
             IJLibrary lib
             if (dep instanceof MavenDependency) {
                 lib = new IJMavenLibrary()
@@ -54,34 +55,45 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
                 if (dep.sources != null) {
                     lib.sources << dep.sources
                 }
+            } else if (dep instanceof ScalaSdkDependency) {
+                lib = new IJScalaLibrary()
+                lib.languageLevel = dep.scalaVersion.name()
+                lib.attributes['type'] = 'Scala'
+                lib.classpath = dep.classpath.collect { it.classes }.findAll { it != null }
+
+                lib.classes = dep.libraries.collect { it.classes }.findAll { it != null }
+                lib.javadoc = dep.libraries.collect { it.javadoc }.findAll { it != null }
+                lib.sources = dep.libraries.collect { it.sources }.findAll { it != null }
+            } else {
+                throw new RuntimeException("Unhandled LibraryDependency type: " + dep.class.name)
             }
             lib.libraryName = it.libraryName
             libTable.libraries.put(it.libraryFileName, lib)
         }
-        if (context.scalaSdk.scalac != null) {
-            IJScalaLibrary scalaLib = new IJScalaLibrary()
-            scalaLib.libraryName = context.scalaSdk.sdkName
-            scalaLib.languageLevel = context.scalaSdk.name()
-            scalaLib.attributes << [type: 'Scala']
-            context.scalaSdk.classpath.each {
-                if (it.classes != null) {
-                    scalaLib.classpath << it.classes
-                }
-            }
-            context.scalaSdk.libraries.each {
-                if (it.classes != null) {
-                    scalaLib.classes << it.classes
-                }
-                if (it.javadoc != null) {
-                    scalaLib.javadoc << it.javadoc
-                }
-                if (it.sources != null) {
-                    scalaLib.sources << it.sources
-                }
-            }
-
-            libTable.libraries.put(context.scalaSdk.sdkName.replaceAll("[.-]", "_"), scalaLib)
-        }
+//        if (context.oldScalaSdk.scalac != null) {
+//            IJScalaLibrary scalaLib = new IJScalaLibrary()
+//            scalaLib.libraryName = context.oldScalaSdk.sdkName
+//            scalaLib.languageLevel = context.oldScalaSdk.scalaVersion.name()
+//            scalaLib.attributes << [type: 'Scala']
+//            context.oldScalaSdk.classpath.each {
+//                if (it.classes != null) {
+//                    scalaLib.classpath << it.classes
+//                }
+//            }
+//            context.oldScalaSdk.libraries.each {
+//                if (it.classes != null) {
+//                    scalaLib.classes << it.classes
+//                }
+//                if (it.javadoc != null) {
+//                    scalaLib.javadoc << it.javadoc
+//                }
+//                if (it.sources != null) {
+//                    scalaLib.sources << it.sources
+//                }
+//            }
+//
+//            libTable.libraries.put(context.oldScalaSdk.sdkName.replaceAll("[.-]", "_"), scalaLib)
+//        }
         libTable.write(dotIdea.resolve("libraries"))
 
         def ijModules = new IJModules()
@@ -145,25 +157,43 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
                 def scope = it.key
                 def deps = it.value
                 deps.each { dep_ ->
-                    ijModule.entries << new IJOrderEntry().with {
-                        attributes['scope'] = scope.name()
-                        if (dep_.export) {
-                            attributes['exported'] = ''
-                        }
-                        if (dep_ instanceof WorkspaceModuleDependency) {
-                            def dep = dep_ as WorkspaceModuleDependency
-                            attributes['type'] = 'module'
-                            attributes['module-name'] = dep.module.name
 
-                        } else if (dep_ instanceof LibraryDependency) {
-                            def dep = dep_ as LibraryDependency
-                            attributes['type'] = 'library'
-                            attributes['name'] = dep.libraryName
-                            attributes['level'] = 'project'
-                        } else {
-                            throw new RuntimeException("Unhandled type: " + dep_.class)
+                    if (dep_ instanceof MavenDependency) {
+                        MavenDependency dep = dep_ as MavenDependency
+                        ijModule.entries << new IJLibraryOrderEntry().with {
+                            library = new IJMavenLibrary()
+                            if (dep.classes != null) {
+                                library.classes << dep.classes
+                            }
+                            if (dep.javadoc != null) {
+                                library.javadoc << dep.javadoc
+                            }
+                            if (dep.sources != null) {
+                                library.sources << dep.sources
+                            }
+                            it
                         }
-                        it
+                    } else {
+                        ijModule.entries << new IJOrderEntry().with {
+                            attributes['scope'] = scope.name()
+                            if (dep_.export) {
+                                attributes['exported'] = ''
+                            }
+                            if (dep_ instanceof WorkspaceModuleDependency) {
+                                def dep = dep_ as WorkspaceModuleDependency
+                                attributes['type'] = 'module'
+                                attributes['module-name'] = dep.module.name
+
+                            } else if (dep_ instanceof LibraryDependency) {
+                                def dep = dep_ as LibraryDependency
+                                attributes['type'] = 'library'
+                                attributes['name'] = dep.libraryName
+                                attributes['level'] = 'project'
+                            } else {
+                                throw new RuntimeException("Unhandled type: " + dep_.class)
+                            }
+                            it
+                        }
                     }
                 }
             }

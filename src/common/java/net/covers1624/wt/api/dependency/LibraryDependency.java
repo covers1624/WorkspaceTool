@@ -3,7 +3,6 @@ package net.covers1624.wt.api.dependency;
 /**
  * A Dependency that is stored in a {@link DependencyLibrary}
  *
- * TODO, Allow any Dependency.
  * Created by covers1624 on 30/6/19.
  */
 public interface LibraryDependency extends Dependency {
@@ -29,7 +28,7 @@ public interface LibraryDependency extends Dependency {
      *
      * @return The MavenDependency.
      */
-    MavenDependency getMavenDependency();
+    Dependency getDependency();
 
     /**
      * Sets the name for the library.
@@ -45,7 +44,7 @@ public interface LibraryDependency extends Dependency {
      * @param dependency The MavenDependency.
      * @return The same LibraryDepenedency.
      */
-    LibraryDependency setMavenDependency(MavenDependency dependency);
+    LibraryDependency setDependency(Dependency dependency);
 
     /**
      * {@inheritDoc}

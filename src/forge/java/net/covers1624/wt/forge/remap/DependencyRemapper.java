@@ -46,7 +46,17 @@ public class DependencyRemapper {
             remapCache.put(dep.getNotation().toString(), remappedData);
             save();
         }
-        return new RemappedMavenDependency(dep, remappedData);
+        MavenDependency ret = dep.copy();
+        if (remappedData.classes != null) {
+            ret.setClasses(remappedData.classes.toPath());
+        }
+        if (remappedData.javadoc != null) {
+            ret.setJavadoc(remappedData.javadoc.toPath());
+        }
+        if (remappedData.sources != null) {
+            ret.setSources(remappedData.sources.toPath());
+        }
+        return ret;
     }
 
     private void save() {

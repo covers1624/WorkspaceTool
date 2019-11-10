@@ -2,8 +2,6 @@ package net.covers1624.wt.forge;
 
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import net.covers1624.wt.api.Extension;
 import net.covers1624.wt.api.ExtensionDetails;
 import net.covers1624.wt.api.WorkspaceToolContext;
@@ -11,11 +9,13 @@ import net.covers1624.wt.api.data.ConfigurationData;
 import net.covers1624.wt.api.data.ProjectData;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.dependency.MavenDependency;
+import net.covers1624.wt.api.dependency.ScalaSdkDependency;
 import net.covers1624.wt.api.framework.FrameworkRegistry;
 import net.covers1624.wt.api.gradle.GradleManager;
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;
+import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.api.script.WorkspaceScript;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.script.module.ModuleSpec;
@@ -31,16 +31,20 @@ import net.covers1624.wt.forge.gradle.FGVersion;
 import net.covers1624.wt.forge.gradle.data.FG2Data;
 import net.covers1624.wt.forge.gradle.data.FG2McpMappingData;
 import net.covers1624.wt.forge.gradle.data.FGPluginData;
+import net.covers1624.wt.forge.remap.CSVRemapper;
 import net.covers1624.wt.forge.remap.DependencyRemapper;
 import net.covers1624.wt.forge.remap.JarRemapper;
 import net.covers1624.wt.forge.remap.SRGToMCPRemapper;
 import net.covers1624.wt.mc.data.VersionInfoJson;
 import net.covers1624.wt.util.TypedMap;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -52,10 +56,12 @@ import java.util.*;
 @ExtensionDetails (name = "Forge", desc = "Provides integration for the MinecraftForge modding framework.")
 public class ForgeExtension implements Extension {
 
+    private static final Logger logger = LogManager.getLogger("ForgeExtension");
+
     public static final TypedMap.Key<VersionInfoJson> VERSION_INFO = new TypedMap.Key<>("forge:version_info");
     public static final TypedMap.Key<Path> ASSETS_PATH = new TypedMap.Key<>("forge:assets_path");
 
-    private DependencyRemapper remapper;
+    private Optional<DependencyRemapper> remapper;
 
     @Override
     public void load() {
@@ -63,7 +69,8 @@ public class ForgeExtension implements Extension {
         PrepareScriptEvent.REGISTRY.register(this::onPrepareScript);
         ModuleHashCheckEvent.REGISTRY.register(this::onModuleHashCheck);
         ProcessModulesEvent.REGISTRY.register(this::onProcessModules112);
-        ProcessDependencyEvent.REGISTRY.register(this::onProcessDependency112);
+        ProcessDependencyEvent.REGISTRY.register(this::onProcessDependency);
+        ProcessModulesEvent.REGISTRY.register(this::processModules);
         ScriptWorkspaceEvalEvent.REGISTRY.register(this::onScriptWorkspaceEvalEvent);
 
         ProcessModulesEvent.REGISTRY.register(this::onProcessModules114);
@@ -125,7 +132,6 @@ public class ForgeExtension implements Extension {
                         fmlCoreMods.addAll(fgData.fmlCoreMods);
                         tweakClasses.addAll(fgData.tweakClasses);
                     }
-
                 }
             });
             script.getWorkspace().getRunConfigContainer().getRunConfigs().values().forEach(config -> {
@@ -147,21 +153,56 @@ public class ForgeExtension implements Extension {
                     });
                 }
             });
+            GradleBackedModule forgeModule = findForgeModule(context);
+            Configuration config = forgeModule.getSourceSets().get("main").getCompileConfiguration();
+            Optional<ScalaSdkDependency> dep = config.getAllDependencies().stream()//
+                    .filter(e -> e instanceof ScalaSdkDependency)//
+                    .map(e -> (ScalaSdkDependency) e)//
+                    .findFirst();
+            dep.ifPresent(scalaSdk -> {
+                context.modules.forEach(e -> {
+                    e.getSourceSets().get("main").getCompileConfiguration().addDependency(scalaSdk);
+                });
+            });
         }
     }
 
-    private void onProcessDependency112(ProcessDependencyEvent event) {
+    private void onProcessDependency(ProcessDependencyEvent event) {
         WorkspaceToolContext context = event.getContext();
-        if (context.workspaceScript.getFrameworkClass().equals(Forge112.class)) {
-            if (remapper == null) {
-                GradleBackedModule forgeModule = findForgeModule(context);
-                ProjectData projectData = forgeModule.getProjectData();
+        //Used as latch to compute. Empty means something else from null.
+        //noinspection OptionalAssignedToNull
+        if (remapper == null) {
+            GradleBackedModule forgeModule = findForgeModule(context);
+            ProjectData projectData = forgeModule.getProjectData();
+            FGPluginData pluginData = projectData.getData(FGPluginData.class);
+            if (pluginData != null && pluginData.version.isFg2()) {
                 FG2McpMappingData mappingData = projectData.getData(FG2McpMappingData.class);
                 if (mappingData == null) {
                     throw new RuntimeException("Forge module missing mapping data.");
                 }
-                remapper = new DependencyRemapper(context.cacheDir, new JarRemapper(new SRGToMCPRemapper(mappingData)));
+                remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new SRGToMCPRemapper(mappingData))));
+            } else {
+                Optional<MavenDependency> mappingsDep = forgeModule.getConfigurations().values()//
+                        .parallelStream()//
+                        .flatMap(e -> e.getDependencies().parallelStream())//
+                        .filter(e -> e instanceof MavenDependency)//
+                        .map(e -> (MavenDependency) e)//
+                        .filter(e -> e.getNotation().group.equals("net.minecraft") && e.getNotation().module.startsWith("mappings_"))//
+                        .findFirst();
+                mappingsDep.map(MavenDependency::getClasses).ifPresent(path -> {
+                    try {
+                        remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new CSVRemapper(path))));
+                    } catch (IOException e) {
+                        logger.warn("Unable to setup CSVReampper!", e);
+                    }
+                });
+                //noinspection OptionalAssignedToNull
+                if (remapper == null) {
+                    remapper = Optional.empty();
+                }
             }
+        }
+        remapper.ifPresent(remapper -> {
             Configuration config = event.getDependencyConfig();
             Dependency dep = event.getDependency();
             if (dep instanceof MavenDependency) {
@@ -172,7 +213,27 @@ public class ForgeExtension implements Extension {
                     event.setResult(remapper.process(mvnDep));
                 }
             }
-        }
+        });
+    }
+
+    public void processModules(ProcessModulesEvent event) {
+        event.getContext().modules.forEach(m -> {
+            Map<String, Configuration> cfgs = m.getConfigurations();
+            SourceSet main = m.getSourceSets().get("main");
+            Configuration deobfCompile = cfgs.get("deobfCompile");
+            Configuration deobfProvided = cfgs.get("deobfProvided");
+            Configuration compileConfiguration = main.getCompileConfiguration();
+            Configuration compileOnlyConfiguration = main.getCompileOnlyConfiguration();
+            if (compileConfiguration != null) {
+                if (deobfCompile != null) {
+                    compileConfiguration.addExtendsFrom(deobfCompile);
+                }
+            }
+            if (compileOnlyConfiguration != null && deobfProvided != null) {
+                compileOnlyConfiguration.addExtendsFrom(deobfProvided);
+            }
+        });
+
     }
 
     private void onProcessModules114(ProcessModulesEvent event) {

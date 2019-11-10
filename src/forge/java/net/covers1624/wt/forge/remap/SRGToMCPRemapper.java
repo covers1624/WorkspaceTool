@@ -25,19 +25,12 @@ package net.covers1624.wt.forge.remap;
 
 import net.covers1624.wt.forge.gradle.data.FG2McpMappingData;
 import net.covers1624.wt.forge.util.SrgReader;
-import org.objectweb.asm.commons.Remapper;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A simple Remapper that maps from SRG to MCP mappings.
  * Created by covers1624 on 10/01/19.
  */
-public class SRGToMCPRemapper extends Remapper {
-
-    private Map<String, String> fieldMap = new HashMap<>();
-    private Map<String, String> methodMap = new HashMap<>();
+public class SRGToMCPRemapper extends SimpleRemapper {
 
     public SRGToMCPRemapper(FG2McpMappingData data) {
         SrgReader.readSrg(data.srgToMcp, (type, args) -> {
@@ -50,23 +43,5 @@ public class SRGToMCPRemapper extends Remapper {
                     break;
             }
         });
-    }
-
-    @Override
-    public String mapFieldName(String owner, String name, String desc) {
-        String n = fieldMap.get(name);
-        return n != null ? n : name;
-    }
-
-    @Override
-    public String mapMethodName(String owner, String name, String desc) {
-        String n = methodMap.get(name);
-        return n != null ? n : name;
-    }
-
-    @Override
-    public String mapInvokeDynamicMethodName(String name, String desc) {
-        String n = methodMap.get(name);
-        return n != null ? n : name;
     }
 }

@@ -39,6 +39,7 @@ import java.util.List;
  *
  * Created by covers1624 on 30/01/19.
  */
+@Deprecated
 public class ScalaSdk {
 
     private ScalaVersion scalaVersion;

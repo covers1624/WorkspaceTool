@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 /**
  * Created by covers1624 on 15/6/19.
  */
-@VersionedClass (5)
+@VersionedClass (6)
 @SuppressWarnings ("UnstableApiUsage")
 public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToolModel> {
 
@@ -149,7 +149,7 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
     private void buildConfigurationData(Project project, ProjectData projectData) {
         ConfigurationWalker walker = new ConfigurationWalker(project.getDependencies());
         Visitor visitor = new Visitor(projectData);
-        walker.walk(project.getConfigurations(), visitor);
+        walker.walk(project.getConfigurations(), visitor, true, true, true);
     }
 
     private static class Visitor implements ConfigurationVisitor {

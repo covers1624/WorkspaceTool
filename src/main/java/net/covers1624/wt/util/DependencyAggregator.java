@@ -2,8 +2,10 @@ package net.covers1624.wt.util;
 
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.MavenDependency;
+import net.covers1624.wt.api.dependency.ScalaSdkDependency;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
+import net.covers1624.wt.util.scala.ScalaVersion;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
@@ -21,7 +23,8 @@ public class DependencyAggregator {
     private final WorkspaceToolContext context;
     private final Map<String, String> overrides;
 
-    private final HashMap<String, NavigableMap<ArtifactVersion, MavenDependency>> versionTable = new HashMap<>();
+    private final Map<ScalaVersion, NavigableMap<ArtifactVersion, ScalaSdkDependency>> scalaVersionTable = new HashMap<>();
+    private final Map<String, NavigableMap<ArtifactVersion, MavenDependency>> versionTable = new HashMap<>();
 
     public DependencyAggregator(WorkspaceToolContext context) {
         this.context = context;
@@ -35,8 +38,15 @@ public class DependencyAggregator {
                     .map(e -> (MavenDependency) e)//
                     .forEach(dep -> {
                         MavenNotation notation = dep.getNotation();
-                        Map<ArtifactVersion, MavenDependency> versions = versionTable.computeIfAbsent(getKey(notation), e -> new TreeMap<>());//Utils.computeIfAbsent(versionTable, notation.group, notation.module, TreeMap::new);
+                        Map<ArtifactVersion, MavenDependency> versions = versionTable.computeIfAbsent(getKey(notation), e -> new TreeMap<>());
                         versions.put(new DefaultArtifactVersion(notation.version), dep);
+                    });
+            configuration.getDependencies().stream()//
+                    .filter(e -> e instanceof ScalaSdkDependency)//
+                    .map(e -> (ScalaSdkDependency) e)//
+                    .forEach(dep -> {
+                        Map<ArtifactVersion, ScalaSdkDependency> versions = scalaVersionTable.computeIfAbsent(dep.getScalaVersion(), e -> new TreeMap<>());
+                        versions.put(new DefaultArtifactVersion(dep.getVersion()), dep);
                     });
         }
     }
@@ -44,6 +54,10 @@ public class DependencyAggregator {
     public MavenDependency resolve(MavenNotation notation) {
         notation = MavenNotation.parse(transformDep(notation.toString()));
         return versionTable.get(getKey(notation)).lastEntry().getValue();
+    }
+
+    public ScalaSdkDependency resolveScala(ScalaVersion version) {
+        return scalaVersionTable.get(version).lastEntry().getValue();
     }
 
     private String transformDep(String mavenDep) {

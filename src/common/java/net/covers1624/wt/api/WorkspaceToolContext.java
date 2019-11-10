@@ -51,7 +51,8 @@ public class WorkspaceToolContext {
 
     //FrameworkHandler.constructFrameworkModules
 
-    public ScalaSdk scalaSdk;
+//    @Deprecated
+//    public ScalaSdk oldScalaSdk;
 
     //ProcessDependencyEvent
 
