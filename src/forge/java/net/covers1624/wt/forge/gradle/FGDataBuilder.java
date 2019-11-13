@@ -1,13 +1,11 @@
 package net.covers1624.wt.forge.gradle;
 
 import groovy.lang.MetaProperty;
+import net.covers1624.wt.api.data.ConfigurationData;
 import net.covers1624.wt.api.data.PluginData;
 import net.covers1624.wt.api.data.ProjectData;
 import net.covers1624.wt.event.VersionedClass;
-import net.covers1624.wt.forge.gradle.data.FG2Data;
-import net.covers1624.wt.forge.gradle.data.FG2McpMappingData;
-import net.covers1624.wt.forge.gradle.data.FG3Data;
-import net.covers1624.wt.forge.gradle.data.FGPluginData;
+import net.covers1624.wt.forge.gradle.data.*;
 import net.covers1624.wt.gradle.builder.ExtraDataBuilder;
 import net.covers1624.wt.util.ColUtils;
 import net.covers1624.wt.util.MavenNotation;
@@ -97,14 +95,14 @@ public class FGDataBuilder implements ExtraDataBuilder {
             } else if (version.startsWith("3.0")) {
                 fgPluginData.version = FGVersion.FG30;
             } else {
-                logger.error("Unknown FG version: '{}', From: '{}'", version, ident);
+                logger.error("Unknown FG version: '{}', From: '{}' in project {}({})", version, ident, project.getPath(), project.getDisplayName());
             }
         }
         if (fgPluginData.version != FGVersion.UNKNOWN) {
-            logger.info("Found ForgeGradle! Version: {}", fgPluginData.version);
+            logger.info("Found ForgeGradle! Version: {} in project {}({})", fgPluginData.version, project.getPath(), project.getDisplayName());
             pluginData.extraData.put(FGPluginData.class, fgPluginData);
         } else {
-            logger.warn("Failed to find ForgeGradle. :(");
+            logger.warn("Failed to find ForgeGradle in project {}({}). :(", project.getPath(), project.getDisplayName());
             return;
         }
 
@@ -220,6 +218,24 @@ public class FGDataBuilder implements ExtraDataBuilder {
             if (extension != null) {
                 data.accessTransformers = tryGetProperty(extension, "accessTransformers");
                 data.sideAnnotationStrippers = tryGetProperty(extension, "sideAnnotationStrippers");
+            }
+
+            Optional<ConfigurationData.MavenDependency> mappings = projectData.configurations.values().stream()//
+                    .flatMap(e -> e.dependencies.stream())//
+                    .filter(e -> e instanceof ConfigurationData.MavenDependency)//
+                    .map(e -> ((ConfigurationData.MavenDependency) e))//
+                    .filter(e -> //
+                            e.mavenNotation.group.equals("net.minecraft")//
+                                    && e.mavenNotation.module.startsWith("mappings_"))//
+                    .findFirst();
+            mappings.ifPresent(e -> {
+                FG3McpMappingData fg3MappingData = new FG3McpMappingData();
+                fg3MappingData.mappingsArtifact = e.mavenNotation;
+                fg3MappingData.mappingsZip = e.classes;
+                projectData.extraData.put(FG3McpMappingData.class, fg3MappingData);
+            });
+            if (!mappings.isPresent()) {
+                logger.warn("MCP Mappings not found in project!");
             }
         }
     }

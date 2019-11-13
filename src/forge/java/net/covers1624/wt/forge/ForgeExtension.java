@@ -30,6 +30,7 @@ import net.covers1624.wt.forge.gradle.FGDataBuilder;
 import net.covers1624.wt.forge.gradle.FGVersion;
 import net.covers1624.wt.forge.gradle.data.FG2Data;
 import net.covers1624.wt.forge.gradle.data.FG2McpMappingData;
+import net.covers1624.wt.forge.gradle.data.FG3McpMappingData;
 import net.covers1624.wt.forge.gradle.data.FGPluginData;
 import net.covers1624.wt.forge.remap.CSVRemapper;
 import net.covers1624.wt.forge.remap.DependencyRemapper;
@@ -182,20 +183,16 @@ public class ForgeExtension implements Extension {
                 }
                 remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new SRGToMCPRemapper(mappingData))));
             } else {
-                Optional<MavenDependency> mappingsDep = forgeModule.getConfigurations().values()//
-                        .parallelStream()//
-                        .flatMap(e -> e.getDependencies().parallelStream())//
-                        .filter(e -> e instanceof MavenDependency)//
-                        .map(e -> (MavenDependency) e)//
-                        .filter(e -> e.getNotation().group.equals("net.minecraft") && e.getNotation().module.startsWith("mappings_"))//
-                        .findFirst();
-                mappingsDep.map(MavenDependency::getClasses).ifPresent(path -> {
+                FG3McpMappingData mappingData = projectData.getData(FG3McpMappingData.class);
+                if (mappingData != null) {
                     try {
-                        remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new CSVRemapper(path))));
+                        remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new CSVRemapper(mappingData.mappingsZip.toPath()))));
                     } catch (IOException e) {
                         logger.warn("Unable to setup CSVReampper!", e);
                     }
-                });
+                } else {
+                    logger.warn("Forge project does not have FG3McpMappingData!");
+                }
                 //noinspection OptionalAssignedToNull
                 if (remapper == null) {
                     remapper = Optional.empty();
