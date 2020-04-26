@@ -3,6 +3,7 @@ package net.covers1624.wt.forge.remap;
 import com.google.gson.reflect.TypeToken;
 import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.api.impl.dependency.MavenDependencyImpl;
+import net.covers1624.wt.util.JarRemapper;
 import net.covers1624.wt.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

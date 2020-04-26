@@ -1,7 +1,6 @@
 package net.covers1624.wt.api.module;
 
-import net.covers1624.wt.api.data.ProjectData;
-import net.covers1624.wt.api.data.PluginData;
+import net.covers1624.wt.api.gradle.data.ProjectData;
 
 /**
  * Represents a Module that has been constructed from Gradle.

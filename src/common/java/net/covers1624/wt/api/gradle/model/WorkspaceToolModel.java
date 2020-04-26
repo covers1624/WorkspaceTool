@@ -1,6 +1,6 @@
 package net.covers1624.wt.api.gradle.model;
 
-import net.covers1624.wt.api.data.ProjectData;
+import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.event.VersionedClass;
 
 import java.io.Serializable;

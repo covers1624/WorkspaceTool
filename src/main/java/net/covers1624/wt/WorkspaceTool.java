@@ -8,11 +8,11 @@ import groovy.lang.GroovyShell;
 import net.covers1624.wt.api.Extension;
 import net.covers1624.wt.api.ExtensionDetails;
 import net.covers1624.wt.api.WorkspaceToolContext;
-import net.covers1624.wt.api.data.*;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.api.dependency.ScalaSdkDependency;
 import net.covers1624.wt.api.framework.FrameworkHandler;
+import net.covers1624.wt.api.gradle.data.*;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.gradle.model.impl.WorkspaceToolModelImpl;
 import net.covers1624.wt.api.impl.dependency.DependencyLibraryImpl;
@@ -30,6 +30,7 @@ import net.covers1624.wt.api.module.GradleBackedModule;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.api.script.ModdingFramework;
+import net.covers1624.wt.api.script.NullFramework;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.script.module.ModuleSpec;
 import net.covers1624.wt.api.script.runconfig.RunConfig;
@@ -41,11 +42,7 @@ import net.covers1624.wt.gradle.GradleManagerImpl;
 import net.covers1624.wt.gradle.GradleModelCacheImpl;
 import net.covers1624.wt.tail.AnsiTailConsoleAppender;
 import net.covers1624.wt.tail.OverallProgressTail;
-import net.covers1624.wt.util.DependencyAggregator;
-import net.covers1624.wt.util.MavenNotation;
-import net.covers1624.wt.util.ParameterFormatter;
-import net.covers1624.wt.util.SimpleServiceLoader;
-import net.covers1624.wt.util.ScalaVersion;
+import net.covers1624.wt.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
@@ -156,6 +153,9 @@ public class WorkspaceTool {
 
         context.gradleManager.includeResourceMarker("gradle_plugin.marker");
 
+        context.frameworkRegistry.registerScriptImpl(NullFramework.class, NullFramework::new);
+        context.frameworkRegistry.registerFrameworkHandler(NullFramework.class, FrameworkHandler.NullFrameworkHandler::new);
+
         logger.info("Preparing script..");
         Binding binding = new Binding();
         binding.setProperty(AbstractWorkspaceScript.FR_PROP, context.frameworkRegistry);
@@ -216,9 +216,9 @@ public class WorkspaceTool {
                         if (notation.group.startsWith("org.scala-lang")) {
                             if (notation.module.equals("scala-compiler")) {
                                 sdkCandidate.setScalac(dep);
-                            } else {
-                                sdkCandidate.addLibrary(dep);
                             }
+                            sdkCandidate.addLibrary(dep);
+
                         }
                     });
             if (sdkCandidate.getScalac() != null) {

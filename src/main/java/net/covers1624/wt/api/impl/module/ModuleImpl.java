@@ -1,7 +1,7 @@
 package net.covers1624.wt.api.impl.module;
 
 import net.covers1624.wt.api.WorkspaceToolContext;
-import net.covers1624.wt.api.data.ProjectData;
+import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;

@@ -1,6 +1,6 @@
 package net.covers1624.wt.api.impl.dependency;
 
-import net.covers1624.wt.api.data.ConfigurationData;
+import net.covers1624.wt.api.gradle.data.ConfigurationData;
 import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.util.MavenNotation;
 

@@ -1,6 +1,6 @@
 package net.covers1624.wt.gradle;
 
-import net.covers1624.wt.api.data.BuildProperties;
+import net.covers1624.wt.api.gradle.data.BuildProperties;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
 

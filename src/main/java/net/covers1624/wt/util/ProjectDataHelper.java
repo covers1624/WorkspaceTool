@@ -1,8 +1,8 @@
 package net.covers1624.wt.util;
 
-import net.covers1624.wt.api.data.ConfigurationData;
-import net.covers1624.wt.api.data.ProjectData;
-import net.covers1624.wt.api.data.SourceSetData;
+import net.covers1624.wt.api.gradle.data.ConfigurationData;
+import net.covers1624.wt.api.gradle.data.ProjectData;
+import net.covers1624.wt.api.gradle.data.SourceSetData;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.impl.dependency.MavenDependencyImpl;

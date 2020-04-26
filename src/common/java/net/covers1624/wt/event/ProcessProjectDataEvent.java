@@ -1,7 +1,7 @@
 package net.covers1624.wt.event;
 
 import net.covers1624.wt.api.WorkspaceToolContext;
-import net.covers1624.wt.api.data.ProjectData;
+import net.covers1624.wt.api.gradle.data.ProjectData;
 
 /**
  * Created by covers1624 on 26/10/19.

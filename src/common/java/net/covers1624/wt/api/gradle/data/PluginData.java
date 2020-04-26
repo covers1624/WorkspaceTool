@@ -1,4 +1,4 @@
-package net.covers1624.wt.api.data;
+package net.covers1624.wt.api.gradle.data;
 
 import net.covers1624.wt.event.VersionedClass;
 

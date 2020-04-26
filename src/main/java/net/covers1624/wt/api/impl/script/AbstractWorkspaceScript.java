@@ -6,6 +6,7 @@ import net.covers1624.wt.api.framework.FrameworkRegistry;
 import net.covers1624.wt.api.impl.script.module.ModuleContainerImpl;
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.script.ModdingFramework;
+import net.covers1624.wt.api.script.NullFramework;
 import net.covers1624.wt.api.script.Workspace;
 import net.covers1624.wt.api.script.WorkspaceScript;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
@@ -79,7 +80,7 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
             throw new IllegalArgumentException("Multi framework is currently not supported.");
         }
         if (frameworkClass == null) {
-            frameworkClass = clazz;
+            frameworkClass = clazz != null ? clazz : NullFramework.class;
             framework = frameworkRegistry.constructScriptImpl(frameworkClass);
         }
         consumer.accept((T) framework);

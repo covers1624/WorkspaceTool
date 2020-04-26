@@ -1,6 +1,6 @@
 package net.covers1624.wt.api.gradle;
 
-import net.covers1624.wt.api.data.ExtraData;
+import net.covers1624.wt.api.gradle.data.ExtraData;
 
 import java.nio.file.Path;
 import java.util.Set;

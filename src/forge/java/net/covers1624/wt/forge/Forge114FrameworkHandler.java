@@ -5,9 +5,9 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import net.covers1624.wt.api.WorkspaceToolContext;
-import net.covers1624.wt.api.data.ProjectData;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.dependency.SourceSetDependency;
+import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.impl.dependency.MavenDependencyImpl;
 import net.covers1624.wt.api.impl.dependency.SourceSetDependencyImpl;
@@ -20,6 +20,8 @@ import net.covers1624.wt.api.tail.DownloadProgressTail;
 import net.covers1624.wt.api.tail.TailGroup;
 import net.covers1624.wt.api.tail.TextTail;
 import net.covers1624.wt.forge.api.script.Forge114;
+import net.covers1624.wt.forge.util.AccessExtractor;
+import net.covers1624.wt.forge.util.AtFile;
 import net.covers1624.wt.mc.data.AssetIndexJson;
 import net.covers1624.wt.mc.data.VersionInfoJson;
 import net.covers1624.wt.mc.data.VersionManifestJson;
@@ -150,12 +152,15 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
                     .forProjectDirectory(forgeDir.toFile())//
                     .connect()) {
                 connection.newBuild()//
-                        .forTasks("clean", "setup")//
+                        .forTasks("clean", "setup", ":forge:compileJava")//
                         .withArguments("-si")//
                         .setStandardOutput(System.out)//
                         .setStandardError(System.err)//
                         .run();
             }
+            Path accessList = context.cacheDir.resolve("forge_access_list.cfg.xz");
+            AtFile atFile = AccessExtractor.extractAccess(Collections.singleton(forgeDir.resolve("projects/forge/build/classes/java/main")));
+            atFile.write(accessList, AtFile.CompressionMethod.XZ);
             hashContainer.remove(HASH_MARKER_SETUP);//clear the marker.
         }
         try {

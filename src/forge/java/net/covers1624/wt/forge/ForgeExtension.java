@@ -5,13 +5,14 @@ import com.electronwill.nightconfig.core.file.FileConfig;
 import net.covers1624.wt.api.Extension;
 import net.covers1624.wt.api.ExtensionDetails;
 import net.covers1624.wt.api.WorkspaceToolContext;
-import net.covers1624.wt.api.data.ConfigurationData;
-import net.covers1624.wt.api.data.ProjectData;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.api.dependency.ScalaSdkDependency;
 import net.covers1624.wt.api.framework.FrameworkRegistry;
 import net.covers1624.wt.api.gradle.GradleManager;
+import net.covers1624.wt.api.gradle.data.ConfigurationData;
+import net.covers1624.wt.api.gradle.data.ProjectData;
+import net.covers1624.wt.api.impl.dependency.MavenDependencyImpl;
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;
@@ -21,6 +22,7 @@ import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.script.module.ModuleSpec;
 import net.covers1624.wt.api.script.runconfig.RunConfig;
 import net.covers1624.wt.event.*;
+import net.covers1624.wt.forge.api.export.ForgeExportedData;
 import net.covers1624.wt.forge.api.impl.Forge112Impl;
 import net.covers1624.wt.forge.api.impl.Forge114Impl;
 import net.covers1624.wt.forge.api.impl.Forge114ModuleSpecTemplate;
@@ -34,10 +36,12 @@ import net.covers1624.wt.forge.gradle.data.FG3McpMappingData;
 import net.covers1624.wt.forge.gradle.data.FGPluginData;
 import net.covers1624.wt.forge.remap.CSVRemapper;
 import net.covers1624.wt.forge.remap.DependencyRemapper;
-import net.covers1624.wt.forge.remap.JarRemapper;
 import net.covers1624.wt.forge.remap.SRGToMCPRemapper;
 import net.covers1624.wt.mc.data.VersionInfoJson;
+import net.covers1624.wt.util.JarRemapper;
+import net.covers1624.wt.util.JarStripper;
 import net.covers1624.wt.util.TypedMap;
+import net.covers1624.wt.util.Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,6 +53,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * All Forge related handling for WorkspaceTool
@@ -172,45 +178,62 @@ public class ForgeExtension implements Extension {
         WorkspaceToolContext context = event.getContext();
         //Used as latch to compute. Empty means something else from null.
         //noinspection OptionalAssignedToNull
-        if (remapper == null) {
-            GradleBackedModule forgeModule = findForgeModule(context);
-            ProjectData projectData = forgeModule.getProjectData();
-            FGPluginData pluginData = projectData.getData(FGPluginData.class);
-            if (pluginData != null && pluginData.version.isFg2()) {
-                FG2McpMappingData mappingData = projectData.getData(FG2McpMappingData.class);
-                if (mappingData == null) {
-                    throw new RuntimeException("Forge module missing mapping data.");
-                }
-                remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new SRGToMCPRemapper(mappingData))));
-            } else {
-                FG3McpMappingData mappingData = projectData.getData(FG3McpMappingData.class);
-                if (mappingData != null) {
-                    try {
-                        remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new CSVRemapper(mappingData.mappingsZip.toPath()))));
-                    } catch (IOException e) {
-                        logger.warn("Unable to setup CSVReampper!", e);
+        if (event.getContext().workspaceScript.getFramework() instanceof ForgeFramework) {
+            if (remapper == null) {
+                GradleBackedModule forgeModule = findForgeModule(context);
+                ProjectData projectData = forgeModule.getProjectData();
+                FGPluginData pluginData = projectData.pluginData.getData(FGPluginData.class);
+                if (pluginData != null && pluginData.version.isFg2()) {
+                    FG2McpMappingData mappingData = projectData.getData(FG2McpMappingData.class);
+                    if (mappingData == null) {
+                        throw new RuntimeException("Forge module missing mapping data.");
                     }
+                    remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new SRGToMCPRemapper(mappingData))));
                 } else {
-                    logger.warn("Forge project does not have FG3McpMappingData!");
+                    ProjectData forgeSubModuleData = projectData.subProjects.stream()//
+                            .filter(e -> e.name.equals("forge"))//
+                            .findFirst()//
+                            .orElseThrow(() -> new RuntimeException("'forge' submodule not found on Forge project."));
+                    FG3McpMappingData mappingData = forgeSubModuleData.getData(FG3McpMappingData.class);
+                    if (mappingData != null) {
+                        try {
+                            remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new CSVRemapper(mappingData.mappingsZip.toPath()))));
+                        } catch (IOException e) {
+                            logger.warn("Unable to setup CSVReampper!", e);
+                        }
+                    } else {
+                        logger.warn("Forge project does not have FG3McpMappingData!");
+                    }
+                    //noinspection OptionalAssignedToNull
+                    if (remapper == null) {
+                        remapper = Optional.empty();
+                    }
                 }
-                //noinspection OptionalAssignedToNull
-                if (remapper == null) {
-                    remapper = Optional.empty();
+            }
+            Dependency dep = event.getDependency();
+            remapper.ifPresent(remapper -> {
+                Configuration config = event.getDependencyConfig();
+                if (dep instanceof MavenDependency) {
+                    MavenDependency mvnDep = (MavenDependency) dep;
+                    if (mvnDep.getNotation().group.startsWith("deobf.")) {
+                        event.setResult(null);
+                    } else if (config.getName().equals("deobfCompile") || config.getName().equals("deobfProvided")) {
+                        event.setResult(remapper.process(mvnDep));
+                    }
+                }
+            });
+            //HACK, Remove Scala classes from Scorge jar.
+            if (dep instanceof MavenDependency) {
+                MavenDependency mvnDep = (MavenDependency) dep;
+                if (mvnDep.getNotation().group.equals("net.minecraftforge") && mvnDep.getNotation().module.equals("Scorge")) {
+                    String path = mvnDep.getNotation().toPath();
+                    Path output = context.cacheDir.resolve("scorge_strip").resolve(path);
+                    JarStripper.stripJar(mvnDep.getClasses(), output, e -> !e.toString().startsWith("scala/"));
+                    MavenDependency newDep = new MavenDependencyImpl(mvnDep).setClasses(output);
+                    event.setResult(newDep);
                 }
             }
         }
-        remapper.ifPresent(remapper -> {
-            Configuration config = event.getDependencyConfig();
-            Dependency dep = event.getDependency();
-            if (dep instanceof MavenDependency) {
-                MavenDependency mvnDep = (MavenDependency) dep;
-                if (mvnDep.getNotation().group.startsWith("deobf.")) {
-                    event.setResult(null);
-                } else if (config.getName().equals("deobfCompile") || config.getName().equals("deobfProvided")) {
-                    event.setResult(remapper.process(mvnDep));
-                }
-            }
-        });
     }
 
     public void processModules(ProcessModulesEvent event) {
@@ -243,17 +266,17 @@ public class ForgeExtension implements Extension {
                     .findFirst()//
                     .orElseThrow(() -> new RuntimeException("Missing forge submodule."));
             Map<String, String> envVars = new HashMap<>();
-            String mcVer = rootProject.extraProperties.get("MC_VERSION");
+            String mcVersion = rootProject.extraProperties.get("MC_VERSION");
             VersionInfoJson versionInfo = context.blackboard.get(VERSION_INFO);
 
             envVars.put("assetIndex", versionInfo.assetIndex.id);
             envVars.put("assetDirectory", context.blackboard.get(ASSETS_PATH).toAbsolutePath().toString());
-            envVars.put("MC_VERSION", mcVer);
+            envVars.put("MC_VERSION", mcVersion);
             envVars.put("MCP_VERSION", rootProject.extraProperties.get("MCP_VERSION"));
             envVars.put("FORGE_GROUP", forgeSubProject.group);
             envVars.put("FORGE_SPEC", forgeSubProject.extraProperties.get("SPEC_VERSION"));
             //TODO, This strips the minecraft version from the beginning, perhaps strip branch name off the end?
-            envVars.put("FORGE_VERSION", forgeSubProject.version.substring(mcVer.length() + 1).replace("-wt-local", ""));
+            envVars.put("FORGE_VERSION", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""));
             envVars.put("LAUNCHER_VERSION", forgeSubProject.extraProperties.get("SPEC_VERSION"));
             for (RunConfig runConfig : context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values()) {
                 runConfig.envVar(envVars);
@@ -282,6 +305,27 @@ public class ForgeExtension implements Extension {
         WorkspaceToolContext context = event.getContext();
         if (context.workspaceScript.getFrameworkClass().equals(Forge114.class)) {
             List<String> modClasses = new ArrayList<>();
+            ForgeExportedData exportedData = new ForgeExportedData();
+            Forge114 forge114 = (Forge114) context.workspaceScript.getFramework();
+            GradleBackedModule forgeModule = findForgeModule(context);
+            ProjectData rootProject = forgeModule.getProjectData();
+            ProjectData forgeSubProject = rootProject.subProjects.stream()//
+                    .filter(e -> e.name.equals("forge"))//
+                    .findFirst()//
+                    .orElseThrow(() -> new RuntimeException("Missing forge submodule."));
+            String mcVersion = rootProject.extraProperties.get("MC_VERSION");
+
+            exportedData.forgeRepo = forge114.getUrl();
+            exportedData.forgeCommit = forge114.getCommit();
+            exportedData.forgeBranch = forge114.getBranch();
+            exportedData.forgeVersion = forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", "");
+            exportedData.mcVersion = mcVersion;
+            FG3McpMappingData fg3McpMappingData = forgeModule.getProjectData().getData(FG3McpMappingData.class);
+            if (fg3McpMappingData != null) {
+                exportedData.fg3Data = new ForgeExportedData.FG3MCPData(fg3McpMappingData);
+            }
+
+            //TODO, generate AccessList.
 
             ModuleContainerSpec moduleContainerSpec = context.workspaceScript.getModuleContainer();
             Map<String, ModuleSpec> customModules = moduleContainerSpec.getCustomModules();
@@ -295,6 +339,15 @@ public class ForgeExtension implements Extension {
                     moduleMods.getModSourceSets().entrySet().stream()//
                             .filter(e -> e.getValue().equals(sourceSet))//
                             .forEach(e -> {
+                                ForgeExportedData.ModData modData = new ForgeExportedData.ModData();
+                                modData.moduleId = module.getName();
+                                modData.modId = e.getKey();
+                                modData.moduleName = moduleName;
+                                modData.sourceSet = sourceSet;
+                                module.getSourceMap().forEach((k, v) -> modData.sources.put(k, v.stream().map(Path::toFile).collect(toList())));
+                                modData.sources.put("resources", module.getResources().stream().map(Path::toFile).collect(toList()));
+                                modData.output = module.getOutput().toFile();
+                                exportedData.mods.add(modData);
                                 //Add twice, forge doesnt expect sources and resources to be in the same folder??
                                 modClasses.add(append(e.getKey(), module.getOutput()));
                                 modClasses.add(append(e.getKey(), module.getOutput()));
@@ -313,10 +366,20 @@ public class ForgeExtension implements Extension {
                                         .map(mi -> mi.get("modId"))//
                                         .map(e -> (String) e)//
                                         .filter(Objects::nonNull)//
-                                        .forEach(mod -> {
+                                        .forEach(modId -> {
+                                            ForgeExportedData.ModData modData = new ForgeExportedData.ModData();
+                                            modData.moduleId = module.getName();
+                                            modData.modId = modId;
+                                            modData.moduleName = moduleName;
+                                            modData.sourceSet = sourceSet;
+                                            module.getSourceMap().forEach((k, v) -> modData.sources.put(k, v.stream().map(Path::toFile).collect(toList())));
+                                            modData.sources.put("resources", module.getResources().stream().map(Path::toFile).collect(toList()));
+                                            modData.output = module.getOutput().toFile();
+                                            exportedData.mods.add(modData);
+
                                             //Add twice, forge doesnt expect sources and resources to be in the same folder??
-                                            modClasses.add(append(mod, module.getOutput()));
-                                            modClasses.add(append(mod, module.getOutput()));
+                                            modClasses.add(append(modId, module.getOutput()));
+                                            modClasses.add(append(modId, module.getOutput()));
                                         });
                             }
                         }
@@ -328,6 +391,7 @@ public class ForgeExtension implements Extension {
             for (RunConfig runConfig : context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values()) {
                 runConfig.envVar(envVars);
             }
+            Utils.toJson(exportedData, ForgeExportedData.class, context.cacheDir.resolve(ForgeExportedData.PATH));
         }
     }
 

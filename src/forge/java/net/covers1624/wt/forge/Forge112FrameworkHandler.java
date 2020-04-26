@@ -15,7 +15,7 @@ import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.forge.api.script.Forge112;
-import net.covers1624.wt.forge.util.ATMerger;
+import net.covers1624.wt.forge.util.AtFile;
 import net.covers1624.wt.util.MavenNotation;
 import net.covers1624.wt.util.ProjectDataHelper;
 import net.covers1624.wt.util.Utils;
@@ -62,9 +62,9 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             if (hashContainer.check(HASH_MERGED_AT, atHash)) {
                 needsSetup = true;
                 hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
-                ATMerger atMerger = new ATMerger();
-                atFiles.forEach(atMerger::consume);
-                atMerger.write(mergedAT);
+                AtFile atFile = new AtFile();
+                atFiles.stream().map(AtFile::new).forEach(atFile::merge);
+                atFile.write(mergedAT);
                 hashContainer.set(HASH_MERGED_AT, atHash);
             }
         }
@@ -101,6 +101,7 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         Module forgeModule = new ModuleImpl.GradleModule("Forge", forgeDir, model.getProjectData());
         context.frameworkModules.add(forgeModule);
         Map<String, Configuration> configurations = ProjectDataHelper.buildConfigurations(forgeModule, model.getProjectData());
+        forgeModule.setConfigurations(configurations);
         Configuration forgeGradleMcDeps = configurations.get("forgeGradleMcDeps");
         Configuration runtime = configurations.get("runtime");
         addSourceSet(forgeModule, "main", ss -> {

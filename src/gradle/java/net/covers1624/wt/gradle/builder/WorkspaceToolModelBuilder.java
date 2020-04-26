@@ -3,7 +3,7 @@ package net.covers1624.wt.gradle.builder;
 import net.covers1624.gradlestuff.dependencies.ConfigurationVisitor;
 import net.covers1624.gradlestuff.dependencies.ConfigurationWalker;
 import net.covers1624.gradlestuff.dependencies.DependencyName;
-import net.covers1624.wt.api.data.*;
+import net.covers1624.wt.api.gradle.data.*;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.gradle.model.impl.WorkspaceToolModelImpl;
 import net.covers1624.wt.event.VersionedClass;

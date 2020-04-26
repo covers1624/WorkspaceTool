@@ -58,6 +58,7 @@ import java.nio.file.*;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -92,6 +93,10 @@ public class Utils {
 
     public static Runnable sneak(ThrowingRunnable<Throwable> tr) {
         return () -> sneaky(tr);
+    }
+
+    public static <T, R> Function<T, R> sneak(ThrowingFunction<T, R, Throwable> tf) {
+        return e -> sneaky(() -> tf.apply(e));
     }
 
     public static void sneaky(ThrowingRunnable<Throwable> tr) {
@@ -287,6 +292,19 @@ public class Utils {
                 toDelete.pop().delete();
             }
         }
+    }
+
+    public static Path makeFile(Path path) {
+        if (Files.notExists(path)) {
+            Path parent = path.toAbsolutePath().getParent();
+            if (Files.notExists(parent)) {
+                sneaky(() -> Files.createDirectories(parent));
+            }
+        } else {
+            sneaky(() -> Files.delete(path));
+        }
+        sneaky(() -> Files.createFile(path));
+        return path;
     }
 
     /**

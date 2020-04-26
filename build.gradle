@@ -76,7 +76,7 @@ dependencies {
 
     //Common
     common 'org.ow2.asm:asm:7.0'
-    common 'org.ow2.asm:asm-commons:7.0'
+    common 'org.ow2.asm:asm-commons:7.+'
     common 'org.apache.logging.log4j:log4j-core:2.11.1'
     common 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
     common 'org.apache.logging.log4j:log4j-jul:2.11.1'
@@ -96,6 +96,9 @@ dependencies {
     common 'com.electronwill.night-config:core:3.6.0'
     common 'com.electronwill.night-config:toml:3.6.0'
     common 'com.opencsv:opencsv:5.0'
+    common "org.tukaani:xz:1.8"
+    common "org.apache.commons:commons-compress:1.8.1"
+    common 'org.apache.commons:commons-collections4:4.3'
     commonCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //mavenResolver
@@ -132,6 +135,8 @@ dependencies {
 
     //Main
     compile 'net.covers1624.workspacetool.deps:gradle-api:4.10.3'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
+    compile 'org.apache.logging.log4j:log4j-jul:2.11.1'
     compile sourceSets.common.output
     runtimeOnly sourceSets.forge.output
     runtimeOnly sourceSets.intellij.output
@@ -239,7 +244,7 @@ task makeShell() {
         def libs = new HashSet()
         sourceSets.each { libs += it.runtimeClasspath }
         libs = libs.collect { it.absolutePath }
-        libs.each {println it}
+        libs.each { println it }
         def lines = []
         lines << "#!/bin/bash"
         lines << "java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -classpath \"${libs.join(":")}\" ${shellMain}"

@@ -2,6 +2,7 @@ package net.covers1624.wt.api.framework;
 
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.script.ModdingFramework;
+import net.covers1624.wt.api.script.NullFramework;
 
 /**
  * This is used to control the Framework API for the exported workspace.
@@ -22,5 +23,15 @@ public interface FrameworkHandler<T extends ModdingFramework> {
      * @param moduleList    The ModuleList.
      */
     void constructFrameworkModules(T frameworkImpl);
+
+    class NullFrameworkHandler implements FrameworkHandler<NullFramework> {
+
+        public NullFrameworkHandler(WorkspaceToolContext ctx) {
+        }
+
+        @Override
+        public void constructFrameworkModules(NullFramework frameworkImpl) {
+        }
+    }
 
 }

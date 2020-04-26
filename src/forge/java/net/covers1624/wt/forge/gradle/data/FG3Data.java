@@ -1,6 +1,6 @@
 package net.covers1624.wt.forge.gradle.data;
 
-import net.covers1624.wt.api.data.ExtraData;
+import net.covers1624.wt.api.gradle.data.ExtraData;
 
 import java.io.File;
 import java.util.ArrayList;

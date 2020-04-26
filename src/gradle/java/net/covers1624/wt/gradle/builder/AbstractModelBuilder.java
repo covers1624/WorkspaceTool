@@ -1,6 +1,6 @@
 package net.covers1624.wt.gradle.builder;
 
-import net.covers1624.wt.api.data.BuildProperties;
+import net.covers1624.wt.api.gradle.data.BuildProperties;
 import net.covers1624.wt.event.VersionedClass;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;

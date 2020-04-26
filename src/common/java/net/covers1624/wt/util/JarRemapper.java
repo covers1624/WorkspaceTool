@@ -21,7 +21,7 @@
  *
  */
 
-package net.covers1624.wt.forge.remap;
+package net.covers1624.wt.util;
 
 import net.covers1624.wt.util.Utils;
 import org.objectweb.asm.ClassReader;
@@ -116,47 +116,4 @@ public class JarRemapper {
             return FileVisitResult.CONTINUE;
         }
     }
-
-    //    public void process(File input, File output) {
-    //        try (JarFile inputJar = new JarFile(input, false)) {
-    //            List<Pair<JarEntry, byte[]>> toProcess = inputJar//
-    //                    .stream()//
-    //                    .filter(e -> !shouldStrip(e.getName()))//
-    //                    .map(e -> Pair.of(e, Utils.doLoudly(() -> Utils.toBytes(inputJar.getInputStream(e)))))//
-    //                    .collect(Collectors.toList());
-    //            List<Pair<JarEntry, byte[]>> processed = toProcess.parallelStream()//
-    //                    .map(e -> {
-    //                        String name = e.getLeft().getName();
-    //                        if (name.equals("META-INF/MANIFEST.MF")) {
-    //                            Manifest mf = Utils.doLoudly(() -> new Manifest(Utils.toInputStream(e.getRight())));
-    //                            mf.getEntries().clear();
-    //                            ByteArrayOutputStream out = new ByteArrayOutputStream();
-    //                            Utils.doLoudly(() -> mf.write(out));
-    //                            return Pair.of(new JarEntry(name), out.toByteArray());
-    //                        } else if (!e.getLeft().isDirectory() && name.endsWith(".class")) {
-    //                            ClassReader reader = new ClassReader(e.getRight());
-    //                            ClassWriter writer = new ClassWriter(0);
-    //                            ClassRemapper remapper = new ClassRemapper(writer, this.remapper);
-    //                            reader.accept(remapper, 0);
-    //                            return Pair.of(new JarEntry(name), writer.toByteArray());
-    //                        } else {
-    //                            return Pair.of(new JarEntry(e.getLeft()), e.getRight());
-    //                        }
-    //                    })//
-    //                    .collect(Collectors.toList());
-    //            try (JarOutputStream jout = new JarOutputStream(new FileOutputStream(Utils.makeFile(output)))) {
-    //                for (Pair<JarEntry, byte[]> pair : processed) {
-    //                    jout.putNextEntry(pair.getLeft());
-    //                    jout.write(pair.getRight());
-    //                    jout.closeEntry();
-    //                }
-    //            }
-    //        } catch (IOException e) {
-    //            e.printStackTrace();
-    //        }
-    //    }
-    //
-    //    private static boolean shouldStrip(String name) {
-    //        return name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA");
-    //    }
 }

@@ -1,52 +1,44 @@
-/*
- * Copyright (c) 2018-2019 covers1624
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
-
 package net.covers1624.wt.forge.util;
 
+import net.covers1624.wt.util.ThrowingFunction;
 import net.covers1624.wt.util.Utils;
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static net.covers1624.wt.util.ParameterFormatter.format;
 
 /**
- * Created by covers1624 on 8/01/19.
+ * Created by covers1624 on 16/11/19.
  */
-public class ATMerger {
+public class AtFile {
 
     private Map<String, AtClass> classMap = new HashMap<>();
 
-    public void consume(Path atFile) {
-        try (Stream<String> lines = Files.lines(atFile)) {
-            lines.forEach(_line -> {
+    public AtFile() {
+    }
+
+    public AtFile(Path path) {
+        this(path, CompressionMethod.NONE);
+    }
+
+    public AtFile(Path path, CompressionMethod cMethod) {
+        this();
+        parse(path, cMethod);
+    }
+
+    private void parse(Path atFile, CompressionMethod cMethod) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(cMethod.wrapInput(Files.newInputStream(atFile))))) {
+            reader.lines().forEach(_line -> {
                 String line = _line;
                 int hashIdx = line.indexOf('#');
                 if (hashIdx != -1) {
@@ -117,11 +109,47 @@ public class ATMerger {
         }
     }
 
+    public void merge(AtFile other) {
+        other.classMap.forEach((cName, cNode) -> {
+            AtClass atClass = getClass(cName);
+            atClass.mergeAccess(cNode.accessChange);
+            atClass.mergeFinal(cNode.finalChange);
+            cNode.methods.forEach((mName, mNode) -> {
+                AtMethod atMethod = atClass.methods.get("*()");
+                if (atMethod == null) {
+                    atMethod = atClass.getMethod(mName);
+                    if (atMethod.isWild()) {
+                        AtMethod finalAtMethod = atMethod;
+                        atClass.methods.values().removeIf(e -> e != finalAtMethod);
+                    }
+                }
+                atMethod.mergeAccess(mNode.accessChange);
+                atMethod.mergeFinal(mNode.finalChange);
+            });
+            cNode.fields.forEach((fName, fNode) -> {
+                AtField atField = atClass.fields.get("*");
+                if (atField == null) {
+                    atField = atClass.getField(fName);
+                    if (atField.isWild()) {
+                        AtField finalAtField = atField;
+                        atClass.fields.values().removeIf(e -> e != finalAtField);
+                    }
+                }
+                atField.mergeAccess(fNode.accessChange);
+                atField.mergeFinal(fNode.finalChange);
+            });
+        });
+    }
+
     public void write(Path outputFile) {
+        write(outputFile, CompressionMethod.NONE);
+    }
+
+    public void write(Path outputFile, CompressionMethod cMethod) {
         if (Files.exists(outputFile)) {
             Utils.sneaky(() -> Files.delete(outputFile));
         }
-        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(outputFile, WRITE, CREATE))) {
+        try (PrintWriter writer = new PrintWriter(cMethod.wrapOutput(Files.newOutputStream(outputFile, WRITE, CREATE)))) {
             boolean first = true;
             for (AtClass clazz : classMap.values()) {
                 if (!first) {
@@ -138,9 +166,14 @@ public class ATMerger {
                     writer.println(format("{}{} {} {}{}", method.accessChange.seg, method.finalChange.seg, clazz.name, method.name, method.desc));
                 }
             }
+            writer.flush();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to write merged at to: " + outputFile, e);
+            throw new RuntimeException("Unable to write AtFile to: " + outputFile, e);
         }
+    }
+
+    public AtClass getClass(String className) {
+        return classMap.computeIfAbsent(className, AtClass::new);
     }
 
     public static abstract class AtNode {
@@ -173,12 +206,29 @@ public class ATMerger {
             this.name = name;
         }
 
+        public AtMethod getMethod(String name) {
+            return methods.computeIfAbsent(name, AtMethod::new);
+        }
+
+        public AtField getField(String name) {
+            return fields.computeIfAbsent(name, AtField::new);
+        }
+
         @Override
         public void mergeAccess(AccessChange other) {
             if (accessChange == null) {
                 accessChange = other;
             } else {
                 super.mergeAccess(other);
+            }
+        }
+
+        @Override
+        public void mergeFinal(FinalChange other) {
+            if (finalChange == null) {
+                finalChange = other;
+            } else {
+                super.mergeFinal(other);
             }
         }
     }
@@ -220,6 +270,7 @@ public class ATMerger {
     public enum AccessChange {
         PUBLIC,
         PROTECTED,
+        PACKAGE,
         PRIVATE;
 
         public String seg;
@@ -274,6 +325,28 @@ public class ATMerger {
                 return other;
             }
             return this;
+        }
+    }
+
+    public enum CompressionMethod {
+        NONE(e -> e, e -> e),
+        XZ(XZCompressorInputStream::new, XZCompressorOutputStream::new),
+        ZIP(InflaterInputStream::new, DeflaterOutputStream::new);
+
+        private ThrowingFunction<InputStream, InputStream, IOException> isFunc;
+        private ThrowingFunction<OutputStream, OutputStream, IOException> osFunc;
+
+        CompressionMethod(ThrowingFunction<InputStream, InputStream, IOException> isFunc, ThrowingFunction<OutputStream, OutputStream, IOException> osFunc) {
+            this.isFunc = isFunc;
+            this.osFunc = osFunc;
+        }
+
+        public InputStream wrapInput(InputStream is) throws IOException {
+            return isFunc.apply(is);
+        }
+
+        public OutputStream wrapOutput(OutputStream os) throws IOException {
+            return osFunc.apply(os);
         }
 
     }

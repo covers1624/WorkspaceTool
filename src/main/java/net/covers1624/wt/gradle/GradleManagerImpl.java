@@ -4,6 +4,7 @@ import net.covers1624.wt.api.gradle.GradleManager;
 import net.covers1624.wt.util.CopyingFileVisitor;
 import net.covers1624.wt.util.Utils;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -20,6 +21,8 @@ import static net.covers1624.wt.util.Utils.*;
  * Created by covers1624 on 13/6/19.
  */
 public class GradleManagerImpl implements Closeable, GradleManager {
+
+    private static final Logger logger = LogManager.getLogger("GradleManagerImpl");
 
     private Set<Object> scriptClasspathMarkerClasses = new HashSet<>();
     private Set<String> scriptClasspathMarkerResources = new HashSet<>();
@@ -69,9 +72,10 @@ public class GradleManagerImpl implements Closeable, GradleManager {
     @Override
     public Path getInitScript() {
         if (initScript == null) {
+
             initScript = sneaky(() -> Files.createTempFile("wt_init", ".gradle"));
             tmpFiles.add(initScript);
-            LogManager.getLogger("GradleManagerImpl").info(initScript);
+            logger.info("Building InitScript..");
             //TODO, cache.
             //Compute our additions.
             String depLine = Stream.concat(//
@@ -123,6 +127,7 @@ public class GradleManagerImpl implements Closeable, GradleManager {
             scriptLines.remove(idx);
             scriptLines.add(idx, depLine);
             sneaky(() -> Files.write(initScript, scriptLines));
+            logger.info("InitScript built to: {}", initScript);
         }
         return initScript;
     }

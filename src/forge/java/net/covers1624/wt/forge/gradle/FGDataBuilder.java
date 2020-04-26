@@ -1,9 +1,9 @@
 package net.covers1624.wt.forge.gradle;
 
 import groovy.lang.MetaProperty;
-import net.covers1624.wt.api.data.ConfigurationData;
-import net.covers1624.wt.api.data.PluginData;
-import net.covers1624.wt.api.data.ProjectData;
+import net.covers1624.wt.api.gradle.data.ConfigurationData;
+import net.covers1624.wt.api.gradle.data.PluginData;
+import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.event.VersionedClass;
 import net.covers1624.wt.forge.gradle.data.*;
 import net.covers1624.wt.gradle.builder.ExtraDataBuilder;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 /**
  * Created by covers1624 on 18/6/19.
  */
-@VersionedClass (4)
+@VersionedClass (5)
 public class FGDataBuilder implements ExtraDataBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(FGDataBuilder.class);
@@ -219,7 +219,6 @@ public class FGDataBuilder implements ExtraDataBuilder {
                 data.accessTransformers = tryGetProperty(extension, "accessTransformers");
                 data.sideAnnotationStrippers = tryGetProperty(extension, "sideAnnotationStrippers");
             }
-
             Optional<ConfigurationData.MavenDependency> mappings = projectData.configurations.values().stream()//
                     .flatMap(e -> e.dependencies.stream())//
                     .filter(e -> e instanceof ConfigurationData.MavenDependency)//
@@ -229,6 +228,7 @@ public class FGDataBuilder implements ExtraDataBuilder {
                                     && e.mavenNotation.module.startsWith("mappings_"))//
                     .findFirst();
             mappings.ifPresent(e -> {
+                logger.info("Found MCP mappings.");
                 FG3McpMappingData fg3MappingData = new FG3McpMappingData();
                 fg3MappingData.mappingsArtifact = e.mavenNotation;
                 fg3MappingData.mappingsZip = e.classes;
