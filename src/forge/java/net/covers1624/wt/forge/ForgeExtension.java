@@ -16,6 +16,7 @@ import net.covers1624.wt.api.impl.dependency.MavenDependencyImpl;
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;
+import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.api.script.WorkspaceScript;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
@@ -212,6 +213,7 @@ public class ForgeExtension implements Extension {
             }
             Dependency dep = event.getDependency();
             remapper.ifPresent(remapper -> {
+                Module module = event.getModule();
                 Configuration config = event.getDependencyConfig();
                 if (dep instanceof MavenDependency) {
                     MavenDependency mvnDep = (MavenDependency) dep;
@@ -219,6 +221,14 @@ public class ForgeExtension implements Extension {
                         event.setResult(null);
                     } else if (config.getName().equals("deobfCompile") || config.getName().equals("deobfProvided")) {
                         event.setResult(remapper.process(mvnDep));
+                    } else {
+                        Configuration fg3Obfuscated = module.getConfigurations().get("__obfuscated");
+                        if(fg3Obfuscated != null && fg3Obfuscated.getAllDependencies().stream()
+                                .filter(e -> e instanceof MavenDependency)
+                                .map(e -> (MavenDependency) e)
+                                .anyMatch(e -> e.getNotation().equals(mvnDep.getNotation()))) {
+                            event.setResult(remapper.process(mvnDep));
+                        }
                     }
                 }
             });
