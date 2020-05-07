@@ -11,6 +11,7 @@ import net.covers1624.wt.intellij.api.script.IntellijRunConfig
 import net.covers1624.wt.intellij.api.workspace.IJWorkspaceModule
 import net.covers1624.wt.intellij.model.*
 import net.covers1624.wt.intellij.util.ContentRootMerger
+import net.covers1624.wt.util.Utils
 import org.apache.commons.lang3.StringUtils
 
 /**
@@ -70,7 +71,9 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
             lib.libraryName = it.libraryName
             libTable.libraries.put(it.libraryFileName, lib)
         }
-        libTable.write(dotIdea.resolve("libraries"))
+        def libFolder = dotIdea.resolve("libraries")
+        Utils.deleteFolder(libFolder.toFile())//TODO, Path impl of this.
+        libTable.write(libFolder)
 
         def ijModules = new IJModules()
         def modulesFolder = dotIdea.resolve("modules")
