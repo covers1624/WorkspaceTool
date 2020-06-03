@@ -22,7 +22,8 @@ import static net.covers1624.wt.util.ParameterFormatter.format;
  */
 public class AtFile {
 
-    private Map<String, AtClass> classMap = new HashMap<>();
+    private final Map<String, AtClass> classMap = new HashMap<>();
+    private boolean useDot;
 
     public AtFile() {
     }
@@ -34,6 +35,11 @@ public class AtFile {
     public AtFile(Path path, CompressionMethod cMethod) {
         this();
         parse(path, cMethod);
+    }
+
+    public AtFile useDot() {
+        useDot = true;
+        return this;
     }
 
     private void parse(Path atFile, CompressionMethod cMethod) {
@@ -157,13 +163,13 @@ public class AtFile {
                 }
                 first = false;
                 if (clazz.accessChange != null) {
-                    writer.println(format("{}{} {}", clazz.accessChange.seg, clazz.finalChange.seg, clazz.name));
+                    writer.println(format("{}{} {}", clazz.accessChange.seg, clazz.finalChange.seg, clazz.name()));
                 }
                 for (AtField field : clazz.fields.values()) {
-                    writer.println(format("{}{} {} {}", field.accessChange.seg, field.finalChange.seg, clazz.name, field.name));
+                    writer.println(format("{}{} {} {}", field.accessChange.seg, field.finalChange.seg, clazz.name(), field.name));
                 }
                 for (AtMethod method : clazz.methods.values()) {
-                    writer.println(format("{}{} {} {}{}", method.accessChange.seg, method.finalChange.seg, clazz.name, method.name, method.desc));
+                    writer.println(format("{}{} {} {}{}", method.accessChange.seg, method.finalChange.seg, clazz.name(), method.name, method.desc));
                 }
             }
             writer.flush();
@@ -176,7 +182,7 @@ public class AtFile {
         return classMap.computeIfAbsent(className, AtClass::new);
     }
 
-    public static abstract class AtNode {
+    public abstract class AtNode {
 
         public AccessChange accessChange;
         public FinalChange finalChange = FinalChange.NONE;
@@ -195,7 +201,7 @@ public class AtFile {
 
     }
 
-    public static class AtClass extends AtNode {
+    public class AtClass extends AtNode {
 
         public String name;
         public Map<String, AtMethod> methods = new HashMap<>();
@@ -212,6 +218,13 @@ public class AtFile {
 
         public AtField getField(String name) {
             return fields.computeIfAbsent(name, AtField::new);
+        }
+
+        public String name() {
+            if (useDot) {
+                return name.replace("/", ".");
+            }
+            return name;
         }
 
         @Override
@@ -233,7 +246,7 @@ public class AtFile {
         }
     }
 
-    public static class AtMethod extends AtNode {
+    public class AtMethod extends AtNode {
 
         public String name;
         public String desc;
@@ -253,7 +266,7 @@ public class AtFile {
         }
     }
 
-    public static class AtField extends AtNode {
+    public class AtField extends AtNode {
 
         public String name;
 

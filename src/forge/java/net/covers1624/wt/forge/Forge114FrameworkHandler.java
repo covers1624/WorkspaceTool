@@ -34,12 +34,15 @@ import org.gradle.tooling.ProjectConnection;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static java.text.MessageFormat.format;
 import static java.util.Collections.emptySet;
@@ -57,6 +60,36 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
     @Override
     public void constructFrameworkModules(Forge114 frameworkImpl) {
         super.constructFrameworkModules(frameworkImpl);
+
+        Path cachedForgeAt = context.cacheDir.resolve("forge_accesstransformer.cfg");
+        Path forgeAt = forgeDir.resolve("src/main/resources/META-INF/accesstransformer.cfg");
+        Path mergedAt = context.cacheDir.resolve("merged_at.cfg");
+        if (wasCloned || !Files.exists(cachedForgeAt)) {
+            Utils.sneaky(() -> Files.copy(forgeAt, cachedForgeAt, StandardCopyOption.REPLACE_EXISTING));
+        }
+        {//AccessTransformers
+            Hasher mergedHasher = sha256.newHasher();
+            List<Path> atFiles = context.modules.parallelStream()//
+                    .flatMap(e -> e.getSourceSets().values().stream())//
+                    .flatMap(e -> e.getResources().stream())//
+                    .filter(Files::exists)//
+                    .flatMap(Utils.sneak(e -> Files.walk(e).filter(f -> f.getFileName().toString().equals("accesstransformer.cfg"))))//
+                    .collect(Collectors.toList());
+            atFiles.forEach(e -> logger.info("Found AccessTransformer: {}", e));
+            atFiles.forEach(e -> Utils.addToHasher(mergedHasher, e));
+            Utils.addToHasher(mergedHasher, cachedForgeAt);
+            HashCode mergedHash = mergedHasher.hash();
+            if (hashContainer.check(HASH_MERGED_AT, mergedHash)) {
+                needsSetup = true;
+                hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
+                AtFile atFile = new AtFile().useDot();
+                atFiles.stream().map(AtFile::new).forEach(atFile::merge);
+                atFile.merge(new AtFile(cachedForgeAt));
+                atFile.write(mergedAt);
+                hashContainer.set(HASH_MERGED_AT, mergedHash);
+            }
+            Utils.sneaky(() -> Files.copy(mergedAt, forgeAt, StandardCopyOption.REPLACE_EXISTING));
+        }
 
         Path formsRt = context.cacheDir.resolve("libs/forms_rt.jar");
         Dependency formsRtDep = new MavenDependencyImpl()//

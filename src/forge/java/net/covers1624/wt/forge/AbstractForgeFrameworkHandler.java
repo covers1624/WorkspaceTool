@@ -35,6 +35,7 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
 
     protected Path forgeDir;
     protected boolean needsSetup;
+    protected boolean wasCloned;
 
     public AbstractForgeFrameworkHandler(WorkspaceToolContext context) {
         this.context = context;
@@ -55,6 +56,7 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
 
         if (Utils.sneaky(gitHelper::validate)) {
             needsSetup = true;
+            wasCloned = true;
             hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
         }
     }
