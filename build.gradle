@@ -99,6 +99,7 @@ dependencies {
     common "org.tukaani:xz:1.8"
     common "org.apache.commons:commons-compress:1.8.1"
     common 'org.apache.commons:commons-collections4:4.3'
+    common 'codechicken:ChickenASM:2.0.0.+'
     commonCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //mavenResolver
