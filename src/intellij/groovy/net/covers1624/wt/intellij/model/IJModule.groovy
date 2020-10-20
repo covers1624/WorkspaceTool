@@ -1,6 +1,6 @@
 package net.covers1624.wt.intellij.model
 
-import org.codehaus.plexus.util.StringUtils
+import org.apache.commons.lang3.StringUtils
 
 import java.nio.file.Path
 

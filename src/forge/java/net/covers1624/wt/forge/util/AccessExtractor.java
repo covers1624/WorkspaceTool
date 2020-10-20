@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -25,7 +26,7 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public class AccessExtractor {
 
-    private static final List<Handle> META_FACTORIES = Arrays.asList(//
+    private static final Set<Handle> META_FACTORIES = new HashSet<>(Arrays.asList(//
             new Handle(//
                     Opcodes.H_INVOKESTATIC,//
                     "java/lang/invoke/LambdaMetafactory",//
@@ -40,7 +41,7 @@ public class AccessExtractor {
                     "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;",//
                     false//
             )//
-    );
+    ));
 
     public static AtFile extractAccess(Set<Path> paths) {
         AtFile atFile = new AtFile();
@@ -106,7 +107,7 @@ public class AccessExtractor {
             } else if ((access & ACC_PROTECTED) != 0) {
                 atNode.accessChange = PROTECTED;
             } else {
-                atNode.accessChange = PACKAGE;
+                atNode.accessChange = DEFAULT;
             }
             atNode.finalChange = (access & ACC_FINAL) != 0 ? MARK : NONE;
         }

@@ -283,7 +283,7 @@ public class AtFile {
     public enum AccessChange {
         PUBLIC,
         PROTECTED,
-        PACKAGE,
+        DEFAULT,
         PRIVATE;
 
         public String seg;

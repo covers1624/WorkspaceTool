@@ -254,8 +254,6 @@ task makeShell() {
     }
 }
 
-//tasks['curseforge'].outputs.upToDateWhen { false }
-
 publishing {
     repositories {
         maven {
