@@ -81,7 +81,7 @@ public class AtFile {
                             method = atClass.methods.computeIfAbsent(name, AtMethod::new);
                             //If its a wildcard, remove all others.
                             if (method.isWild()) {
-                                atClass.methods.values().removeIf(e -> e != method);
+                                atClass.methods.values().removeIf(e -> e != method && e.finalChange == FinalChange.NONE);
                             }
                         } else {
                             //Lookup the wildcard method.
@@ -98,7 +98,7 @@ public class AtFile {
                             field = atClass.fields.computeIfAbsent(name, AtField::new);
                             //If its a wildcard, remove all others.
                             if (field.isWild()) {
-                                atClass.fields.values().removeIf(e -> e != field);
+                                atClass.fields.values().removeIf(e -> e != field && e.finalChange == FinalChange.NONE);
                             }
                         } else {
                             //Lookup the wildcard field.
@@ -126,7 +126,7 @@ public class AtFile {
                     atMethod = atClass.getMethod(mName);
                     if (atMethod.isWild()) {
                         AtMethod finalAtMethod = atMethod;
-                        atClass.methods.values().removeIf(e -> e != finalAtMethod);
+                        atClass.methods.values().removeIf(e -> e != finalAtMethod && e.finalChange == FinalChange.NONE);
                     }
                 }
                 atMethod.mergeAccess(mNode.accessChange);
@@ -138,7 +138,7 @@ public class AtFile {
                     atField = atClass.getField(fName);
                     if (atField.isWild()) {
                         AtField finalAtField = atField;
-                        atClass.fields.values().removeIf(e -> e != finalAtField);
+                        atClass.fields.values().removeIf(e -> e != finalAtField && e.finalChange == FinalChange.NONE);
                     }
                 }
                 atField.mergeAccess(fNode.accessChange);

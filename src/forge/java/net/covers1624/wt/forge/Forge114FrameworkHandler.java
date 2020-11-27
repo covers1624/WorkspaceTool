@@ -79,7 +79,7 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             atFiles.forEach(e -> Utils.addToHasher(mergedHasher, e));
             Utils.addToHasher(mergedHasher, cachedForgeAt);
             HashCode mergedHash = mergedHasher.hash();
-            if (hashContainer.check(HASH_MERGED_AT, mergedHash)) {
+            if (hashContainer.check(HASH_MERGED_AT, mergedHash) || Files.notExists(mergedAt)) {
                 needsSetup = true;
                 hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
                 AtFile atFile = new AtFile().useDot();
