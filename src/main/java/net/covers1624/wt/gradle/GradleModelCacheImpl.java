@@ -7,7 +7,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import net.covers1624.wt.api.WorkspaceToolContext;
-import net.covers1624.wt.api.gradle.GradleManager;
 import net.covers1624.wt.api.gradle.GradleModelCache;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.event.ModuleHashCheckEvent;
@@ -20,6 +19,8 @@ import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.Task;
+import org.gradle.tooling.model.build.BuildEnvironment;
+import org.gradle.util.GradleVersion;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -132,10 +133,30 @@ public class GradleModelCacheImpl implements GradleModelCache {
     }
 
     private WorkspaceToolModel getModelFromGradle(Path modulePath, Set<String> extraTasks) {
-        try (ProjectConnection connection = GradleConnector.newConnector()//
-                .useGradleVersion(GRADLE_VERSION)//
-                .forProjectDirectory(modulePath.toFile())//
+        boolean useProjectGradle = false;
+        try (ProjectConnection connection = GradleConnector.newConnector()
+                .forProjectDirectory(modulePath.toFile())
                 .connect()) {
+            BuildEnvironment environment = connection.getModel(BuildEnvironment.class);
+            GradleVersion installed = GradleVersion.version(environment.getGradle().getGradleVersion());
+            GradleVersion requiredVersion = GradleVersion.version(GRADLE_VERSION);
+
+            logger.info("Detected Gradle version: {}", installed);
+            if (installed.compareTo(requiredVersion) >= 0) {
+                logger.info("Using project gradle version.");
+                useProjectGradle = true;
+            } else {
+                logger.info("Forcing gradle {}.", GRADLE_VERSION);
+            }
+        }
+
+        GradleConnector connector = GradleConnector.newConnector();
+        connector.forProjectDirectory(modulePath.toFile());
+        if (!useProjectGradle) {
+            connector.useGradleVersion(GRADLE_VERSION);
+        }
+
+        try (ProjectConnection connection = connector.connect()) {
             GradleProject project = connection.getModel(GradleProject.class);
             Set<String> executeBefore = new HashSet<>();
             executeBefore.addAll(context.gradleManager.getExecuteBefore());
