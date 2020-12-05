@@ -1,6 +1,7 @@
 package net.covers1624.wt.api.module;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,16 +19,16 @@ public interface Module {
      */
     Path getPath();
 
-    @Deprecated
-    Path getCompileOutput();
-
-    @Deprecated
-    void setCompileOutput(Path compileOutput);
-
     /**
      * @return Any SourceSets this Module has.
      */
     Map<String, SourceSet> getSourceSets();
+
+    List<Path> getExcludes();
+
+    void addExclude(Path exclude);
+
+    void setExcludes(List<Path> excludes);
 
     /**
      * Adds a SourceSet to this Module.

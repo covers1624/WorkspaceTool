@@ -97,20 +97,35 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
             ijModules.modules[modulePath] = null
 
             def contentRoots = mergeResult.row(module.name)
+            if (!module.excludes.empty) {
+                ContentRootMerger.MergedSourceSet moduleRoot = contentRoots[module.path]
+                if (moduleRoot == null) {
+                    moduleRoot = new ContentRootMerger.MergedSourceSet()
+                    moduleRoot.root = module.path
+                    contentRoots[module.path] = moduleRoot
+                }
+                moduleRoot.typeMap[ContentRootMerger.EXCLUDE_MAGIC_TYPE] = module.excludes
+            }
             contentRoots.each {
                 def cr = it.key
                 def paths = it.value
                 ijModule.content << new IJModuleContent().with {
                     contentRoot = cr
                     paths.typeMap.each {
-                        def attribs = [:]
-                        if (it.key == 'resources') {
-                            attribs['type'] = ijModule.isTest ? 'java-test-resource' : 'java-resource'
+                        if (it.key == ContentRootMerger.EXCLUDE_MAGIC_TYPE) {
+                            it.value.each {
+                                excludes[it] = [:]
+                            }
                         } else {
-                            attribs['isTestSource'] = ijModule.isTest ? 'true' : 'false'
-                        }
-                        it.value.each {
-                            sources[it] = attribs
+                            def attribs = [:]
+                            if (it.key == 'resources') {
+                                attribs['type'] = ijModule.isTest ? 'java-test-resource' : 'java-resource'
+                            } else {
+                                attribs['isTestSource'] = ijModule.isTest ? 'true' : 'false'
+                            }
+                            it.value.each {
+                                sources[it] = attribs
+                            }
                         }
                     }
                     it

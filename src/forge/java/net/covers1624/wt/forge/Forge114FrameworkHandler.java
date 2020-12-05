@@ -121,6 +121,11 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
 
         WorkspaceToolModel model = context.modelCache.getModel(forgeDir, emptySet(), Collections.singleton("prepareRuns"));
         Module forgeModule = new ModuleImpl.GradleModule("Forge", forgeDir, model.getProjectData());
+        forgeModule.addExclude(forgeDir.resolve("build"));
+        forgeModule.addExclude(forgeDir.resolve(".gradle"));
+        forgeModule.addExclude(forgeDir.resolve("projects/clean"));
+        forgeModule.addExclude(forgeDir.resolve("projects/forge/build"));
+        forgeModule.addExclude(forgeDir.resolve("projects/mcp/build"));
         ProjectData forgeSubModuleData = model.getProjectData().subProjects.stream()//
                 .filter(e -> e.name.equals("forge"))//
                 .findFirst()//

@@ -37,6 +37,7 @@ class IJModuleContent {
     Path contentRoot
     //Source to Attribute map.
     Map<Path, Map> sources = [:]
+    Map<Path, Map> excludes = [:]
 
     def write(Node rootNode) {
         def content = rootNode.appendNode("content", [url: contentRoot.fileURL])
@@ -44,6 +45,11 @@ class IJModuleContent {
             def attribs = [url: it.key.fileURL]
             attribs += it.value
             content.appendNode("sourceFolder", attribs)
+        }
+        excludes.each {
+            def attribs = [url: it.key.fileURL]
+            attribs += it.value
+            content.appendNode("excludeFolder", attribs)
         }
     }
 }

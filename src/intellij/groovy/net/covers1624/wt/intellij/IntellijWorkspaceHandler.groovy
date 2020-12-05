@@ -25,6 +25,7 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
             wModule.isGroup = true
             wModule.name = module.name.replace("/", ".")
             wModule.output = outFolder.resolve(wModule.name.replace(".", "/"))
+            wModule.excludes = module.excludes
             modules[wModule.name] = wModule
 
 

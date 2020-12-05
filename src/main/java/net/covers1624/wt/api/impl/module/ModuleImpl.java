@@ -11,9 +11,7 @@ import net.covers1624.wt.event.ProcessProjectDataEvent;
 import net.covers1624.wt.util.ProjectDataHelper;
 
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by covers1624 on 25/05/19.
@@ -23,14 +21,15 @@ public class ModuleImpl implements Module {
     private final String name;
     private final Path path;
     private final Map<String, SourceSet> sourceSets;
+    private final List<Path> excludes;
     private final Map<String, Configuration> configurations;
-    private Path compileOutput;
     private boolean modulePerSourceSet;
 
     public ModuleImpl(String name, Path path) {
         this.name = name;
         this.path = path;
         this.sourceSets = new HashMap<>();
+        this.excludes = new ArrayList<>();
         this.configurations = new HashMap<>();
         if (!path.getFileSystem().provider().getScheme().equals("file")) {
             throw new RuntimeException("Path is not on the default filesystem.");
@@ -48,16 +47,6 @@ public class ModuleImpl implements Module {
     }
 
     @Override
-    public Path getCompileOutput() {
-        return compileOutput;
-    }
-
-    @Override
-    public void setCompileOutput(Path compileOutput) {
-        this.compileOutput = compileOutput;
-    }
-
-    @Override
     public Map<String, SourceSet> getSourceSets() {
         return sourceSets;
     }
@@ -71,6 +60,22 @@ public class ModuleImpl implements Module {
     public void setSourceSets(Map<String, SourceSet> sourceSets) {
         this.sourceSets.clear();
         this.sourceSets.putAll(sourceSets);
+    }
+
+    @Override
+    public List<Path> getExcludes() {
+        return excludes;
+    }
+
+    @Override
+    public void addExclude(Path exclude) {
+        excludes.add(exclude);
+    }
+
+    @Override
+    public void setExcludes(List<Path> excludes) {
+        this.excludes.clear();
+        this.excludes.addAll(excludes);
     }
 
     @Override
@@ -119,6 +124,8 @@ public class ModuleImpl implements Module {
         ProcessProjectDataEvent.REGISTRY.fireEvent(new ProcessProjectDataEvent(context, model.getProjectData()));
         GradleModule module = new GradleModule(name, path, model.getProjectData());
         ProjectDataHelper.buildModule(module, model);
+        module.addExclude(path.resolve("build"));
+        module.addExclude(path.resolve(".gradle"));
         return module;
     }
 }

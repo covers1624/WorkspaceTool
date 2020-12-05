@@ -27,6 +27,8 @@ public interface WorkspaceModule {
     //Resources.
     List<Path> getResources();
 
+    List<Path> getExcludes();
+
     Path getOutput();
 
     Map<DependencyScope, Set<Dependency>> getDependencies();

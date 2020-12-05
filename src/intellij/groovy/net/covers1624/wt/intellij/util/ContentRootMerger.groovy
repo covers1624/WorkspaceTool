@@ -3,9 +3,9 @@ package net.covers1624.wt.intellij.util
 import com.google.common.collect.HashBasedTable
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.Multimap
+import com.google.common.collect.Table
 import net.covers1624.wt.api.workspace.WorkspaceModule
 import net.covers1624.wt.util.Utils
-import com.google.common.collect.Table
 
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
@@ -18,6 +18,8 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 //@groovy.transform.CompileStatic
 class ContentRootMerger {
+
+    public static final EXCLUDE_MAGIC_TYPE = '$$_$$_excludes'
 
     /**
      * Takes a List of modules, merges the content root's of each SourceSet.
@@ -55,6 +57,9 @@ class ContentRootMerger {
         }
         modules.each { module ->
             Multimap<Path, MergedSourceSet> sourceSets = HashMultimap.create()
+            if (module.sourceMap.containsKey(EXCLUDE_MAGIC_TYPE)) {
+                throw new RuntimeException("Somehow you have a SourceSet the same name as our magic string for excludes: ${module.path}, SS: ${EXCLUDE_MAGIC_TYPE}")
+            }
             def sourceTypes = ['resources': module.resources]
             sourceTypes += module.sourceMap
             sourceTypes.each {

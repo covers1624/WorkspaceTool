@@ -18,6 +18,7 @@ class IJWorkspaceModuleImpl implements WorkspaceModule, IJWorkspaceModule {
     private boolean isGroup
     private Map<String, List<Path>> sourceMap = [:]
     private List<Path> resources = []
+    private List<Path> excludes = []
     private Path output
     private Map<DependencyScope, Set<Dependency>> dependencies = [:]
     private IJWorkspaceModule parent
@@ -47,6 +48,11 @@ class IJWorkspaceModuleImpl implements WorkspaceModule, IJWorkspaceModule {
     @Override
     List<Path> getResources() {
         return resources
+    }
+
+    @Override
+    List<Path> getExcludes() {
+        return excludes
     }
 
     @Override
