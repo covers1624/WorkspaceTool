@@ -29,6 +29,9 @@ apply plugin: 'net.covers1624.ss-dependencies'
 group 'net.covers1624.workspace_tool'
 version '0.2.0'
 
+version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
+println "Starting build of ${archivesBaseName}, Version: ${version}"
+
 sourceCompatibility = 1.8
 
 sourceSets {
@@ -236,12 +239,12 @@ task makeShell() {
 
 publishing {
     repositories {
-        maven {
-            url "https://maven-upload.covers1624.net/"
-            if (project.hasProperty('maven_pass')) {
+        if (System.getenv('MAVEN_PASS')) {
+            maven {
+                url "https://maven-upload.covers1624.net/"
                 credentials {
                     username 'covers1624'
-                    password project.getProperty('maven_pass')
+                    password System.getenv('MAVEN_PASS')
                 }
             }
         }
