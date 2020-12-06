@@ -1,14 +1,14 @@
-package net.covers1624.wt.util;
+package net.covers1624.wt.wrapper.maven;
 
-import net.covers1624.wt.wrapper.iso.ConsoleTransferListener;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
+import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -24,61 +24,66 @@ import org.eclipse.aether.util.filter.DependencyFilterUtils;
 import org.eclipse.aether.version.Version;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Created by covers1624 on 3/8/19.
+ * Created by covers1624 on 6/12/20.
  */
-public class ScriptDepsResolver {
+public class MavenResolver {
 
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^\\}]*)\\}");
 
-    public static List<URL> getDeps(List<String> repos, List<String> deps) throws Exception {
-        List<RemoteRepository> remoteRepos = new ArrayList<>();
-        for (String repo : repos) {
-            remoteRepos.add(new RemoteRepository.Builder(null, "default", resolvePlaceholders(repo)).build());
-        }
+    private final DefaultRepositorySystemSession session;
+    private final RepositorySystem system;
 
-        File globalDir = new File(System.getProperty("wt.global.dir"));
+    private final List<RemoteRepository> repos;
+
+    public MavenResolver(Path localRepoPath, Map<String, String> repos) {
+        session = MavenRepositorySystemUtils.newSession();
+
         DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
+        locator.setService(VersionRangeResolver.class, LocalVersionRangeResolver.class);
         locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
         locator.addService(TransporterFactory.class, FileTransporterFactory.class);
         locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-        RepositorySystem system = locator.getService(RepositorySystem.class);
-        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-        LocalRepository localRepo = new LocalRepository(new File(globalDir, "local-repo"));
+        system = locator.getService(RepositorySystem.class);
+
+        LocalRepository localRepo = new LocalRepository(localRepoPath.toFile());
         session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
-        //Safely imported, only iso'd in wrapper because dep extraction.
         session.setTransferListener(new ConsoleTransferListener());
 
-        List<File> dependencies = new ArrayList<>();
-        for (String dep : deps) {
-            Artifact artifact = new DefaultArtifact(dep);
-            VersionRangeRequest request = new VersionRangeRequest();
-            request.setArtifact(artifact);
-            request.setRepositories(remoteRepos);
+        this.repos = repos.entrySet().stream()
+                .map(e -> new RemoteRepository.Builder(e.getKey(), "default", resolvePlaceholders(e.getValue())).build())
+                .collect(Collectors.toList());
+    }
 
-            VersionRangeResult result = system.resolveVersionRange(session, request);
-            Version version = result.getHighestVersion();
+    public Set<File> resolve(MavenNotation notation) throws Exception {
+        Artifact artifact = notation.toArtifact();
 
-            CollectRequest collectRequest = new CollectRequest();
-            collectRequest.setRoot(new org.eclipse.aether.graph.Dependency(artifact.setVersion(version.toString()), JavaScopes.RUNTIME));
-            collectRequest.setRepositories(remoteRepos);
-            DependencyRequest dependencyRequest = new DependencyRequest(collectRequest, DependencyFilterUtils.classpathFilter(JavaScopes.RUNTIME));
-            List<ArtifactResult> artifactResults = system.resolveDependencies(session, dependencyRequest).getArtifactResults();
-            dependencies.addAll(artifactResults.stream()//
-                    .map(ArtifactResult::getArtifact)//
-                    .map(Artifact::getFile)//
-                    .collect(Collectors.toList())//
-            );
-        }
-        return dependencies.stream().map(ScriptDepsResolver::quietToURL).collect(Collectors.toList());
+        VersionRangeRequest versionRangeRequest = new VersionRangeRequest();
+        versionRangeRequest.setArtifact(artifact);
+        versionRangeRequest.setRepositories(repos);
+
+        VersionRangeResult versionRangeResult = system.resolveVersionRange(session, versionRangeRequest);
+        Version latest = versionRangeResult.getHighestVersion();
+
+        CollectRequest collectRequest = new CollectRequest();
+        collectRequest.setRoot(new Dependency(artifact.setVersion(latest.toString()), JavaScopes.RUNTIME));
+        collectRequest.setRepositories(repos);
+
+        DependencyRequest dependencyRequest = new DependencyRequest(collectRequest, DependencyFilterUtils.classpathFilter(JavaScopes.RUNTIME, JavaScopes.COMPILE));
+        List<ArtifactResult> artifactResults = system.resolveDependencies(session, dependencyRequest).getArtifactResults();
+
+        return artifactResults.stream()
+                .map(ArtifactResult::getArtifact)
+                .map(Artifact::getFile)
+                .collect(Collectors.toSet());
     }
 
     private static String resolvePlaceholders(String value) {
@@ -94,14 +99,6 @@ public class ScriptDepsResolver {
         }
         matcher.appendTail(result);
         return result.toString();
-    }
-
-    private static URL quietToURL(File file) {
-        try {
-            return file.toURI().toURL();
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }

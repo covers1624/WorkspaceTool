@@ -3,13 +3,6 @@ import net.covers1624.gradlestuff.dependencies.ConfigurationVisitor
 import net.covers1624.gradlestuff.dependencies.ConfigurationWalker
 import net.covers1624.gradlestuff.dependencies.DependencyName
 import org.apache.commons.lang3.StringUtils
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassWriter
-
-import java.security.MessageDigest
-import java.util.jar.JarEntry
-import java.util.jar.JarInputStream
-import java.util.jar.JarOutputStream
 
 buildscript {
     repositories() {
@@ -19,8 +12,6 @@ buildscript {
         maven { url 'https://maven.covers1624.net/' }
     }
     dependencies {
-        classpath 'org.ow2.asm:asm:7.0'
-        classpath 'org.apache.commons:commons-lang3:3.9'
         classpath 'net.covers1624:GradleStuff:1.1-SNAPSHOT'
     }
 }
@@ -29,13 +20,14 @@ plugins {
     id 'java'
     id 'groovy'
     id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 //Converts source set output's to proper Dependencies in a configuration.
 apply plugin: 'net.covers1624.ss-dependencies'
 
 group 'net.covers1624.workspace_tool'
-version '0.1.0'
+version '0.2.0'
 
 sourceCompatibility = 1.8
 
@@ -52,11 +44,8 @@ sourceSets {
 repositories {
     jcenter()
     mavenLocal()
-    maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
     maven { url 'https://maven.covers1624.net/' }
-    maven { url 'https://maven.fabricmc.net/' }
     maven { url 'https://files.minecraftforge.net/maven/' }
-    maven { url 'https://dl.bintray.com/jetbrains/intellij-third-party-dependencies/' }
 }
 
 configurations {
@@ -156,10 +145,10 @@ dependencies {
     testCompile 'org.apache.logging.log4j:log4j-core:2.11.1:tests'
 
     //Wrapper
-    wrapperCompile "com.google.code.gson:gson:2.8.5"
-    wrapperCompile 'org.apache.logging.log4j:log4j-core:2.11.1'
-    wrapperCompile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
-
+    wrapperCompile 'com.google.code.gson:gson:2.8.5'
+    wrapperCompile 'org.apache.commons:commons-lang3:3.9'
+    wrapperCompile 'org.slf4j:slf4j-simple:1.7.25'
+    wrapperCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     testImplementation sourceSets.intellij.output
 
@@ -200,38 +189,29 @@ task minecraftJar(type: Jar) {
     from sourceSets.minecraft.output
 }
 
+task wrapperJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    baseName 'wt-wrapperv2'
 
-task makeWrapperLibs {
-    doLast {
-        def properties = new Properties()
-        sourceSets.wrapper.compileClasspath.each {
-            if (it.isFile()) {
-                def out = new File(makeWrapperLibs.temporaryDir, it.getName())
-                out.createNewFile()
-                processJar(it.newInputStream(), out.newOutputStream())
-                wrapperJar.from(out) {
-                    into "META-INF/libs"
-                }
-                properties.setProperty(out.getName(), sha256(out))
-            }
-        }
-        def propsFile = new File(temporaryDir, "libraries.properties")
-        def out = propsFile.newOutputStream()
-        properties.save(out, "List of libraries to extract.")
-        out.close()
-        wrapperJar.from(propsFile) {
-            into "META-INF"
-        }
-    }
-}
+    minimize()
+    configurations = [project.configurations.wrapperCompile]
 
-task wrapperJar(type: Jar) {
-    baseName 'wt-wrapper'
-    dependsOn makeWrapperLibs
     from sourceSets.wrapper.output
     manifest {
         attributes 'Main-Class': "net.covers1624.wt.wrapper.Main"
     }
+
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/plexus/**'
+    exclude 'META-INF/sisu/**'
+    exclude 'module-info.class'
+
+    relocate 'com.google', 'net.covers1624.repack.com.google'
+    relocate 'javax.inject', 'net.covers1624.repack.javax.inject'
+    relocate 'org.apache', 'net.covers1624.repack.org.apache'
+    relocate 'org.codehaus', 'net.covers1624.repack.org.codehaus'
+    relocate 'org.eclipse', 'net.covers1624.repack.org.eclipse'
+    relocate 'org.slf4j', 'net.covers1624.repack.org.slf4j'
+    relocate 'joptsimple', 'net.covers1624.repack.joptsimple'
 }
 
 task makeShell() {
@@ -316,50 +296,6 @@ publishing {
             artifact minecraftJar
             addDependencies(pom, sourceSets.minecraft)
         }
-    }
-}
-
-def sha256(File file) {
-    MessageDigest md = MessageDigest.getInstance("SHA-256")
-    file.eachByte 4096, { bytes, len ->
-        md.update(bytes, 0, len)
-    }
-    return md.digest().encodeHex().toString()
-}
-
-def processJar(InputStream is, OutputStream os) {
-    def jos = new JarOutputStream(os)
-    def jis = new JarInputStream(is)
-    JarEntry entry = null
-    while ((entry = jis.nextJarEntry) != null) {
-        if (entry.getName().endsWith(".class")) {
-            jos.putNextEntry(new JarEntry(entry.getName()))
-            stripDebug(jis, jos)
-            jos.closeEntry()
-        } else {
-            jos.putNextEntry(new JarEntry(entry))
-            copy(jis, jos)
-            jos.closeEntry()
-        }
-    }
-    jis.close()
-    jos.close()
-}
-
-def stripDebug(def is, OutputStream os) {
-    def cr = new ClassReader(is)
-    def cw = new ClassWriter(0)
-    cr.accept(cw, ClassReader.SKIP_DEBUG)
-    os.write(cw.toByteArray())
-}
-
-ext.bufferCache = ThreadLocal.withInitial({ new byte[32 * 1024] })
-
-def copy(InputStream is, OutputStream os) throws IOException {
-    byte[] buffer = bufferCache.get()
-    int len
-    while ((len = is.read(buffer)) != -1) {
-        os.write(buffer, 0, len)
     }
 }
 

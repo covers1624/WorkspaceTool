@@ -1,0 +1,13 @@
+{
+	//Mixed Gradle/Buildr syntax.
+	"artifact": "net.covers1624.workspace_tool:wt-core:[0.2,)",
+	"main_class": "net.covers1624.wt.WorkspaceTool",
+	"repos": {
+		//Magical repo id of local
+		"local": "file://${user.home}/.m2/repository/",
+		"jcenter": "https://jcenter.bintray.com/",
+		"central": "https://repo.maven.apache.org/maven2/",
+		"covers1624": "https://maven.covers1624.net/",
+		"forge": "https://files.minecraftforge.net/maven/"
+	}
+}
