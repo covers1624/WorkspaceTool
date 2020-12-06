@@ -115,7 +115,7 @@ dependencies {
     }
 
     //Gradle
-    gradleImplementation "net.covers1624:GradleStuff:1.2.+"
+    gradleCompile "net.covers1624:GradleStuff:1.2.+"
     gradleCompileOnly sourceSets.common.output
     gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
     gradleCompileOnly('net.covers1624.workspacetool.deps:gradle-api:4.10.3') {
