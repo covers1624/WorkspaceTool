@@ -115,7 +115,7 @@ dependencies {
     }
 
     //Gradle
-    gradleImplementation "net.covers1624:GradleStuff:1.1-SNAPSHOT"
+    gradleImplementation "net.covers1624:GradleStuff:1.2.+"
     gradleCompileOnly sourceSets.common.output
     gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
     gradleCompileOnly('net.covers1624.workspacetool.deps:gradle-api:4.10.3') {
@@ -216,6 +216,8 @@ task wrapperJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
     relocate 'org.slf4j', 'net.covers1624.repack.org.slf4j'
     relocate 'joptsimple', 'net.covers1624.repack.joptsimple'
 }
+
+build.dependsOn(commonJar, forgeJar, gradleJar, intellijJar, minecraftJar, wrapperJar)
 
 task makeShell() {
     sourceSets.each {
