@@ -1,6 +1,5 @@
 package net.covers1624.wt.util.download;
 
-import net.covers1624.wt.api.tail.DownloadProgressTail;
 import net.covers1624.wt.util.ColUtils;
 import net.covers1624.wt.util.Utils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,7 +29,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.function.Predicate;
 
-import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.CREATE;
 

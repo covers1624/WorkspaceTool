@@ -27,7 +27,7 @@ plugins {
 apply plugin: 'net.covers1624.ss-dependencies'
 
 group 'net.covers1624.workspace_tool'
-version '0.2.0'
+version '0.2.1'
 
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of ${archivesBaseName}, Version: ${version}"
@@ -92,6 +92,7 @@ dependencies {
     common "org.apache.commons:commons-compress:1.8.1"
     common 'org.apache.commons:commons-collections4:4.3'
     common 'codechicken:ChickenASM:2.0.0.+'
+    common 'net.covers1624:TailConsole:1.0.0.1'
     commonCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //mavenResolver
@@ -193,7 +194,7 @@ task minecraftJar(type: Jar) {
 }
 
 task wrapperJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
-    baseName 'wt-wrapperv2'
+    baseName 'wt-wrapper'
 
     minimize()
     configurations = [project.configurations.wrapperCompile]

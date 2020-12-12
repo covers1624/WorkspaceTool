@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="warn">
     <Appenders>
-        <AnsiTailConsoleAppender name="SysOut">
+        <TailConsoleAppender name="SysOut">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level] [%logger]: %msg%n"/>
-        </AnsiTailConsoleAppender>
+        </TailConsoleAppender>
         <RollingRandomAccessFile name="File" fileName="${sys.logging.prefix:-.workspace_tool/}logs/latest.log" filePattern=".workspace_tool/logs/%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level] [%logger]: %msg%n"/>
             <Policies>

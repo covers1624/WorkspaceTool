@@ -1,9 +1,5 @@
 package net.covers1624.wt.util.download;
 
-import net.covers1624.wt.api.tail.DownloadProgressTail;
-import net.covers1624.wt.api.tail.TextTail;
-
-import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.function.Predicate;

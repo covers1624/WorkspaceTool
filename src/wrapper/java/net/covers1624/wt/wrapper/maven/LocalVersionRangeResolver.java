@@ -137,7 +137,6 @@ public class LocalVersionRangeResolver implements VersionRangeResolver, Service 
         for (RemoteRepository repository : request.getRepositories()) {
             Metadata meta = metadata;
             if (repository.getId().equals("local")) {
-                System.out.println("" + repository);
                 meta = new DefaultMetadata(request.getArtifact().getGroupId(), request.getArtifact().getArtifactId(),
                         MAVEN_LOCAL_METADATA_XML, Metadata.Nature.RELEASE_OR_SNAPSHOT);
             }

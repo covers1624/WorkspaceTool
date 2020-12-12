@@ -4,6 +4,9 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.tconsole.api.TailConsole;
+import net.covers1624.tconsole.api.TailGroup;
+import net.covers1624.tconsole.tails.TextTail;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.dependency.SourceSetDependency;
@@ -16,9 +19,7 @@ import net.covers1624.wt.api.impl.module.SourceSetImpl;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
-import net.covers1624.wt.api.tail.DownloadProgressTail;
-import net.covers1624.wt.api.tail.TailGroup;
-import net.covers1624.wt.api.tail.TextTail;
+import net.covers1624.wt.util.download.DownloadProgressTail;
 import net.covers1624.wt.forge.api.script.Forge114;
 import net.covers1624.wt.forge.util.AccessExtractor;
 import net.covers1624.wt.forge.util.AtFile;
@@ -29,6 +30,7 @@ import net.covers1624.wt.util.MavenNotation;
 import net.covers1624.wt.util.ProjectDataHelper;
 import net.covers1624.wt.util.Utils;
 import net.covers1624.wt.util.download.DownloadAction;
+import net.rubygrapefruit.platform.terminal.Terminals;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 
@@ -223,9 +225,10 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
 
         Path assetsDir = mcDir.resolve("assets");
         context.blackboard.put(ForgeExtension.ASSETS_PATH, assetsDir);
-        TailGroup dlGroup = context.console.newGroup();
+        TailGroup dlGroup = context.console.newGroupFirst();
         DownloadProgressTail.Pool tailPool = new DownloadProgressTail.Pool(dlGroup);
-        TextTail totalProgressTail = dlGroup.add(new TextTail());
+        TextTail totalProgressTail = dlGroup.add(new TextTail(1));
+        totalProgressTail.setLine(0, "Downloading assests..");
 
         Path vManifest = mcDir.resolve("version_manifest.json");
         {
@@ -292,7 +295,7 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
                 tail.setFileName(name);
                 action.setProgressTail(tail);
                 Utils.sneaky(action::execute);
-                if (!context.console.isSupported()) {
+                if (!context.console.isSupported(TailConsole.Output.STDOUT)) {
                     logger.info("Downloaded: '{}' to '{}'", action.getSrc(), action.getDest());
                 }
                 action.setProgressTail(null);
@@ -305,7 +308,7 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
 
         while (!executor.awaitTermination(200, TimeUnit.MILLISECONDS)) {
             int done = (int) executor.getCompletedTaskCount();
-            totalProgressTail.setText(format("Completed: {0}/{1}   {2}%", done, max, (int) ((double) done / max * 100)));
+            totalProgressTail.setLine(0, format("Completed: {0}/{1}   {2}%", done, max, (int) ((double) done / max * 100)));
         }
         context.console.removeGroup(dlGroup);
     }

@@ -5,6 +5,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import net.covers1624.tconsole.api.TailGroup;
+import net.covers1624.tconsole.log4j.Log4jUtils;
+import net.covers1624.tconsole.log4j.TailConsoleAppender;
 import net.covers1624.wt.api.Extension;
 import net.covers1624.wt.api.ExtensionDetails;
 import net.covers1624.wt.api.WorkspaceToolContext;
@@ -34,14 +37,12 @@ import net.covers1624.wt.api.script.NullFramework;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.script.module.ModuleSpec;
 import net.covers1624.wt.api.script.runconfig.RunConfig;
-import net.covers1624.wt.api.tail.TailGroup;
 import net.covers1624.wt.api.workspace.WorkspaceHandler;
 import net.covers1624.wt.api.workspace.WorkspaceWriter;
 import net.covers1624.wt.event.*;
 import net.covers1624.wt.gradle.GradleManagerImpl;
 import net.covers1624.wt.gradle.GradleModelCacheImpl;
-import net.covers1624.wt.tail.AnsiTailConsoleAppender;
-import net.covers1624.wt.tail.OverallProgressTail;
+import net.covers1624.wt.util.OverallProgressTail;
 import net.covers1624.wt.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
@@ -87,8 +88,10 @@ public class WorkspaceTool {
     }
 
     private void run(String[] args) throws Exception {
-
         WorkspaceToolContext context = new WorkspaceToolContext();
+        context.console = TailConsoleAppender.getTailConsole();
+        Log4jUtils.redirectStreams();
+
         context.projectDir = new File("").toPath().normalize().toAbsolutePath();
         context.cacheDir = context.projectDir.resolve(".workspace_tool");
 
@@ -97,8 +100,8 @@ public class WorkspaceTool {
             logger.error("'workspace.groovy' does not exist in the project directory. {}", context.projectDir);
             System.exit(1);
         }
-        context.console = AnsiTailConsoleAppender.getTailConsole();
-        context.console.setUpdateFixedRate(45, TimeUnit.MILLISECONDS);
+
+        context.console.setRefreshRate(15, TimeUnit.MILLISECONDS);
         TailGroup mainGroup = context.console.newGroup();
         mainGroup.add(new OverallProgressTail());
 
