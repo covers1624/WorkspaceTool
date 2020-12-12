@@ -6,8 +6,10 @@ import net.covers1624.wt.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,13 +26,13 @@ public class GradleManagerImpl implements Closeable, GradleManager {
 
     private static final Logger logger = LogManager.getLogger("GradleManagerImpl");
 
-    private Set<Object> scriptClasspathMarkerClasses = new HashSet<>();
-    private Set<String> scriptClasspathMarkerResources = new HashSet<>();
+    private final Set<Object> scriptClasspathMarkerClasses = new HashSet<>();
+    private final Set<String> scriptClasspathMarkerResources = new HashSet<>();
 
-    private Set<String> dataBuilders = new HashSet<>();
-    private Set<String> executeBefore = new HashSet<>();
+    private final Set<String> dataBuilders = new HashSet<>();
+    private final Set<String> executeBefore = new HashSet<>();
 
-    private Set<Path> tmpFiles = new HashSet<>();
+    private final Set<Path> tmpFiles = new HashSet<>();
 
     private Path initScript;
 
@@ -106,11 +108,17 @@ public class GradleManagerImpl implements Closeable, GradleManager {
                         }
                     })//
                     .map(Path::toString)//
-                    .map(e -> "\'" + e + "\'")//
+                    .map(e -> e.replace("\\", "\\\\"))
+                    .map(e -> "'" + e + "'")//
                     .collect(Collectors.joining(", ", "        classpath files([", "])"));
 
             //Read all lines.
-            List<String> scriptLines = sneaky(() -> Files.readAllLines(getResourcePath("/templates/gradle/init.gradle")));
+            List<String> scriptLines;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(GradleManagerImpl.class.getResourceAsStream("/templates/gradle/init.gradle")))) {
+                scriptLines = reader.lines().collect(Collectors.toList());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read template.", e);
+            }
             int idx = -1;
             //find our marker line.
             for (int i = 0; i < scriptLines.size(); i++) {

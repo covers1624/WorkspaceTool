@@ -544,7 +544,7 @@ public class Utils {
         return resourceRoot != null ? new File(resourceRoot).getAbsoluteFile().toPath() : null;
     }
 
-    public static Path getJarPathForClass(Class aClass) {
+    public static Path getJarPathForClass(Class<?> aClass) {
         String resourceRoot = getResourceRoot(aClass, "/" + aClass.getName().replace('.', '/') + ".class");
         return resourceRoot != null ? new File(resourceRoot).getAbsoluteFile().toPath() : null;
     }
@@ -554,7 +554,7 @@ public class Utils {
         return resourceRoot != null ? new File(resourceRoot).getAbsoluteFile().toPath() : null;
     }
 
-    public static String getResourceRoot(Class context, String path) {
+    public static String getResourceRoot(Class<?> context, String path) {
         URL url = context.getResource(path);
         if (url == null) {
             url = ClassLoader.getSystemResource(path.substring(1));
@@ -675,10 +675,6 @@ public class Utils {
             return false;
         }
 
-    }
-
-    public static Path getResourcePath(String resource) {
-        return sneaky(() -> Paths.get(Utils.class.getResource(resource).toURI()));
     }
 
     /**
