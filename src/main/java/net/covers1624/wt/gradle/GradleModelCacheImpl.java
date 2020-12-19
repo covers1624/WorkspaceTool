@@ -79,6 +79,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
         logger.info("Processing module: {}", relPath);
         HashContainer hashContainer = new HashContainer(dataDir.resolve(relPath.replace("/", "_") + "_cache.json"));
 
+        //TODO, Event here to allow Forge module to add various other files.
         List<Path> toHash = StreamSupport.stream(Iterables.concat(hashedFiles, extraHash).spliterator(), true)//
                 .map(modulePath::resolve)//
                 .filter(Files::exists)//

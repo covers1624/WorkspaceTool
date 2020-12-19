@@ -5,7 +5,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
 /**
- * A FileVisitor for Path's that copes from a to b.
+ * A FileVisitor for Path's that copies from a to b.
  *
  * Created by covers1624 on 14/6/19.
  */
