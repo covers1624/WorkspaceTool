@@ -24,12 +24,15 @@ import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.forge.api.script.Forge114;
 import net.covers1624.wt.forge.util.AccessExtractor;
 import net.covers1624.wt.forge.util.AtFile;
+import net.covers1624.wt.gradle.GradleProgressListener;
 import net.covers1624.wt.mc.data.AssetIndexJson;
 import net.covers1624.wt.mc.data.VersionInfoJson;
 import net.covers1624.wt.mc.data.VersionManifestJson;
+import net.covers1624.wt.util.LoggingOutputStream;
 import net.covers1624.wt.util.MavenNotation;
 import net.covers1624.wt.util.ProjectDataHelper;
 import net.covers1624.wt.util.Utils;
+import org.apache.logging.log4j.Level;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.build.BuildEnvironment;
@@ -211,12 +214,17 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
                 connector.useGradleVersion(GRADLE_VERSION);
             }
             try (ProjectConnection connection = connector.connect()) {
+                TailGroup tailGroup = context.console.newGroupFirst();
                 connection.newBuild()//
-                        .forTasks("clean", "setup", ":forge:compileJava")//
-                        .withArguments("-si")//
-                        .setStandardOutput(System.out)//
-                        .setStandardError(System.err)//
+                        .forTasks("clean", "setup", ":forge:compileJava")
+                        .withArguments("-si")
+                        .setJvmArguments("-Xmx3G")
+                        .setJvmArguments("-Dorg.gradle.daemon=false")
+                        .setStandardOutput(new LoggingOutputStream(logger, Level.INFO))
+                        .setStandardError(new LoggingOutputStream(logger, Level.ERROR))
+                        .addProgressListener(new GradleProgressListener(context, tailGroup))
                         .run();
+                context.console.removeGroup(tailGroup);
             }
             Path accessList = context.cacheDir.resolve("forge_access_list.cfg.xz");
             AtFile atFile = AccessExtractor.extractAccess(Collections.singleton(forgeDir.resolve("projects/forge/build/classes/java/main")));

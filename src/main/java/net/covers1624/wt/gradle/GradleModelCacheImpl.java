@@ -6,6 +6,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.gradle.GradleModelCache;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
@@ -175,12 +176,18 @@ public class GradleModelCacheImpl implements GradleModelCache {
             if (!notExecuting.isEmpty()) {
                 logger.info("The following tasks will not be executed: {}", String.join(", ", notExecuting));
             }
-            return connection//
-                    .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))//
-                    .setStandardOutput(new LoggingOutputStream(logger, Level.INFO))//
-                    .setStandardError(new LoggingOutputStream(logger, Level.ERROR))//
-                    .withArguments("-si", "-I", context.gradleManager.getInitScript().toAbsolutePath().toString())//
+            TailGroup tailGroup = context.console.newGroupFirst();
+            WorkspaceToolModel run = connection//
+                    .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))
+                    .setJvmArguments("-Xmx3G")
+                    .setJvmArguments("-Dorg.gradle.daemon=false")
+                    .setStandardOutput(new LoggingOutputStream(logger, Level.INFO))
+                    .setStandardError(new LoggingOutputStream(logger, Level.ERROR))
+                    .addProgressListener(new GradleProgressListener(context, tailGroup))
+                    .withArguments("-si", "-I", context.gradleManager.getInitScript().toAbsolutePath().toString())
                     .forTasks(toExecute).run();
+            context.console.removeGroup(tailGroup);
+            return run;
         }
     }
 
