@@ -94,6 +94,10 @@ public class FGDataBuilder implements ExtraDataBuilder {
                 fgPluginData.version = FGVersion.FG23;
             } else if (version.startsWith("3.0")) {
                 fgPluginData.version = FGVersion.FG30;
+            } else if (version.startsWith("4.0")) {
+                fgPluginData.version = FGVersion.FG40;
+            } else if (version.startsWith("4.1")) {
+                fgPluginData.version = FGVersion.FG41;
             } else {
                 logger.error("Unknown FG version: '{}', From: '{}' in project {}({})", version, ident, project.getPath(), project.getDisplayName());
             }
@@ -134,8 +138,8 @@ public class FGDataBuilder implements ExtraDataBuilder {
         FGVersion version = fgPluginData.version;
         if (version.isFg2()) {
             FG2.build(project, pluginData, projectData);
-        } else if (version.isFg3()) {
-            FG3.build(project, pluginData, projectData);
+        } else if (version.isAtleastFG3()) {
+            FG3Plus.build(project, pluginData, projectData);
         }
     }
 
@@ -206,7 +210,7 @@ public class FGDataBuilder implements ExtraDataBuilder {
         }
     }
 
-    public static class FG3 {
+    public static class FG3Plus {
 
         public static void build(Project project, PluginData pluginData, ProjectData projectData) {
             FG3Data data = new FG3Data();

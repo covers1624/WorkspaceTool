@@ -14,6 +14,8 @@ public class FGVersion implements Serializable {
     public static final FGVersion FG22 = new FGVersion("2.2");
     public static final FGVersion FG23 = new FGVersion("2.3");
     public static final FGVersion FG30 = new FGVersion("3.0");
+    public static final FGVersion FG40 = new FGVersion("4.0");
+    public static final FGVersion FG41 = new FGVersion("4.1");
 
     public final String version;
 
@@ -25,8 +27,8 @@ public class FGVersion implements Serializable {
         return this.equals(FG22) || this.equals(FG23);
     }
 
-    public boolean isFg3() {
-        return this.equals(FG30);
+    public boolean isAtleastFG3() {
+        return this.equals(FG30) || this.equals(FG40) || this.equals(FG41);
     }
 
     @Override

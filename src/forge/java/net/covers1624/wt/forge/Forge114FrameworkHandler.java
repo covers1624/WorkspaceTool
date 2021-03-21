@@ -33,6 +33,8 @@ import net.covers1624.wt.util.download.DownloadAction;
 import net.rubygrapefruit.platform.terminal.Terminals;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.build.BuildEnvironment;
+import org.gradle.util.GradleVersion;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -187,10 +189,29 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         });
 
         if (needsSetup) {
-            try (ProjectConnection connection = GradleConnector.newConnector()//
-                    .useGradleVersion(GRADLE_VERSION)//
-                    .forProjectDirectory(forgeDir.toFile())//
+            boolean useProjectGradle = false;
+            try (ProjectConnection connection = GradleConnector.newConnector()
+                    .forProjectDirectory(forgeDir.toFile())
                     .connect()) {
+                BuildEnvironment environment = connection.getModel(BuildEnvironment.class);
+                GradleVersion installed = GradleVersion.version(environment.getGradle().getGradleVersion());
+                GradleVersion requiredVersion = GradleVersion.version(GRADLE_VERSION);
+
+                logger.info("Detected Gradle version: {}", installed);
+                if (installed.compareTo(requiredVersion) >= 0) {
+                    logger.info("Using project gradle version.");
+                    useProjectGradle = true;
+                } else {
+                    logger.info("Forcing gradle {}.", GRADLE_VERSION);
+                }
+            }
+
+            GradleConnector connector = GradleConnector.newConnector();
+            connector.forProjectDirectory(forgeDir.toFile());
+            if (!useProjectGradle) {
+                connector.useGradleVersion(GRADLE_VERSION);
+            }
+            try (ProjectConnection connection = connector.connect()) {
                 connection.newBuild()//
                         .forTasks("clean", "setup", ":forge:compileJava")//
                         .withArguments("-si")//

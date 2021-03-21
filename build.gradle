@@ -12,7 +12,7 @@ buildscript {
         maven { url 'https://maven.covers1624.net/' }
     }
     dependencies {
-        classpath 'net.covers1624:GradleStuff:1.1-SNAPSHOT'
+        classpath 'net.covers1624:GradleStuff:2.0.0+'
     }
 }
 
@@ -27,7 +27,7 @@ plugins {
 apply plugin: 'net.covers1624.ss-dependencies'
 
 group 'net.covers1624.workspace_tool'
-version '0.2.1'
+version '0.2.2'
 
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of ${archivesBaseName}, Version: ${version}"
@@ -116,7 +116,7 @@ dependencies {
     }
 
     //Gradle
-    gradleCompile "net.covers1624:GradleStuff:1.2.+"
+    gradleCompile "net.covers1624:GradleStuff:2.0.0+"
     gradleCompileOnly sourceSets.common.output
     gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
     gradleCompileOnly('net.covers1624.workspacetool.deps:gradle-api:4.10.3') {
@@ -136,7 +136,7 @@ dependencies {
     runtimeOnly sourceSets.intellij.output
     runtimeOnly sourceSets.gradle.output
     runtimeOnly sourceSets.minecraft.output
-    runtimeOnly 'net.covers1624:GradleStuff:1.1-SNAPSHOT'
+    runtimeOnly 'net.covers1624:GradleStuff:2.0.0+'
     compileOnly 'org.jetbrains:annotations:16.0.2'
     compileOnly sourceSets.wrapper.output
     annotationProcessor 'org.apache.logging.log4j:log4j-core:2.11.1'
