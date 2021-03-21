@@ -16,9 +16,13 @@ public class OverallProgressTail extends AbstractTail {
     }
 
     @Override
+    public void onInitialized() {
+        setLine(0, "===============================");
+    }
+
+    @Override
     public void tick() {
         long now = System.currentTimeMillis();
-        setLine(0, "===============================");
         setLine(1, "Elapsed: [" + formatter.format(now - start) + "]");
     }
 }

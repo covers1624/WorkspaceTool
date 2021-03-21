@@ -92,7 +92,8 @@ dependencies {
     common "org.apache.commons:commons-compress:1.8.1"
     common 'org.apache.commons:commons-collections4:4.3'
     common 'codechicken:ChickenASM:2.0.0.+'
-    common 'net.covers1624:TailConsole:1.0.0.1'
+    common 'net.covers1624:TailConsole:1.1.0.4'
+    common 'net.covers1624:Quack:0.2.0.9'
     commonCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //mavenResolver

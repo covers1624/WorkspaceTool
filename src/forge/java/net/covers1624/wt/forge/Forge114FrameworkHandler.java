@@ -4,6 +4,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.quack.net.download.DownloadAction;
+import net.covers1624.quack.net.download.DownloadProgressTail;
 import net.covers1624.tconsole.api.TailConsole;
 import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.tconsole.tails.TextTail;
@@ -19,7 +21,6 @@ import net.covers1624.wt.api.impl.module.SourceSetImpl;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
-import net.covers1624.wt.util.download.DownloadProgressTail;
 import net.covers1624.wt.forge.api.script.Forge114;
 import net.covers1624.wt.forge.util.AccessExtractor;
 import net.covers1624.wt.forge.util.AtFile;
@@ -29,8 +30,6 @@ import net.covers1624.wt.mc.data.VersionManifestJson;
 import net.covers1624.wt.util.MavenNotation;
 import net.covers1624.wt.util.ProjectDataHelper;
 import net.covers1624.wt.util.Utils;
-import net.covers1624.wt.util.download.DownloadAction;
-import net.rubygrapefruit.platform.terminal.Terminals;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.build.BuildEnvironment;
@@ -314,12 +313,12 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             executor.submit(() -> {
                 DownloadProgressTail tail = tailPool.pop();
                 tail.setFileName(name);
-                action.setProgressTail(tail);
+                action.setListener(tail);
                 Utils.sneaky(action::execute);
                 if (!context.console.isSupported(TailConsole.Output.STDOUT)) {
                     logger.info("Downloaded: '{}' to '{}'", action.getSrc(), action.getDest());
                 }
-                action.setProgressTail(null);
+                action.setListener(null);
                 tailPool.push(tail);
             });
         });
