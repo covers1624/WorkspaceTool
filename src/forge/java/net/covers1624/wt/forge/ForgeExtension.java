@@ -109,11 +109,11 @@ public class ForgeExtension implements Extension {
     }
 
     private void onModuleHashCheck(ModuleHashCheckEvent event) {
-        event.putVersionedClass(FG2McpMappingData.class);
-        event.putVersionedClass(FGPluginData.class);
-        event.putVersionedClass(FG2Data.class);
-        event.putVersionedClass(FGDataBuilder.class);
-        event.putVersionedClass(FGVersion.class);
+        event.putClassBytes("net.covers1624.wt.forge.gradle.data.FG2McpMappingData");
+        event.putClassBytes("net.covers1624.wt.forge.gradle.data.FGPluginData");
+        event.putClassBytes("net.covers1624.wt.forge.gradle.data.FG2Data");
+        event.putClassBytes("net.covers1624.wt.forge.gradle.FGDataBuilder");
+        event.putClassBytes("net.covers1624.wt.forge.gradle.FGVersion");
     }
 
     private void onScriptWorkspaceEvalEvent(ScriptWorkspaceEvalEvent event) {

@@ -27,7 +27,7 @@ plugins {
 apply plugin: 'net.covers1624.ss-dependencies'
 
 group 'net.covers1624.workspace_tool'
-version '0.2.2'
+version '0.3.0'
 
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of ${archivesBaseName}, Version: ${version}"
@@ -49,6 +49,7 @@ repositories {
     mavenLocal()
     maven { url 'https://maven.covers1624.net/' }
     maven { url 'https://files.minecraftforge.net/maven/' }
+    maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
 }
 
 configurations {
@@ -112,24 +113,20 @@ dependencies {
     forgeCompileOnly sourceSets.common.output
     forgeCompileOnly sourceSets.main.output
     forgeCompileOnly sourceSets.gradle.output
-    forgeCompileOnly('net.covers1624.workspacetool.deps:gradle-api:4.10.3') {
-        exclude module: 'gradle-api-impldep'
-    }
+    forgeCompileOnly gradleApi()
 
     //Gradle
     gradleCompile "net.covers1624:GradleStuff:2.0.0+"
+    gradleCompileOnly gradleApi()
     gradleCompileOnly sourceSets.common.output
     gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
-    gradleCompileOnly('net.covers1624.workspacetool.deps:gradle-api:4.10.3') {
-        exclude module: 'gradle-api-impldep'
-    }
 
     //Intellij
     intellijCompileOnly sourceSets.common.output
     intellijCompileOnly sourceSets.main.output
 
     //Main
-    compile 'net.covers1624.workspacetool.deps:gradle-api:4.10.3'
+    compile 'org.gradle:gradle-tooling-api:4.10.3'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
     compile 'org.apache.logging.log4j:log4j-jul:2.11.1'
     compile sourceSets.common.output

@@ -2,9 +2,14 @@ package net.covers1624.wt.event;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import net.covers1624.wt.util.Utils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectStreamClass;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -17,13 +22,15 @@ import java.util.Map;
 
 /**
  * Collects extra variables to be considered when checking the up-to-date status of extracted gradle data.
- *
+ * <p>
  * Stored in a map, checked in no particular order, don't step on other peoples shit. Be smart.
- *
+ * <p>
  * Created by covers1624 on 2/7/19.
  */
 @SuppressWarnings ("UnstableApiUsage")
 public class ModuleHashCheckEvent extends Event {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final EventRegistry<ModuleHashCheckEvent> REGISTRY = new EventRegistry<>(ModuleHashCheckEvent.class);
     private static final ClassVersionCache classVersionCache = new ClassVersionCache();
@@ -109,8 +116,14 @@ public class ModuleHashCheckEvent extends Event {
         classVersionCache.lookup(clazz).addToEvent(this);
     }
 
-    public void putVersionedClass(String cName) {
-        putVersionedClass(Utils.sneaky(() -> Class.forName(cName)));
+    public void putClassBytes(String cName) {
+        try (InputStream is = ModuleHashCheckEvent.class.getResourceAsStream("/" + cName.replace(".", "/") + ".class")) {
+            Hasher hasher = sha256.newHasher();
+            Utils.addToHasher(hasher, is);
+            extraHashes.put(cName, hasher.hash());
+        } catch (IOException e) {
+            LOGGER.error("Unable to get bytes of class {}", cName, e);
+        }
     }
 
     private static class ClassVersionCache {

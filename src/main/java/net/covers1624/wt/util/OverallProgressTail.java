@@ -1,14 +1,12 @@
 package net.covers1624.wt.util;
 
 import net.covers1624.tconsole.AbstractTail;
-import org.gradle.internal.logging.format.TersePrettyDurationFormatter;
 
 /**
  * Created by covers1624 on 10/8/19.
  */
 public class OverallProgressTail extends AbstractTail {
 
-    private final TersePrettyDurationFormatter formatter = new TersePrettyDurationFormatter();
     private final long start = System.currentTimeMillis();
 
     public OverallProgressTail() {
@@ -23,6 +21,25 @@ public class OverallProgressTail extends AbstractTail {
     @Override
     public void tick() {
         long now = System.currentTimeMillis();
-        setLine(1, "Elapsed: [" + formatter.format(now - start) + "]");
+        setLine(1, "Elapsed: [" + formatDurationTerse(now - start) + "]");
+    }
+
+    public static String formatDurationTerse(long elapsedTimeInMs) {
+        StringBuilder result = new StringBuilder();
+        if (elapsedTimeInMs > 3600000L) {
+            result.append(elapsedTimeInMs / 3600000L).append("h ");
+        }
+
+        if (elapsedTimeInMs > 60000L) {
+            result.append(elapsedTimeInMs % 3600000L / 60000L).append("m ");
+        }
+
+        if (elapsedTimeInMs >= 1000L) {
+            result.append(elapsedTimeInMs % 60000L / 1000L).append("s");
+        } else {
+            result.append(elapsedTimeInMs).append("ms");
+        }
+
+        return result.toString();
     }
 }

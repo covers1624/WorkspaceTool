@@ -338,10 +338,10 @@ public class WorkspaceTool {
         event.putVersionedClass(SourceSetData.class);
         event.putVersionedClass(WorkspaceToolModel.class);
         event.putVersionedClass(WorkspaceToolModelImpl.class);
-        event.putVersionedClass("net.covers1624.wt.gradle.WorkspaceToolGradlePlugin");
-        event.putVersionedClass("net.covers1624.wt.gradle.builder.AbstractModelBuilder");
-        event.putVersionedClass("net.covers1624.wt.gradle.builder.ExtraDataBuilder");
-        event.putVersionedClass("net.covers1624.wt.gradle.builder.WorkspaceToolModelBuilder");
+        event.putClassBytes("net.covers1624.wt.gradle.WorkspaceToolGradlePlugin");
+        event.putClassBytes("net.covers1624.wt.gradle.builder.AbstractModelBuilder");
+        event.putClassBytes("net.covers1624.wt.gradle.builder.ExtraDataBuilder");
+        event.putClassBytes("net.covers1624.wt.gradle.builder.WorkspaceToolModelBuilder");
     }
 
     private void onProcessDependency(ProcessDependencyEvent event) {
