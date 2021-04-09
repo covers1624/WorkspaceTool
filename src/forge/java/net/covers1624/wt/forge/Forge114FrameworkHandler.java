@@ -182,12 +182,18 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         context.modules.forEach(m -> {
             m.getSourceSets().values().forEach(ss -> {
                 ss.getCompileConfiguration().addDependency(forgeDep);
+                for (Path resourceDir : ss.getResources()) {
+                    //If the SS has a mods.toml file, assume there is _some_ mod there
+                    if (Files.exists(resourceDir.resolve("META-INF/mods.toml"))) {
+                        userdevRuntume.addDependency(new SourceSetDependencyImpl()
+                                .setModule(m)
+                                .setSourceSet(ss.getName())
+                                .setExport(false)
+                        );
+                        break;
+                    }
+                }
             });
-            userdevRuntume.addDependency(new SourceSetDependencyImpl()//
-                    .setModule(m)//
-                    .setSourceSet("main")//
-                    .setExport(false)//
-            );
         });
 
         if (needsSetup) {

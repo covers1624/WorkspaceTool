@@ -362,7 +362,7 @@ public class ForgeExtension implements Extension {
                                 modClasses.add(append(e.getKey(), module.getOutput()));
                                 modClasses.add(append(e.getKey(), module.getOutput()));
                             });
-                } else if (sourceSet.equals("main")) {
+                } else {
                     for (Path resourceDir : module.getResources()) {
                         Path modsToml = resourceDir.resolve("META-INF/mods.toml");
                         if (Files.exists(modsToml)) {
