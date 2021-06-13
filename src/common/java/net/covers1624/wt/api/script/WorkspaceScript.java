@@ -2,8 +2,8 @@ package net.covers1624.wt.api.script;
 
 import groovy.lang.Closure;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
-import net.covers1624.wt.api.script.runconfig.RunConfigContainer;
 import net.covers1624.wt.util.ClosureBackedConsumer;
+import net.covers1624.wt.util.JavaVersion;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 /**
  * WorkspaceTool scripts extend from this class.
  * Most methods are named so Groovy Magic can happen.
- *
+ * <p>
  * Created by covers1624 on 13/05/19.
  */
 public interface WorkspaceScript {
@@ -64,6 +64,22 @@ public interface WorkspaceScript {
     void depOverride(String from, String to);
 
     /**
+     * The Java Version to use.
+     *
+     * @param javaVersion The java version.
+     */
+    default void jdk(JavaVersion javaVersion) {
+        setJdk(javaVersion);
+    }
+
+    /**
+     * The Java Version to use.
+     *
+     * @param javaVersion The java version.
+     */
+    void setJdk(JavaVersion javaVersion);
+
+    /**
      * Configures the ModuleContainer.
      *
      * @param closure The Closure.
@@ -111,6 +127,8 @@ public interface WorkspaceScript {
     Workspace getWorkspace();
 
     Map<String, String> getDepOverrides();
+
+    JavaVersion getJdk();
 
     ModuleContainerSpec getModuleContainer();
 

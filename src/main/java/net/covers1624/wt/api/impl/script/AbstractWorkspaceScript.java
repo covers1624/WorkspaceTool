@@ -12,6 +12,7 @@ import net.covers1624.wt.api.script.WorkspaceScript;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.workspace.WorkspaceRegistry;
 import net.covers1624.wt.event.ScriptWorkspaceEvalEvent;
+import net.covers1624.wt.util.JavaVersion;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,6 +41,7 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     private Workspace workspace;
     private ModuleContainerSpec moduleContainer;
     private Map<String, String> depOverrides = new HashMap<>();
+    private JavaVersion javaVersion = JavaVersion.JAVA_8;
 
     public AbstractWorkspaceScript() {
         super();
@@ -94,6 +96,11 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     @Override
     public void depOverride(String from, String to) {
         depOverrides.put(from, to);
+    }
+
+    @Override
+    public void setJdk(JavaVersion javaVersion) {
+        this.javaVersion = javaVersion;
     }
 
     @Override
@@ -157,6 +164,11 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     @Override
     public Map<String, String> getDepOverrides() {
         return depOverrides;
+    }
+
+    @Override
+    public JavaVersion getJdk() {
+        return javaVersion;
     }
 
     @Override

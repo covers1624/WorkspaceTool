@@ -259,26 +259,26 @@ public class WorkspaceTool {
         //Replace maven dependencies with module dependencies.
         context.modules.forEach(module -> {
             for (Configuration config : module.getConfigurations().values()) {
-                config.setDependencies(config.getDependencies().stream()//
+                config.setDependencies(config.getDependencies().stream()
                         .map(e -> {
                             ProcessDependencyEvent event = new ProcessDependencyEvent(context, module, config, config, e);
                             ProcessDependencyEvent.REGISTRY.fireEvent(event);
                             return event.getResult();
-                        })//
-                        .filter(Objects::nonNull)//
-                        .collect(Collectors.toSet())//
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet())
                 );
             }
             SourceSet testSS = module.getSourceSets().get("test");
             if (testSS != null) {
-                testSS.getCompileConfiguration().addDependency(new SourceSetDependencyImpl()//
-                        .setModule(module)//
-                        .setSourceSet("main")//
+                testSS.getCompileConfiguration().addDependency(new SourceSetDependencyImpl()
+                        .setModule(module)
+                        .setSourceSet("main")
                 );
             }
             SourceSet apiSS = module.getSourceSets().get("api");
             if (apiSS != null) {
-                module.getSourceSets().get("main").getCompileConfiguration().addDependency(//
+                module.getSourceSets().get("main").getCompileConfiguration().addDependency(
                         new SourceSetDependencyImpl().setModule(module).setSourceSet("api"));
             }
         });
@@ -311,10 +311,13 @@ public class WorkspaceTool {
         CompilerConfiguration configuration = new CompilerConfiguration();
         configuration.setScriptBaseClass(AbstractWorkspaceScript.class.getName());
         ImportCustomizer importCustomizer = new ImportCustomizer();
-        importCustomizer.addStarImports(//
-                "net.covers1624.wt.api.script",//
-                "net.covers1624.wt.api.script.module",//
-                "net.covers1624.wt.api.script.runconfig"//
+        importCustomizer.addImports(
+                "net.covers1624.wt.util.JavaVersion"
+        );
+        importCustomizer.addStarImports(
+                "net.covers1624.wt.api.script",
+                "net.covers1624.wt.api.script.module",
+                "net.covers1624.wt.api.script.runconfig"
         );
         configuration.addCompilationCustomizers(importCustomizer);
         PrepareScriptEvent.REGISTRY.fireEvent(new PrepareScriptEvent(binding, scriptFile, configuration));
@@ -350,13 +353,13 @@ public class WorkspaceTool {
         if (dependency instanceof MavenDependency) {
             MavenDependency mavenDep = (MavenDependency) dependency;
             MavenNotation notation = mavenDep.getNotation();
-            Optional<Module> matchingModule = event.getContext().modules.parallelStream()//
-                    .filter(e -> e instanceof GradleBackedModule)//
-                    .map(e -> (GradleBackedModule) e)//
-                    .filter(e -> e != module)//
-                    .filter(e -> e.getProjectData().group.equals(notation.group))//
-                    .filter(e -> e.getProjectData().archivesBaseName.equals(notation.module))//
-                    .map(e -> (Module) e)//
+            Optional<Module> matchingModule = event.getContext().modules.parallelStream()
+                    .filter(e -> e instanceof GradleBackedModule)
+                    .map(e -> (GradleBackedModule) e)
+                    .filter(e -> e != module)
+                    .filter(e -> e.getProjectData().group.equals(notation.group))
+                    .filter(e -> e.getProjectData().archivesBaseName.equals(notation.module))
+                    .map(e -> (Module) e)
                     .findFirst();
             if (matchingModule.isPresent()) {
                 Module otherModule = matchingModule.get();

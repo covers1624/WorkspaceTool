@@ -10,19 +10,19 @@ import net.covers1624.wt.intellij.api.script.Intellij
  */
 class IntellijImpl extends AbstractWorkspace implements Intellij {
 
-    private boolean modulePerSourceSet
+    private String jdkName
 
     IntellijImpl(MixinInstantiator mixinInstantiator) {
         super(mixinInstantiator)
     }
 
     @Override
-    void setModulePerSourceSet(boolean bool) {
-        modulePerSourceSet = bool
+    void setJdkName(String name) {
+        jdkName = name
     }
 
     @Override
-    boolean getModulePerSourceSet() {
-        return modulePerSourceSet
+    String getJdkName() {
+        return jdkName
     }
 }

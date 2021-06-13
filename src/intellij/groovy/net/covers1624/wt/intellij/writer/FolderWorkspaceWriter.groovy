@@ -27,6 +27,9 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
 
     @Override
     void write(Intellij frameworkImpl) {
+        def script = context.workspaceScript
+        def jdkName = frameworkImpl.getJdkName() ?: script.getJdk().version
+        def languageLevel = "JDK_" + script.getJdk().version.replace(".", "_")
         def dotIdea = context.projectDir.resolve(".idea")
         def outFolder = context.projectDir.resolve("out")
 
@@ -36,8 +39,8 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
         if (prm != null) {
             miscNode.remove(prm)
         }
-        //TODO, script hooks to change VM target and JDK name.
-        def prmNew = miscNode.appendNode('component', [name: 'ProjectRootManager', version: '2', languageLevel: 'JDK_1_8', 'project-jdk-name': '1.8', 'project-jdk-type': 'JavaSDK'])
+
+        def prmNew = miscNode.appendNode('component', [name: 'ProjectRootManager', version: '2', languageLevel: languageLevel, 'project-jdk-name': jdkName, 'project-jdk-type': 'JavaSDK'])
         prmNew.appendNode('output', ['url': outFolder.fileURL])
         misc.write(miscNode)
 

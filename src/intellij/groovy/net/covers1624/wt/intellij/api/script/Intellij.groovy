@@ -7,12 +7,11 @@ import net.covers1624.wt.api.script.Workspace
  */
 interface Intellij extends Workspace {
 
-    default void modulePerSourceSet(boolean bool) {
-        setModulePerSourceSet(bool)
+    default void jdkName(String name) {
+        setJdkName(name)
     }
 
-    void setModulePerSourceSet(boolean bool)
+    void setJdkName(String name)
 
-    boolean getModulePerSourceSet()
-
+    String getJdkName()
 }

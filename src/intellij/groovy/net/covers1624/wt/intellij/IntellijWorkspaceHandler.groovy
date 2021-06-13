@@ -16,7 +16,6 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
 
     @Override
     void buildWorkspaceModules(Intellij workspace, WorkspaceToolContext context) {
-        def modulePerSS = workspace.modulePerSourceSet
         def modules = [:] as Map<String, IJWorkspaceModuleImpl>
         def outFolder = context.projectDir.resolve("out")
         context.allModules.each { module ->
