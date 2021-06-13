@@ -1,5 +1,6 @@
 package net.covers1624.wt.intellij.model
 
+import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -37,7 +38,9 @@ class IJRunConfig {
         }
         def methodv2 = configuration.appendNode('method', [v: '2'])
         methodv2.appendNode('option', [name: 'MakeProject', enabled: 'true'])
-        runConfigFolder.resolve(name + ".xml").write(component)
+        def path = runConfigFolder.resolve(name + ".xml")
+        Files.deleteIfExists(path)
+        path.write(component)
     }
 
 }
