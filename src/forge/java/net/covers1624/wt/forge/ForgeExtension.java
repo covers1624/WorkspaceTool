@@ -182,7 +182,7 @@ public class ForgeExtension implements Extension {
                 GradleBackedModule forgeModule = findForgeModule(context);
                 ProjectData projectData = forgeModule.getProjectData();
                 FGPluginData pluginData = projectData.pluginData.getData(FGPluginData.class);
-                if (pluginData != null && pluginData.version.isFg2()) {
+                if (pluginData != null && pluginData.version.isFG2()) {
                     FG2McpMappingData mappingData = projectData.getData(FG2McpMappingData.class);
                     if (mappingData == null) {
                         throw new RuntimeException("Forge module missing mapping data.");

@@ -1,6 +1,7 @@
 package net.covers1624.wt.forge.gradle;
 
 import net.covers1624.wt.event.VersionedClass;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 
@@ -14,23 +15,30 @@ public class FGVersion implements Serializable {
     public static final FGVersion FG22 = new FGVersion("2.2");
     public static final FGVersion FG23 = new FGVersion("2.3");
     public static final FGVersion FG30 = new FGVersion("3.0");
-    public static final FGVersion FG40 = new FGVersion("4.0");
-    public static final FGVersion FG41 = new FGVersion("4.1");
-    public static final FGVersion FG50 = new FGVersion("5.0");
-    public static final FGVersion FG51 = new FGVersion("5.1");
+    public static final FGVersion FG40 = new FGVersion("4.0", FG30);
+    public static final FGVersion FG41 = new FGVersion("4.1", FG30);
+    public static final FGVersion FG50 = new FGVersion("5.0", FG30);
+    public static final FGVersion FG51 = new FGVersion("5.1", FG30);
 
     public final String version;
+    @Nullable
+    public final FGVersion effectiveVersion;
 
     public FGVersion(String version) {
-        this.version = version;
+        this(version, null);
     }
 
-    public boolean isFg2() {
+    public FGVersion(String version, @Nullable FGVersion effectiveVersion) {
+        this.version = version;
+        this.effectiveVersion = effectiveVersion;
+    }
+
+    public boolean isFG2() {
         return this.equals(FG22) || this.equals(FG23);
     }
 
-    public boolean isAtleastFG3() {
-        return this.equals(FG30) || this.equals(FG40) || this.equals(FG41);
+    public boolean isFG3Compatible() {
+        return this.equals(FG30) || effectiveVersion.equals(FG30);
     }
 
     @Override

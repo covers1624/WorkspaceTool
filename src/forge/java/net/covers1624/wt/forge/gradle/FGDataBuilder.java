@@ -114,7 +114,7 @@ public class FGDataBuilder implements ExtraDataBuilder {
             return;
         }
 
-        if (fgPluginData.version.isFg2() && pluginData.pluginIds.contains(FG2_PATCHER_PLUGIN)) {
+        if (fgPluginData.version.isFG2() && pluginData.pluginIds.contains(FG2_PATCHER_PLUGIN)) {
             Task genGradleProjects = project.getTasks().findByName("genGradleProjects");
             if (genGradleProjects != null) {
                 Field field = genGradleProjects.getClass().getSuperclass().getDeclaredField("dependencies");
@@ -140,9 +140,9 @@ public class FGDataBuilder implements ExtraDataBuilder {
             return;
         }
         FGVersion version = fgPluginData.version;
-        if (version.isFg2()) {
+        if (version.isFG2()) {
             FG2.build(project, pluginData, projectData);
-        } else if (version.isAtleastFG3()) {
+        } else if (version.isFG3Compatible()) {
             FG3Plus.build(project, pluginData, projectData);
         }
     }

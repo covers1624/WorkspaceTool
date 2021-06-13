@@ -115,12 +115,14 @@ dependencies {
     forgeCompileOnly sourceSets.main.output
     forgeCompileOnly sourceSets.gradle.output
     forgeCompileOnly gradleApi()
+    forgeCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //Gradle
     gradleCompile "net.covers1624:GradleStuff:2.1.0.+"
     gradleCompileOnly gradleApi()
     gradleCompileOnly sourceSets.common.output
     gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+    gradleCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //Intellij
     intellijCompileOnly sourceSets.common.output
