@@ -27,7 +27,7 @@ plugins {
 apply plugin: 'net.covers1624.ss-dependencies'
 
 group 'net.covers1624.workspace_tool'
-version '0.3.0'
+version '0.3.1'
 
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of ${archivesBaseName}, Version: ${version}"
@@ -45,8 +45,9 @@ sourceSets {
 }
 
 repositories {
-    jcenter()
     mavenLocal()
+    jcenter()
+    mavenCentral()
     maven { url 'https://maven.covers1624.net/' }
     maven { url 'https://files.minecraftforge.net/maven/' }
     maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
@@ -68,8 +69,8 @@ configurations {
 dependencies {
 
     //Common
-    common 'org.ow2.asm:asm:7.0'
-    common 'org.ow2.asm:asm-commons:7.+'
+    common 'org.ow2.asm:asm:9.1'
+    common 'org.ow2.asm:asm-commons:9.1'
     common 'org.apache.logging.log4j:log4j-core:2.11.1'
     common 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
     common 'org.apache.logging.log4j:log4j-jul:2.11.1'
@@ -116,7 +117,7 @@ dependencies {
     forgeCompileOnly gradleApi()
 
     //Gradle
-    gradleCompile "net.covers1624:GradleStuff:2.0.0+"
+    gradleCompile "net.covers1624:GradleStuff:2.1.0.+"
     gradleCompileOnly gradleApi()
     gradleCompileOnly sourceSets.common.output
     gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
@@ -134,7 +135,7 @@ dependencies {
     runtimeOnly sourceSets.intellij.output
     runtimeOnly sourceSets.gradle.output
     runtimeOnly sourceSets.minecraft.output
-    runtimeOnly 'net.covers1624:GradleStuff:2.0.0+'
+    runtimeOnly 'net.covers1624:GradleStuff:2.1.0.+'
     compileOnly 'org.jetbrains:annotations:16.0.2'
     compileOnly sourceSets.wrapper.output
     annotationProcessor 'org.apache.logging.log4j:log4j-core:2.11.1'
@@ -217,26 +218,6 @@ task wrapperJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 }
 
 build.dependsOn(commonJar, forgeJar, gradleJar, intellijJar, minecraftJar, wrapperJar)
-
-task makeShell() {
-    sourceSets.each {
-        def isMain = it.name == "main"
-        def name = isMain ? "" : StringUtils.capitalize(it.name)
-        makeShell.dependsOn("compile" + name + "Java")
-        makeShell.dependsOn("compile" + name + "Groovy")
-    }
-    doLast {
-        def libs = new HashSet()
-        sourceSets.each { libs += it.runtimeClasspath }
-        libs = libs.collect { it.absolutePath }
-        libs.each { println it }
-        def lines = []
-        lines << "#!/bin/bash"
-        lines << "java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -classpath \"${libs.join(":")}\" ${shellMain}"
-        lines << "read -p \"Press enter to continue\""
-        file('build/shell.sh').text = lines.join("\n")
-    }
-}
 
 publishing {
     repositories {

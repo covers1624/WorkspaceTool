@@ -133,7 +133,8 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
                     data.getOrComputeSrc("scala").addAll(getDirs(scalaSS.getAllScala()));
                 }
 
-                data.compileConfiguration = sourceSet.getCompileConfigurationName();
+                //TODO, this is not ideal, we should more accurately build the runtime compile and runtime classpath.
+                data.compileConfiguration = sourceSet.getImplementationConfigurationName();
                 data.runtimeConfiguration = sourceSet.getRuntimeOnlyConfigurationName();
                 data.compileOnlyConfiguration = sourceSet.getCompileOnlyConfigurationName();
             }

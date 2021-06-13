@@ -177,15 +177,15 @@ public class WorkspaceTool {
         context.dependencyLibrary = new DependencyLibraryImpl();
 
         logger.info("Constructing module representation..");
-        List<Path> candidates = Files.walk(context.projectDir)//
-                .parallel()//
+        List<Path> candidates = Files.walk(context.projectDir)
+                .parallel()
                 .filter(p -> {
                     if (Files.isDirectory(p) && !p.toString().endsWith("buildSrc")) {
                         Path buildGradle = p.resolve("build.gradle");
                         return Files.isRegularFile(buildGradle) && Files.exists(buildGradle);
                     }
                     return false;
-                })//
+                })
                 .collect(Collectors.toList());
 
         ModuleContainerSpec moduleContainer = context.workspaceScript.getModuleContainer();
@@ -211,9 +211,9 @@ public class WorkspaceTool {
         allModules.forEach(module -> {
             ScalaSdkDependency sdkCandidate = new ScalaSdkDependencyImpl();
             Configuration config = module.getSourceSets().get("main").getCompileConfiguration();
-            config.getAllDependencies()//
-                    .stream()//
-                    .filter(e -> e instanceof MavenDependency).map(e -> (MavenDependency) e)//
+            config.getAllDependencies()
+                    .stream()
+                    .filter(e -> e instanceof MavenDependency).map(e -> (MavenDependency) e)
                     .forEach(dep -> {
                         MavenNotation notation = dep.getNotation();
                         if (notation.group.startsWith("org.scala-lang")) {
@@ -226,7 +226,7 @@ public class WorkspaceTool {
                     });
             if (sdkCandidate.getScalac() != null) {
                 sdkCandidate.setVersion(sdkCandidate.getScalac().getNotation().version);
-                ScalaVersion scalaVersion = ScalaVersion.findByVersion(sdkCandidate.getVersion())//
+                ScalaVersion scalaVersion = ScalaVersion.findByVersion(sdkCandidate.getVersion())
                         .orElseThrow(() -> new RuntimeException("Unknown scala version: " + sdkCandidate.getVersion()));
                 sdkCandidate.setScalaVersion(scalaVersion);
                 config.addDependency(sdkCandidate);
@@ -237,12 +237,12 @@ public class WorkspaceTool {
 
         //Resolve all dependencies, and remove duplicates.
         allModules.forEach(dependencyAggregator::consume);
-        stream(allModules.spliterator(), true)//
+        stream(allModules.spliterator(), true)
                 .forEach(module -> {
-                    module.getConfigurations().values()//
-                            .parallelStream()//
+                    module.getConfigurations().values()
+                            .parallelStream()
                             .forEach(config -> {
-                                config.setDependencies(config.getDependencies().stream()//
+                                config.setDependencies(config.getDependencies().stream()
                                         .map(e -> {
                                             if (e instanceof MavenDependency) {
                                                 return dependencyAggregator.resolve(((MavenDependency) e).getNotation());
@@ -250,8 +250,8 @@ public class WorkspaceTool {
                                                 return dependencyAggregator.resolveScala(((ScalaSdkDependency) e).getScalaVersion());
                                             }
                                             return e;
-                                        })//
-                                        .collect(Collectors.toSet())//
+                                        })
+                                        .collect(Collectors.toSet())
                                 );
                             });
                 });

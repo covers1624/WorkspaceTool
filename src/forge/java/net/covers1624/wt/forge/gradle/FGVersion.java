@@ -16,6 +16,8 @@ public class FGVersion implements Serializable {
     public static final FGVersion FG30 = new FGVersion("3.0");
     public static final FGVersion FG40 = new FGVersion("4.0");
     public static final FGVersion FG41 = new FGVersion("4.1");
+    public static final FGVersion FG50 = new FGVersion("5.0");
+    public static final FGVersion FG51 = new FGVersion("5.1");
 
     public final String version;
 

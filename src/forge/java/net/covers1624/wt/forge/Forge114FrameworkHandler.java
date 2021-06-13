@@ -22,7 +22,6 @@ import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.forge.api.script.Forge114;
-import net.covers1624.wt.forge.util.AccessExtractor;
 import net.covers1624.wt.forge.util.AtFile;
 import net.covers1624.wt.gradle.GradleProgressListener;
 import net.covers1624.wt.mc.data.AssetIndexJson;
@@ -74,14 +73,14 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             Utils.sneaky(() -> Files.copy(forgeAt, cachedForgeAt, StandardCopyOption.REPLACE_EXISTING));
         }
         {//AccessTransformers
-            Hasher mergedHasher = sha256.newHasher();
+            Hasher mergedHasher = SHA_256.newHasher();
             List<Path> atFiles = context.modules.parallelStream()//
                     .flatMap(e -> e.getSourceSets().values().stream())//
                     .flatMap(e -> e.getResources().stream())//
                     .filter(Files::exists)//
                     .flatMap(Utils.sneak(e -> Files.walk(e).filter(f -> f.getFileName().toString().equals("accesstransformer.cfg"))))//
                     .collect(Collectors.toList());
-            atFiles.forEach(e -> logger.info("Found AccessTransformer: {}", e));
+            atFiles.forEach(e -> LOGGER.info("Found AccessTransformer: {}", e));
             atFiles.forEach(e -> Utils.addToHasher(mergedHasher, e));
             Utils.addToHasher(mergedHasher, cachedForgeAt);
             HashCode mergedHash = mergedHasher.hash();
@@ -105,13 +104,13 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             Path r1 = forgeDir.resolve("src/userdev/java/net/minecraftforge/userdev/WTLaunchLogin.java");
             Path r2 = forgeDir.resolve("src/userdev/java/net/minecraftforge/userdev/WTCredentialsDialog.java");
 
-            Hasher gStartLoginResourcesHasher = sha256.newHasher();
+            Hasher gStartLoginResourcesHasher = SHA_256.newHasher();
             Utils.addToHasher(gStartLoginResourcesHasher, "/wt_login/forms_rt.jar");
             Utils.addToHasher(gStartLoginResourcesHasher, "/wt_login/114/src/net/minecraftforge/userdev/WTLaunchLogin.java");
             Utils.addToHasher(gStartLoginResourcesHasher, "/wt_login/114/src/net/minecraftforge/userdev/WTCredentialsDialog.java");
             HashCode hash1 = gStartLoginResourcesHasher.hash();
 
-            Hasher gStartLoginFilesHasher = sha256.newHasher();
+            Hasher gStartLoginFilesHasher = SHA_256.newHasher();
             Utils.addToHasher(gStartLoginFilesHasher, formsRt);
             Utils.addToHasher(gStartLoginFilesHasher, r1);
             Utils.addToHasher(gStartLoginFilesHasher, r2);
@@ -137,14 +136,6 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
                 .findFirst()//
                 .orElseThrow(() -> new RuntimeException("'forge' submodule not found on Forge project."));
 
-        //I have no idea why Gradle doesnt do this already..
-        //TODO, Investigate why gradle model builder stuff doesnt extract this properly.
-        forgeSubModuleData.configurations.get("userdevCompile").extendsFrom.add("userdevImplementation");
-        forgeSubModuleData.configurations.get("testCompile").extendsFrom.add("testImplementation");
-        forgeSubModuleData.configurations.get("fmllauncherCompile").extendsFrom.add("fmllauncherImplementation");
-        forgeSubModuleData.configurations.get("fmllauncherCompile").extendsFrom.add("compile");
-        forgeSubModuleData.configurations.get("testCompile").extendsFrom.add("compile");
-        forgeSubModuleData.configurations.get("compile").extendsFrom.add("implementation");
         forgeSubModuleData.configurations.get("installer").transitive = true;
 
         Map<String, Configuration> configurations = ProjectDataHelper.buildConfigurations(forgeModule, forgeSubModuleData);
@@ -205,12 +196,12 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
                 GradleVersion installed = GradleVersion.version(environment.getGradle().getGradleVersion());
                 GradleVersion requiredVersion = GradleVersion.version(GRADLE_VERSION);
 
-                logger.info("Detected Gradle version: {}", installed);
+                LOGGER.info("Detected Gradle version: {}", installed);
                 if (installed.compareTo(requiredVersion) >= 0) {
-                    logger.info("Using project gradle version.");
+                    LOGGER.info("Using project gradle version.");
                     useProjectGradle = true;
                 } else {
-                    logger.info("Forcing gradle {}.", GRADLE_VERSION);
+                    LOGGER.info("Forcing gradle {}.", GRADLE_VERSION);
                 }
             }
 
@@ -226,15 +217,15 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
                         .withArguments("-si")
                         .setJvmArguments("-Xmx3G")
                         .setJvmArguments("-Dorg.gradle.daemon=false")
-                        .setStandardOutput(new LoggingOutputStream(logger, Level.INFO))
-                        .setStandardError(new LoggingOutputStream(logger, Level.ERROR))
+                        .setStandardOutput(new LoggingOutputStream(LOGGER, Level.INFO))
+                        .setStandardError(new LoggingOutputStream(LOGGER, Level.ERROR))
                         .addProgressListener(new GradleProgressListener(context, tailGroup))
                         .run();
                 context.console.removeGroup(tailGroup);
             }
-            Path accessList = context.cacheDir.resolve("forge_access_list.cfg.xz");
-            AtFile atFile = AccessExtractor.extractAccess(Collections.singleton(forgeDir.resolve("projects/forge/build/classes/java/main")));
-            atFile.write(accessList, AtFile.CompressionMethod.XZ);
+//            Path accessList = context.cacheDir.resolve("forge_access_list.cfg.xz");
+//            AtFile atFile = AccessExtractor.extractAccess(Collections.singleton(forgeDir.resolve("projects/forge/build/classes/java/main")));
+//            atFile.write(accessList, AtFile.CompressionMethod.XZ);
             hashContainer.remove(HASH_MARKER_SETUP);//clear the marker.
         }
         try {
@@ -252,7 +243,7 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
     }
 
     private void downloadAssets(Path mcDir, String mcVersion) throws Exception {
-        String RESOURCES_URL = "http://resources.download.minecraft.net/";
+        String RESOURCES_URL = "https://resources.download.minecraft.net/";
         //Mojang uses sha1 for their assets. This is safe to ignore.
         @SuppressWarnings ("deprecation")
         HashFunction sha1 = Hashing.sha1();
@@ -330,7 +321,7 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
                 action.setListener(tail);
                 Utils.sneaky(action::execute);
                 if (!context.console.isSupported(TailConsole.Output.STDOUT)) {
-                    logger.info("Downloaded: '{}' to '{}'", action.getSrc(), action.getDest());
+                    LOGGER.info("Downloaded: '{}' to '{}'", action.getSrc(), action.getDest());
                 }
                 action.setListener(null);
                 tailPool.push(tail);

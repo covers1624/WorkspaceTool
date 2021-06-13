@@ -21,11 +21,11 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
 
     protected static final String GRADLE_VERSION = "4.10.3";
     protected static final HashCode MARKER_HASH = HashCode.fromString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-    protected static final Logger logger = LogManager.getLogger("Forge112FrameworkHandler");
+    protected static final Logger LOGGER = LogManager.getLogger("ForgeFrameworkHandler");
     protected static final String HASH_MERGED_AT = "merged-at";
     protected static final String HASH_MARKER_SETUP = "marker-setup";
     protected static final String HASH_GSTART_LOGIN = "gstart-login";
-    protected static final HashFunction sha256 = Hashing.sha256();
+    protected static final HashFunction SHA_256 = Hashing.sha256();
 
     protected static final String LOCAL_BRANCH_SUFFIX = "-wt-local";
 

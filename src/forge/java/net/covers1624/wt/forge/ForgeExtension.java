@@ -29,8 +29,6 @@ import net.covers1624.wt.forge.api.impl.Forge114Impl;
 import net.covers1624.wt.forge.api.impl.Forge114ModuleSpecTemplate;
 import net.covers1624.wt.forge.api.impl.Forge114RunConfigTemplate;
 import net.covers1624.wt.forge.api.script.*;
-import net.covers1624.wt.forge.gradle.FGDataBuilder;
-import net.covers1624.wt.forge.gradle.FGVersion;
 import net.covers1624.wt.forge.gradle.data.FG2Data;
 import net.covers1624.wt.forge.gradle.data.FG2McpMappingData;
 import net.covers1624.wt.forge.gradle.data.FG3McpMappingData;
@@ -163,9 +161,9 @@ public class ForgeExtension implements Extension {
             });
             GradleBackedModule forgeModule = findForgeModule(context);
             Configuration config = forgeModule.getSourceSets().get("main").getCompileConfiguration();
-            Optional<ScalaSdkDependency> dep = config.getAllDependencies().stream()//
-                    .filter(e -> e instanceof ScalaSdkDependency)//
-                    .map(e -> (ScalaSdkDependency) e)//
+            Optional<ScalaSdkDependency> dep = config.getAllDependencies().stream()
+                    .filter(e -> e instanceof ScalaSdkDependency)
+                    .map(e -> (ScalaSdkDependency) e)
                     .findFirst();
             dep.ifPresent(scalaSdk -> {
                 context.modules.forEach(e -> {
@@ -177,9 +175,9 @@ public class ForgeExtension implements Extension {
 
     private void onProcessDependency(ProcessDependencyEvent event) {
         WorkspaceToolContext context = event.getContext();
-        //Used as latch to compute. Empty means something else from null.
-        //noinspection OptionalAssignedToNull
         if (event.getContext().workspaceScript.getFramework() instanceof ForgeFramework) {
+            //Used as latch to compute. Empty means something else from null.
+            //noinspection OptionalAssignedToNull
             if (remapper == null) {
                 GradleBackedModule forgeModule = findForgeModule(context);
                 ProjectData projectData = forgeModule.getProjectData();
@@ -191,9 +189,9 @@ public class ForgeExtension implements Extension {
                     }
                     remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new SRGToMCPRemapper(mappingData))));
                 } else {
-                    ProjectData forgeSubModuleData = projectData.subProjects.stream()//
-                            .filter(e -> e.name.equals("forge"))//
-                            .findFirst()//
+                    ProjectData forgeSubModuleData = projectData.subProjects.stream()
+                            .filter(e -> e.name.equals("forge"))
+                            .findFirst()
                             .orElseThrow(() -> new RuntimeException("'forge' submodule not found on Forge project."));
                     FG3McpMappingData mappingData = forgeSubModuleData.getData(FG3McpMappingData.class);
                     if (mappingData != null) {
@@ -223,7 +221,7 @@ public class ForgeExtension implements Extension {
                         event.setResult(remapper.process(mvnDep));
                     } else {
                         Configuration fg3Obfuscated = module.getConfigurations().get("__obfuscated");
-                        if(fg3Obfuscated != null && fg3Obfuscated.getAllDependencies().stream()
+                        if (fg3Obfuscated != null && fg3Obfuscated.getAllDependencies().stream()
                                 .filter(e -> e instanceof MavenDependency)
                                 .map(e -> (MavenDependency) e)
                                 .anyMatch(e -> e.getNotation().equals(mvnDep.getNotation()))) {
@@ -271,9 +269,9 @@ public class ForgeExtension implements Extension {
         if (context.workspaceScript.getFrameworkClass().equals(Forge114.class)) {
             GradleBackedModule forgeModule = findForgeModule(context);
             ProjectData rootProject = forgeModule.getProjectData();
-            ProjectData forgeSubProject = rootProject.subProjects.stream()//
-                    .filter(e -> e.name.equals("forge"))//
-                    .findFirst()//
+            ProjectData forgeSubProject = rootProject.subProjects.stream()
+                    .filter(e -> e.name.equals("forge"))
+                    .findFirst()
                     .orElseThrow(() -> new RuntimeException("Missing forge submodule."));
             Map<String, String> envVars = new HashMap<>();
             String mcVersion = rootProject.extraProperties.get("MC_VERSION");
@@ -285,12 +283,27 @@ public class ForgeExtension implements Extension {
             envVars.put("MCP_VERSION", rootProject.extraProperties.get("MCP_VERSION"));
             envVars.put("FORGE_GROUP", forgeSubProject.group);
             envVars.put("FORGE_SPEC", forgeSubProject.extraProperties.get("SPEC_VERSION"));
-            //TODO, This strips the minecraft version from the beginning, perhaps strip branch name off the end?
             envVars.put("FORGE_VERSION", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""));
             envVars.put("LAUNCHER_VERSION", forgeSubProject.extraProperties.get("SPEC_VERSION"));
             for (RunConfig runConfig : context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values()) {
                 runConfig.envVar(envVars);
                 runConfig.envVar(Collections.singletonMap("target", ((Forge114RunConfig) runConfig).getLaunchTarget()));
+            }
+
+            // This is a bit of a hack, we remove the FG3+ 'minecraft' configuration from the 'implementation' configuration
+            //  this configuration should only contain the Deobfuscated & Remapped Forge, and all forge + Minecraft dependencies.
+            //  These dependencies are provided via the module dep on Forge and are safe to remove.
+            for (Module module : event.getContext().modules) {
+                for (SourceSet sourceSet : module.getSourceSets().values()) {
+                    Configuration compileConfiguration = sourceSet.getCompileConfiguration();
+                    if (compileConfiguration.getName().equals("implementation")) {
+                        Optional<Configuration> optMinecraft = compileConfiguration.getExtendsFrom()
+                                .stream()
+                                .filter(e -> e.getName().equals("minecraft"))
+                                .findFirst();
+                        optMinecraft.ifPresent(compileConfiguration.getExtendsFrom()::remove);
+                    }
+                }
             }
         }
     }
@@ -319,9 +332,9 @@ public class ForgeExtension implements Extension {
             Forge114 forge114 = (Forge114) context.workspaceScript.getFramework();
             GradleBackedModule forgeModule = findForgeModule(context);
             ProjectData rootProject = forgeModule.getProjectData();
-            ProjectData forgeSubProject = rootProject.subProjects.stream()//
-                    .filter(e -> e.name.equals("forge"))//
-                    .findFirst()//
+            ProjectData forgeSubProject = rootProject.subProjects.stream()
+                    .filter(e -> e.name.equals("forge"))
+                    .findFirst()
                     .orElseThrow(() -> new RuntimeException("Missing forge submodule."));
             String mcVersion = rootProject.extraProperties.get("MC_VERSION");
 
@@ -346,8 +359,8 @@ public class ForgeExtension implements Extension {
                 Forge114ModuleSpec spec = (Forge114ModuleSpec) customModules.get(moduleName.replace(".", "/"));
                 if (spec != null) {
                     ModuleModsContainer moduleMods = spec.getForgeModuleModsContainer();
-                    moduleMods.getModSourceSets().entrySet().stream()//
-                            .filter(e -> e.getValue().equals(sourceSet))//
+                    moduleMods.getModSourceSets().entrySet().stream()
+                            .filter(e -> e.getValue().equals(sourceSet))
                             .forEach(e -> {
                                 ForgeExportedData.ModData modData = new ForgeExportedData.ModData();
                                 modData.moduleId = module.getName();
@@ -372,10 +385,10 @@ public class ForgeExtension implements Extension {
                                     throw new RuntimeException(String.format("ModsToml file %s expected mods as list.", modsToml));
                                 }
                                 List<UnmodifiableConfig> modConfigs = config.getOrElse("mods", ArrayList::new);
-                                modConfigs.stream()//
-                                        .map(mi -> mi.get("modId"))//
-                                        .map(e -> (String) e)//
-                                        .filter(Objects::nonNull)//
+                                modConfigs.stream()
+                                        .map(mi -> mi.get("modId"))
+                                        .map(e -> (String) e)
+                                        .filter(Objects::nonNull)
                                         .forEach(modId -> {
                                             ForgeExportedData.ModData modData = new ForgeExportedData.ModData();
                                             modData.moduleId = module.getName();
@@ -406,13 +419,13 @@ public class ForgeExtension implements Extension {
     }
 
     private static String append(String mod, Path path) {
-        return mod + "%%" + path.toAbsolutePath().toString();
+        return mod + "%%" + path.toAbsolutePath();
     }
 
     private GradleBackedModule findForgeModule(WorkspaceToolContext context) {
-        return (GradleBackedModule) context.frameworkModules.stream()//
-                .filter(e -> e.getName().equals("Forge"))//
-                .findFirst()//
+        return (GradleBackedModule) context.frameworkModules.stream()
+                .filter(e -> e.getName().equals("Forge"))
+                .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing Forge module."));
     }
 }

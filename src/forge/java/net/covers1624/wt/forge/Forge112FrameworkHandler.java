@@ -49,14 +49,14 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         super.constructFrameworkModules(frameworkImpl);
         Path mergedAT = context.cacheDir.resolve("merged_at.cfg");
         { //AccessTransformers.
-            Hasher atHasher = sha256.newHasher();
+            Hasher atHasher = SHA_256.newHasher();
             List<Path> atFiles = context.modules.parallelStream()//
                     .flatMap(e -> e.getSourceSets().values().stream())//
                     .flatMap(e -> e.getResources().stream())//
                     .filter(Files::exists)//
                     .flatMap(e -> sneaky(() -> Files.walk(e)).filter(f -> f.getFileName().toString().endsWith("_at.cfg")))//
                     .collect(Collectors.toList());
-            atFiles.forEach(e -> logger.info("Found AccessTransformer: {}", e));
+            atFiles.forEach(e -> LOGGER.info("Found AccessTransformer: {}", e));
             atFiles.forEach(e -> Utils.addToHasher(atHasher, e));
             HashCode atHash = atHasher.hash();
             if (hashContainer.check(HASH_MERGED_AT, atHash)) {
@@ -77,13 +77,13 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             Path r1 = forgeDir.resolve("src/start/java/GradleStartLogin.java");
             Path r2 = forgeDir.resolve("src/start/java/net/covers1624/wt/gstart/CredentialsDialog.java");
 
-            Hasher gStartLoginResourcesHasher = sha256.newHasher();
+            Hasher gStartLoginResourcesHasher = SHA_256.newHasher();
             Utils.addToHasher(gStartLoginResourcesHasher, "/wt_login/forms_rt.jar");
             Utils.addToHasher(gStartLoginResourcesHasher, "/wt_login/112/src/GradleStartLogin.java");
             Utils.addToHasher(gStartLoginResourcesHasher, "/wt_login/112/src/net/covers1624/wt/gstart/CredentialsDialog.java");
             HashCode hash1 = gStartLoginResourcesHasher.hash();
 
-            Hasher gStartLoginFilesHasher = sha256.newHasher();
+            Hasher gStartLoginFilesHasher = SHA_256.newHasher();
             Utils.addToHasher(gStartLoginFilesHasher, formsRt);
             Utils.addToHasher(gStartLoginFilesHasher, r1);
             Utils.addToHasher(gStartLoginFilesHasher, r2);

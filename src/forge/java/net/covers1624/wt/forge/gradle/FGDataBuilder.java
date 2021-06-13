@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @VersionedClass (5)
 public class FGDataBuilder implements ExtraDataBuilder {
 
-    private static Logger logger = LoggerFactory.getLogger(FGDataBuilder.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FGDataBuilder.class);
 
     private static final String FG2_USER_PLUGIN = "net.minecraftforge.gradle.forge";
     private static final String FG2_USER_PLUGIN_CLASS = "net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin";
@@ -59,7 +59,7 @@ public class FGDataBuilder implements ExtraDataBuilder {
             } else if (fg2VString.startsWith("2.3")) {
                 fgPluginData.version = FGVersion.FG23;
             } else {
-                logger.error("Failed to parse FG2 Version: {}", fg2VString);
+                LOGGER.error("Failed to parse FG2 Version: {}", fg2VString);
                 throw new RuntimeException("Failed to parse FG2Version.");
             }
         } else {
@@ -76,8 +76,8 @@ public class FGDataBuilder implements ExtraDataBuilder {
                     .map(Pair::getLeft)//
                     .findFirst();
             if (!fgArtifact.isPresent()) {
-                logger.error("Unable to find ForgeGradle artifact in buildscript classpath configuration.");
-                logger.debug("Found artifacts: '{}'", artifacts.parallelStream()//
+                LOGGER.error("Unable to find ForgeGradle artifact in buildscript classpath configuration.");
+                LOGGER.debug("Found artifacts: '{}'", artifacts.parallelStream()//
                         .map(ResolvedArtifact::getModuleVersion)//
                         .map(ResolvedModuleVersion::getId)//
                         .map(Object::toString)//
@@ -98,15 +98,19 @@ public class FGDataBuilder implements ExtraDataBuilder {
                 fgPluginData.version = FGVersion.FG40;
             } else if (version.startsWith("4.1")) {
                 fgPluginData.version = FGVersion.FG41;
+            } else if (version.startsWith("5.0")) {
+                fgPluginData.version = FGVersion.FG50;
+            } else if (version.startsWith("5.1")) {
+                fgPluginData.version = FGVersion.FG51;
             } else {
-                logger.error("Unknown FG version: '{}', From: '{}' in project {}({})", version, ident, project.getPath(), project.getDisplayName());
+                LOGGER.error("Unknown FG version: '{}', From: '{}' in project {}({})", version, ident, project.getPath(), project.getDisplayName());
             }
         }
         if (fgPluginData.version != FGVersion.UNKNOWN) {
-            logger.info("Found ForgeGradle! Version: {} in project {}({})", fgPluginData.version, project.getPath(), project.getDisplayName());
+            LOGGER.info("Found ForgeGradle! Version: {} in project {}({})", fgPluginData.version, project.getPath(), project.getDisplayName());
             pluginData.extraData.put(FGPluginData.class, fgPluginData);
         } else {
-            logger.warn("Failed to find ForgeGradle in project {}({}). :(", project.getPath(), project.getDisplayName());
+            LOGGER.warn("Failed to find ForgeGradle in project {}({}). :(", project.getPath(), project.getDisplayName());
             return;
         }
 
@@ -132,7 +136,7 @@ public class FGDataBuilder implements ExtraDataBuilder {
         FGPluginData fgPluginData = rootData.pluginData.getData(FGPluginData.class);
 
         if (fgPluginData == null) {
-            logger.info("Null plugin data.");
+            LOGGER.info("Null plugin data.");
             return;
         }
         FGVersion version = fgPluginData.version;
@@ -223,23 +227,25 @@ public class FGDataBuilder implements ExtraDataBuilder {
                 data.accessTransformers = tryGetProperty(extension, "accessTransformers");
                 data.sideAnnotationStrippers = tryGetProperty(extension, "sideAnnotationStrippers");
             }
-            Optional<ConfigurationData.MavenDependency> mappings = projectData.configurations.values().stream()//
-                    .flatMap(e -> e.dependencies.stream())//
-                    .filter(e -> e instanceof ConfigurationData.MavenDependency)//
-                    .map(e -> ((ConfigurationData.MavenDependency) e))//
-                    .filter(e -> //
-                            e.mavenNotation.group.equals("net.minecraft")//
-                                    && e.mavenNotation.module.startsWith("mappings_"))//
+            Optional<ConfigurationData.MavenDependency> mappings = projectData.configurations.values().stream()
+                    .flatMap(e -> e.dependencies.stream())
+                    .filter(e -> e instanceof ConfigurationData.MavenDependency)
+                    .map(e -> ((ConfigurationData.MavenDependency) e))
+                    .filter(e ->
+                            e.mavenNotation.group.equals("net.minecraft")
+                                    && (e.mavenNotation.module.startsWith("mappings_")
+                                    || e.mavenNotation.module.startsWith("official_"))
+                    )
                     .findFirst();
             mappings.ifPresent(e -> {
-                logger.info("Found MCP mappings.");
+                LOGGER.info("Found MCP mappings.");
                 FG3McpMappingData fg3MappingData = new FG3McpMappingData();
                 fg3MappingData.mappingsArtifact = e.mavenNotation;
                 fg3MappingData.mappingsZip = e.classes;
                 projectData.extraData.put(FG3McpMappingData.class, fg3MappingData);
             });
             if (!mappings.isPresent()) {
-                logger.warn("MCP Mappings not found in project!");
+                LOGGER.warn("MCP Mappings not found in project!");
             }
         }
     }
