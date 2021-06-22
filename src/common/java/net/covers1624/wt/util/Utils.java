@@ -61,6 +61,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -243,6 +244,10 @@ public class Utils {
             @Override public E next() { return enumeration.nextElement(); }
             //@formatter:on
         };
+    }
+
+    public static <T> Iterable<T> iterable(Stream<T> stream) {
+        return stream::iterator;
     }
 
     /**

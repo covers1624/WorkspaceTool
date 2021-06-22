@@ -64,6 +64,12 @@ configurations {
     compile.extendsFrom mavenResolver
     wrapperCompile.extendsFrom mavenResolver
     minecraftCompile.extendsFrom common
+
+    runtimeClasspath.extendsFrom commonRuntimeClasspath
+    runtimeClasspath.extendsFrom forgeRuntimeClasspath
+    runtimeClasspath.extendsFrom gradleRuntimeClasspath
+    runtimeClasspath.extendsFrom intellijRuntimeClasspath
+    runtimeClasspath.extendsFrom minecraftRuntimeClasspath
 }
 
 dependencies {
@@ -110,6 +116,7 @@ dependencies {
     mavenResolver 'org.apache.maven:maven-resolver-provider:3.6.0'
 
     //Forge
+    forgeCompile 'net.minecraftforge:srgutils:0.4.3'
     forgeCompile sourceSets.minecraft.output
     forgeCompileOnly sourceSets.common.output
     forgeCompileOnly sourceSets.main.output
