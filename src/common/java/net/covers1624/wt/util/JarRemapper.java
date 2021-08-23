@@ -23,7 +23,6 @@
 
 package net.covers1624.wt.util;
 
-import net.covers1624.wt.util.Utils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -34,6 +33,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.jar.Manifest;
 
 /**
@@ -91,7 +92,7 @@ public class JarRemapper {
             Path outFile = outRoot.resolve(inRoot.relativize(inFile).toString());
             if (!outFile.endsWith(".SF") && !outFile.endsWith(".DSA") && !outFile.endsWith(".RSA")) {
                 if (outFile.toString().endsWith("META-INF/MANIFEST.MF")) {
-                    try (InputStream is = Files.newInputStream(inFile);//
+                    try (InputStream is = Files.newInputStream(inFile);
                          OutputStream os = Files.newOutputStream(outFile, StandardOpenOption.CREATE)) {
                         Manifest manifest = new Manifest(is);
                         manifest.getEntries().clear();
@@ -99,7 +100,7 @@ public class JarRemapper {
                         os.flush();
                     }
                 } else if (outFile.toString().endsWith(".class")) {
-                    try (InputStream is = Files.newInputStream(inFile);//
+                    try (InputStream is = Files.newInputStream(inFile);
                          OutputStream os = Files.newOutputStream(outFile, StandardOpenOption.CREATE)) {
                         ClassReader reader = new ClassReader(is);
                         ClassWriter writer = new ClassWriter(0);
@@ -108,6 +109,13 @@ public class JarRemapper {
                         os.write(writer.toByteArray());
                         os.flush();
                     }
+                } else if (outFile.toString().endsWith(".refmap.json")) {
+                    MixinRefMap refMap = Utils.fromJson(inFile, MixinRefMap.class);
+                    // This is a very brute-forced remap.
+                    // We are assuming we will only have srg based data pass through (which is a valid assertion).
+                    refMap.mappings.values().forEach(this::transformRefMap);
+                    refMap.data.values().forEach(e -> e.values().forEach(this::transformRefMap));
+                    Utils.toJson(refMap, MixinRefMap.class, outFile);
                 } else {
                     Files.copy(inFile, outFile);
                 }
@@ -115,5 +123,29 @@ public class JarRemapper {
 
             return FileVisitResult.CONTINUE;
         }
+
+        private void transformRefMap(Map<String, String> mappings) {
+            for (Map.Entry<String, String> entry : mappings.entrySet()) {
+                String line = entry.getValue();
+                if (!line.startsWith("L")) continue;
+                int firstSemiColon = line.indexOf(";");
+                int descStart = line.indexOf("(");
+                String owner = line.substring(1, firstSemiColon);
+                String name = line.substring(firstSemiColon + 1, descStart);
+                String desc = line.substring(descStart);
+
+                String mappedOwner = remapper.mapType(owner);
+                String mappedName = remapper.mapMethodName(owner, name, desc);
+                String mappedDesc = remapper.mapMethodDesc(desc);
+                entry.setValue("L" + mappedOwner + ";" + mappedName + mappedDesc);
+            }
+        }
+
+    }
+
+    private static class MixinRefMap {
+
+        private final Map<String, Map<String, String>> mappings = new HashMap<>();
+        private final Map<String, Map<String, Map<String, String>>> data = new HashMap<>();
     }
 }
