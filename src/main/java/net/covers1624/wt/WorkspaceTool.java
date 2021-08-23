@@ -43,7 +43,6 @@ import net.covers1624.wt.api.workspace.WorkspaceWriter;
 import net.covers1624.wt.event.*;
 import net.covers1624.wt.gradle.GradleManagerImpl;
 import net.covers1624.wt.gradle.GradleModelCacheImpl;
-import net.covers1624.wt.util.OverallProgressTail;
 import net.covers1624.wt.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
@@ -234,6 +233,21 @@ public class WorkspaceTool {
                 config.addDependency(sdkCandidate);
                 //Attempt to nuke. boom.exe
                 config.walkHierarchy(e -> sdkCandidate.getClasspath().forEach(e.getDependencies()::remove));
+            }
+        });
+
+        // Run a pass of dependency processing _before_ running dependency aggregation.
+        context.modules.forEach(module -> {
+            for (Configuration config : module.getConfigurations().values()) {
+                config.setDependencies(config.getDependencies().stream()
+                        .map(e -> {
+                            EarlyProcessDependencyEvent event = new EarlyProcessDependencyEvent(context, module, config, config, e);
+                            EarlyProcessDependencyEvent.REGISTRY.fireEvent(event);
+                            return event.getResult();
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet())
+                );
             }
         });
 

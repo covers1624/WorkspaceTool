@@ -8,11 +8,13 @@ import net.covers1624.wt.api.module.Module;
 /**
  * Called to process the dependency on a Module's Configuration.
  *
+ * The Forge extension uses this for DeobfCompile and DeobfProvided handling.
+ *
  * Created by covers1624 on 26/7/19.
  */
-public class ProcessDependencyEvent extends ResultEvent<Dependency> {
+public class EarlyProcessDependencyEvent extends ResultEvent<Dependency> {
 
-    public static final EventRegistry<ProcessDependencyEvent> REGISTRY = new EventRegistry<>(ProcessDependencyEvent.class);
+    public static final EventRegistry<EarlyProcessDependencyEvent> REGISTRY = new EventRegistry<>(EarlyProcessDependencyEvent.class);
 
     private final WorkspaceToolContext context;
     private final Module module;
@@ -20,7 +22,7 @@ public class ProcessDependencyEvent extends ResultEvent<Dependency> {
     private final Configuration dependencyConfig;
     private final Dependency dependency;
 
-    public ProcessDependencyEvent(WorkspaceToolContext context, Module module, Configuration sourceSetConfig, Configuration dependencyConfig, Dependency dependency) {
+    public EarlyProcessDependencyEvent(WorkspaceToolContext context, Module module, Configuration sourceSetConfig, Configuration dependencyConfig, Dependency dependency) {
         super(false);
         this.context = context;
         this.module = module;

@@ -37,10 +37,7 @@ import net.covers1624.wt.forge.remap.CSVRemapper;
 import net.covers1624.wt.forge.remap.DependencyRemapper;
 import net.covers1624.wt.forge.remap.SRGToMCPRemapper;
 import net.covers1624.wt.mc.data.VersionInfoJson;
-import net.covers1624.wt.util.JarRemapper;
-import net.covers1624.wt.util.JarStripper;
-import net.covers1624.wt.util.TypedMap;
-import net.covers1624.wt.util.Utils;
+import net.covers1624.wt.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -75,7 +72,7 @@ public class ForgeExtension implements Extension {
         PrepareScriptEvent.REGISTRY.register(this::onPrepareScript);
         ModuleHashCheckEvent.REGISTRY.register(this::onModuleHashCheck);
         ProcessModulesEvent.REGISTRY.register(this::onProcessModules112);
-        ProcessDependencyEvent.REGISTRY.register(this::onProcessDependency);
+        EarlyProcessDependencyEvent.REGISTRY.register(this::onProcessDependency);
         ProcessModulesEvent.REGISTRY.register(this::processModules);
         ScriptWorkspaceEvalEvent.REGISTRY.register(this::onScriptWorkspaceEvalEvent);
 
@@ -173,7 +170,7 @@ public class ForgeExtension implements Extension {
         }
     }
 
-    private void onProcessDependency(ProcessDependencyEvent event) {
+    private void onProcessDependency(EarlyProcessDependencyEvent event) {
         WorkspaceToolContext context = event.getContext();
         if (event.getContext().workspaceScript.getFramework() instanceof ForgeFramework) {
             //Used as latch to compute. Empty means something else from null.
@@ -215,17 +212,27 @@ public class ForgeExtension implements Extension {
                 Configuration config = event.getDependencyConfig();
                 if (dep instanceof MavenDependency) {
                     MavenDependency mvnDep = (MavenDependency) dep;
-                    if (mvnDep.getNotation().group.startsWith("deobf.")) {
+                    MavenNotation notation = mvnDep.getNotation();
+                    if (notation.group.startsWith("deobf.")) {
                         event.setResult(null);
                     } else if (config.getName().equals("deobfCompile") || config.getName().equals("deobfProvided")) {
                         event.setResult(remapper.process(mvnDep));
                     } else {
                         Configuration fg3Obfuscated = module.getConfigurations().get("__obfuscated");
-                        if (fg3Obfuscated != null && fg3Obfuscated.getAllDependencies().stream()
-                                .filter(e -> e instanceof MavenDependency)
-                                .map(e -> (MavenDependency) e)
-                                .anyMatch(e -> e.getNotation().equals(mvnDep.getNotation()))) {
-                            event.setResult(remapper.process(mvnDep));
+                        if (fg3Obfuscated != null && notation.version.contains("_mapped_")) {
+                            Optional<MavenDependency> unobfDep = fg3Obfuscated.getAllDependencies().stream()
+                                    .filter(e -> e instanceof MavenDependency)
+                                    .map(e -> (MavenDependency) e)
+                                    .filter(e -> {
+                                        MavenNotation n2 = e.getNotation();
+                                        if (!(n2.group.equals(notation.group))) return false;
+                                        if (!(n2.module.equals(notation.module))) return false;
+                                        if (!(Objects.equals(n2.classifier, notation.classifier))) return false;
+                                        int strip = notation.version.indexOf("_mapped_");
+                                        return n2.version.equals(notation.version.substring(0, strip));
+                                    })
+                                    .findFirst();
+                            unobfDep.ifPresent(e -> event.setResult(remapper.process(e)));
                         }
                     }
                 }
