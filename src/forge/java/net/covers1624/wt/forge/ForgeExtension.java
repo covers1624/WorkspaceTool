@@ -219,7 +219,7 @@ public class ForgeExtension implements Extension {
                         event.setResult(remapper.process(mvnDep));
                     } else {
                         Configuration fg3Obfuscated = module.getConfigurations().get("__obfuscated");
-                        if (fg3Obfuscated != null && notation.version.contains("_mapped_")) {
+                        if (fg3Obfuscated != null) {
                             Optional<MavenDependency> unobfDep = fg3Obfuscated.getAllDependencies().stream()
                                     .filter(e -> e instanceof MavenDependency)
                                     .map(e -> (MavenDependency) e)
@@ -228,6 +228,7 @@ public class ForgeExtension implements Extension {
                                         if (!(n2.group.equals(notation.group))) return false;
                                         if (!(n2.module.equals(notation.module))) return false;
                                         if (!(Objects.equals(n2.classifier, notation.classifier))) return false;
+                                        if (!notation.version.contains("_mapped_") && n2.version.equals(notation.version)) return true;
                                         int strip = notation.version.indexOf("_mapped_");
                                         return n2.version.equals(notation.version.substring(0, strip));
                                     })
