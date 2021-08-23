@@ -1,6 +1,7 @@
 package net.covers1624.wt.forge.gradle;
 
 import groovy.lang.MetaProperty;
+import net.covers1624.quack.util.SneakyUtils;
 import net.covers1624.wt.api.gradle.data.ConfigurationData;
 import net.covers1624.wt.api.gradle.data.PluginData;
 import net.covers1624.wt.api.gradle.data.ProjectData;
@@ -14,6 +15,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.*;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.java.archives.Attributes;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.bundling.Jar;
@@ -22,10 +24,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
 
 /**
  * Created by covers1624 on 18/6/19.
@@ -224,8 +229,8 @@ public class FGDataBuilder implements ExtraDataBuilder {
             Object extension = mcExt != null ? mcExt : patcherExt;
 
             if (extension != null) {
-                data.accessTransformers = tryGetProperty(extension, "accessTransformers");
-                data.sideAnnotationStrippers = tryGetProperty(extension, "sideAnnotationStrippers");
+                data.accessTransformers = coerceToList(tryGetProperty(extension, "accessTransformers"));
+                data.sideAnnotationStrippers = coerceToList(tryGetProperty(extension, "sideAnnotationStrippers"));
             }
             Optional<ConfigurationData.MavenDependency> mappings = projectData.configurations.values().stream()
                     .flatMap(e -> e.dependencies.stream())
@@ -258,13 +263,12 @@ public class FGDataBuilder implements ExtraDataBuilder {
         return null;
     }
 
-    @SuppressWarnings ("unchecked")
     public static <T> T tryGetProperty(Object object, String name) {
         MetaProperty prop = DefaultGroovyMethods.hasProperty(object, name);
         if (prop == null) {
             return null;
         }
-        return (T) prop.getProperty(object);
+        return unsafeCast(prop.getProperty(object));
     }
 
     private static <T> T getProperty(Object object, String name) {
@@ -273,6 +277,14 @@ public class FGDataBuilder implements ExtraDataBuilder {
             throw new RuntimeException("Property not found: " + name);
         }
         return thing;
+    }
+
+    private static <T> List<T> coerceToList(Object o) {
+        if (o instanceof List) return unsafeCast(o);
+        if (o instanceof ConfigurableFileCollection) {
+            return unsafeCast(new ArrayList<>(((ConfigurableFileCollection) o).getFiles()));
+        }
+        throw new IllegalArgumentException("Unable to coerce '" + o.getClass().getName() + "' to a List.");
     }
 
     private static MavenNotation zipNotationOf(Dependency dep) {

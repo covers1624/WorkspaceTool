@@ -59,7 +59,7 @@ public class GradleProgressListener implements ProgressListener {
             builder.append(resolve(descriptor.getParent())).append(" > ");
         }
         String name = descriptor.getDisplayName();
-        if (name.contains("Build parameterized model") && name.contains("for root project")) {
+        if (name.contains("Build model") && name.contains("for root project")) {
             String project = name.substring(name.lastIndexOf("root project") + 13);
             builder.append("Extract WT data for ").append(project);
         } else {

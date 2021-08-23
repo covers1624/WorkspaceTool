@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import net.covers1624.quack.util.SneakyUtils;
 import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.tconsole.log4j.Log4jUtils;
 import net.covers1624.tconsole.log4j.TailConsoleAppender;
@@ -153,6 +154,7 @@ public class WorkspaceTool {
         context.gradleManager.includeClassMarker(StringUtils.class);
         context.gradleManager.includeClassMarker(StringSubstitutor.class);
         context.gradleManager.includeClassMarker(MoreObjects.class);
+        context.gradleManager.includeClassMarker(SneakyUtils.class);
 
         context.gradleManager.includeResourceMarker("gradle_plugin.marker");
 

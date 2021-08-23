@@ -27,7 +27,7 @@ plugins {
 apply plugin: 'net.covers1624.ss-dependencies'
 
 group 'net.covers1624.workspace_tool'
-version '0.3.1'
+version '0.3.2'
 
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of ${archivesBaseName}, Version: ${version}"
