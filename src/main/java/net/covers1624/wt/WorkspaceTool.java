@@ -195,7 +195,7 @@ public class WorkspaceTool {
             for (Path candidate : candidates) {
                 Path rel = context.projectDir.relativize(candidate);
                 if (matcher.test(rel)) {
-                    context.modules.add(ModuleImpl.makeGradleModule(rel.toString(), candidate, context));
+                    context.modules.add(ModuleImpl.makeGradleModule(rel.toString().replace("\\", "/"), candidate, context));
                 }
             }
         }
