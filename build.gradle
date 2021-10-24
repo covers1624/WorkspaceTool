@@ -12,7 +12,7 @@ buildscript {
         maven { url 'https://maven.covers1624.net/' }
     }
     dependencies {
-        classpath 'net.covers1624:GradleStuff:2.0.0+'
+        classpath 'net.covers1624:GradleStuff:2.1.0+'
     }
 }
 
@@ -56,14 +56,14 @@ repositories {
 configurations {
     common
     mavenResolver
-    forgeCompile.extendsFrom common
-    gradleCompile.extendsFrom common
-    intellijCompile.extendsFrom common
-    compile.extendsFrom common
-    commonCompile.extendsFrom common
-    compile.extendsFrom mavenResolver
-    wrapperCompile.extendsFrom mavenResolver
-    minecraftCompile.extendsFrom common
+    forgeImplementation.extendsFrom common
+    gradleImplementation.extendsFrom common
+    intellijImplementation.extendsFrom common
+    implementation.extendsFrom common
+    commonImplementation.extendsFrom common
+    implementation.extendsFrom mavenResolver
+    wrapperImplementation.extendsFrom mavenResolver
+    minecraftImplementation.extendsFrom common
 
     runtimeClasspath.extendsFrom commonRuntimeClasspath
     runtimeClasspath.extendsFrom forgeRuntimeClasspath
@@ -75,92 +75,89 @@ configurations {
 dependencies {
 
     //Common
-    common 'org.ow2.asm:asm:9.1'
-    common 'org.ow2.asm:asm-commons:9.1'
-    common 'org.apache.logging.log4j:log4j-core:2.11.1'
-    common 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
-    common 'org.apache.logging.log4j:log4j-jul:2.11.1'
-    common 'com.google.code.gson:gson:2.8.5'
-    common 'com.google.guava:guava:26.0-jre'
-    common 'org.codehaus.groovy:groovy-all:3.0.0-beta-3'
-    common 'org.apache.commons:commons-text:1.6'
-    common 'org.apache.commons:commons-lang3:3.9'
-    common 'org.apache.maven:maven-artifact:3.6.0'
-    common 'it.unimi.dsi:fastutil:7.1.0'
-    common 'org.eclipse.jgit:org.eclipse.jgit:5.2.1.201812262042-r'
-    common 'net.rubygrapefruit:native-platform:0.18'
-    common 'org.fusesource.jansi:jansi:1.18'
-    common 'org.jline:jline-terminal-jna:3.12.1'
-    common 'org.apache.httpcomponents:httpclient:4.5.7'
-    common 'commons-io:commons-io:2.6'
-    common 'com.electronwill.night-config:core:3.6.0'
-    common 'com.electronwill.night-config:toml:3.6.0'
-    common 'com.opencsv:opencsv:5.0'
-    common "org.tukaani:xz:1.8"
-    common "org.apache.commons:commons-compress:1.8.1"
-    common 'org.apache.commons:commons-collections4:4.3'
+    common 'org.ow2.asm:asm:9.2'
+    common 'org.ow2.asm:asm-commons:9.2'
+    common 'org.apache.logging.log4j:log4j-core:2.14.1'
+    common 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
+    common 'org.apache.logging.log4j:log4j-jul:2.14.1'
+    common 'com.google.code.gson:gson:2.8.8'
+    common 'com.google.guava:guava:31.0.1-jre'
+    common 'org.codehaus.groovy:groovy:3.0.8'
+    common 'org.codehaus.groovy:groovy-xml:3.0.8'
+    common 'org.apache.commons:commons-text:1.9'
+    common 'org.apache.commons:commons-lang3:3.12.0'
+    common 'org.apache.maven:maven-artifact:3.8.1'
+    common 'it.unimi.dsi:fastutil:8.5.6'
+    common 'org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r'
+    common 'org.apache.httpcomponents:httpclient:4.5.13'
+    common 'commons-io:commons-io:2.11.0'
+    common 'com.electronwill.night-config:core:3.6.4'
+    common 'com.electronwill.night-config:toml:3.6.4'
+    common 'com.opencsv:opencsv:5.5.2'
+    common 'org.tukaani:xz:1.9'
+    common 'org.apache.commons:commons-compress:1.21'
+    common 'org.apache.commons:commons-collections4:4.4'
     common 'codechicken:ChickenASM:2.0.0.+'
     common 'net.covers1624:TailConsole:1.1.0.4'
-    common 'net.covers1624:Quack:0.2.0.9'
-    commonCompileOnly 'org.jetbrains:annotations:16.0.2'
+    common 'net.covers1624:Quack:0.3.7.29'
+    commonCompileOnly 'org.jetbrains:annotations:22.0.0'
 
     //mavenResolver
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-api:1.3.3'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-spi:1.3.3'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-impl:1.3.3'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-util:1.3.3'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-connector-basic:1.3.3'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-transport-http:1.3.3'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-transport-file:1.3.3'
-    mavenResolver 'org.apache.maven:maven-model-builder:3.6.0'
-    mavenResolver 'org.apache.maven:maven-resolver-provider:3.6.0'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-api:1.7.2'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-spi:1.7.2'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-impl:1.7.2'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-util:1.7.2'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-connector-basic:1.7.2'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-transport-http:1.7.2'
+    mavenResolver 'org.apache.maven.resolver:maven-resolver-transport-file:1.7.2'
+    mavenResolver 'org.apache.maven:maven-model-builder:3.8.1'
+    mavenResolver 'org.apache.maven:maven-resolver-provider:3.8.1'
 
     //Forge
-    forgeCompile 'net.minecraftforge:srgutils:0.4.3'
-    forgeCompile sourceSets.minecraft.output
+    forgeImplementation 'net.minecraftforge:srgutils:0.4.3'
+    forgeImplementation sourceSets.minecraft.output
     forgeCompileOnly sourceSets.common.output
     forgeCompileOnly sourceSets.main.output
     forgeCompileOnly sourceSets.gradle.output
     forgeCompileOnly gradleApi()
-    forgeCompileOnly 'org.jetbrains:annotations:16.0.2'
+    forgeCompileOnly 'org.jetbrains:annotations:22.0.0'
 
     //Gradle
-    gradleCompile "net.covers1624:GradleStuff:2.1.0.+"
+    gradleImplementation "net.covers1624:GradleStuff:2.1.0.+"
     gradleCompileOnly gradleApi()
     gradleCompileOnly sourceSets.common.output
-    gradleCompileOnly "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
-    gradleCompileOnly 'org.jetbrains:annotations:16.0.2'
+    gradleCompileOnly 'org.jetbrains:annotations:22.0.0'
 
     //Intellij
     intellijCompileOnly sourceSets.common.output
     intellijCompileOnly sourceSets.main.output
 
     //Main
-    compile 'org.gradle:gradle-tooling-api:4.10.3'
-    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
-    compile 'org.apache.logging.log4j:log4j-jul:2.11.1'
-    compile sourceSets.common.output
+    implementation 'org.gradle:gradle-tooling-api:4.10.3'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
+    implementation 'org.apache.logging.log4j:log4j-jul:2.14.1'
+    implementation sourceSets.common.output
     runtimeOnly sourceSets.forge.output
     runtimeOnly sourceSets.intellij.output
     runtimeOnly sourceSets.gradle.output
     runtimeOnly sourceSets.minecraft.output
     runtimeOnly 'net.covers1624:GradleStuff:2.1.0.+'
-    compileOnly 'org.jetbrains:annotations:16.0.2'
+    compileOnly 'org.jetbrains:annotations:22.0.0'
     compileOnly sourceSets.wrapper.output
-    annotationProcessor 'org.apache.logging.log4j:log4j-core:2.11.1'
+    annotationProcessor 'org.apache.logging.log4j:log4j-core:2.14.1'
 
     //Minecraft
     minecraftCompileOnly sourceSets.common.output
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'com.github.stefanbirkner:system-rules:1.19.0'
-    testCompile 'org.apache.logging.log4j:log4j-core:2.11.1:tests'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
+    testImplementation 'org.apache.logging.log4j:log4j-core:2.14.1:tests'
 
     //Wrapper
-    wrapperCompile 'com.google.code.gson:gson:2.8.5'
-    wrapperCompile 'org.apache.commons:commons-lang3:3.9'
-    wrapperCompile 'org.slf4j:slf4j-simple:1.7.25'
-    wrapperCompileOnly 'org.jetbrains:annotations:16.0.2'
+    wrapperImplementation 'com.google.code.gson:gson:2.8.8'
+    wrapperImplementation 'org.apache.commons:commons-lang3:3.12.0'
+    wrapperImplementation 'org.slf4j:slf4j-simple:1.7.32'
+    wrapperCompileOnly 'org.jetbrains:annotations:22.0.0'
 
     testImplementation sourceSets.intellij.output
 
@@ -205,7 +202,7 @@ task wrapperJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
     baseName 'wt-wrapper'
 
     minimize()
-    configurations = [project.configurations.wrapperCompile]
+    configurations = [copyResolvable(project.configurations.wrapperImplementation)]
 
     from sourceSets.wrapper.output
     manifest {
@@ -366,4 +363,10 @@ class Visitor implements ConfigurationVisitor {
     @Override void startVisit(Configuration configuration) {}
     @Override void endVisit() {}
     //@formatter:on
+}
+
+def copyResolvable(Configuration configuration) {
+    var copy = configuration.copy()
+    copy.canBeResolved = true
+    return copy
 }
