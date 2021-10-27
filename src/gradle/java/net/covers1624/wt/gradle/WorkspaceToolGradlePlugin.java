@@ -20,7 +20,6 @@ public class WorkspaceToolGradlePlugin implements Plugin<Gradle> {
     @Override
     public void apply(Gradle gradle) {
         gradle.rootProject(project -> {
-            project.apply(ImmutableMap.of("plugin", "java"));
             applySourceSetPlugin(project);
             ProjectInternal internal = (ProjectInternal) project;
             ToolingModelBuilderRegistry registry = internal.getServices().get(ToolingModelBuilderRegistry.class);

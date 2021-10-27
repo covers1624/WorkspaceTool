@@ -1,9 +1,9 @@
 package net.covers1624.wt.forge.api.export;
 
 import com.google.gson.annotations.SerializedName;
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.forge.gradle.data.FG2McpMappingData;
 import net.covers1624.wt.forge.gradle.data.FG3McpMappingData;
-import net.covers1624.wt.util.MavenNotation;
 
 import java.io.File;
 import java.util.ArrayList;

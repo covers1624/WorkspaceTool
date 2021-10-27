@@ -1,5 +1,6 @@
 package net.covers1624.wt.util;
 
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.MavenDependency;
 import net.covers1624.wt.api.dependency.ScalaSdkDependency;

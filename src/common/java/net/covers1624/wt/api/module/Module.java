@@ -64,8 +64,4 @@ public interface Module {
      * @param configurations The Configuration Map.
      */
     void setConfigurations(Map<String, Configuration> configurations);
-
-    boolean getModulePerSourceSet();
-
-    void setModulePerSourceSet(boolean value);
 }

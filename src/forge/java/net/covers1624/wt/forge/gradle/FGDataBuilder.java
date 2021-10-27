@@ -1,6 +1,7 @@
 package net.covers1624.wt.forge.gradle;
 
 import groovy.lang.MetaProperty;
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.quack.util.SneakyUtils;
 import net.covers1624.wt.api.gradle.data.ConfigurationData;
 import net.covers1624.wt.api.gradle.data.PluginData;
@@ -9,7 +10,6 @@ import net.covers1624.wt.event.VersionedClass;
 import net.covers1624.wt.forge.gradle.data.*;
 import net.covers1624.wt.gradle.builder.ExtraDataBuilder;
 import net.covers1624.wt.util.ColUtils;
-import net.covers1624.wt.util.MavenNotation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.gradle.api.Project;

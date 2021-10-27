@@ -1,8 +1,8 @@
 package net.covers1624.wt.api.impl.dependency;
 
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.api.gradle.data.ConfigurationData;
 import net.covers1624.wt.api.dependency.MavenDependency;
-import net.covers1624.wt.util.MavenNotation;
 
 import java.nio.file.Path;
 import java.util.Objects;

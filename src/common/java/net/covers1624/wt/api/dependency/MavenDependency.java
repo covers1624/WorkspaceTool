@@ -1,6 +1,6 @@
 package net.covers1624.wt.api.dependency;
 
-import net.covers1624.wt.util.MavenNotation;
+import net.covers1624.quack.maven.MavenNotation;
 
 import java.nio.file.Path;
 

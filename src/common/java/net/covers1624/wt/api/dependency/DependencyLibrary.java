@@ -1,10 +1,6 @@
 package net.covers1624.wt.api.dependency;
 
 import net.covers1624.wt.api.module.Module;
-import net.covers1624.wt.util.MavenNotation;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * A library of dependencies. That's all really..

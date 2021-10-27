@@ -1,7 +1,7 @@
 package net.covers1624.wt.mc.data;
 
 import com.google.common.hash.HashCode;
-import net.covers1624.wt.util.MavenNotation;
+import net.covers1624.quack.maven.MavenNotation;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URL;
@@ -42,7 +42,7 @@ public class VersionInfoJson {
 
     public class Library {
 
-        public String name;
+        public MavenNotation name;
         public Extract extract;
         public List<Rule> rules = new ArrayList<>();
         public Map<OS, String> natives = new HashMap<>();
@@ -60,7 +60,7 @@ public class VersionInfoJson {
             return last;
         }
 
-        public String getArtifact(boolean skipNatives) {
+        public MavenNotation getArtifact(boolean skipNatives) {
             if (natives == null || skipNatives) {
                 return name;
             } else {
@@ -68,7 +68,7 @@ public class VersionInfoJson {
                 if (classifier == null) {
                     return name;
                 }
-                return MavenNotation.parse(name).withClassifier(classifier).toString();
+                return name.withClassifier(classifier);
             }
         }
 

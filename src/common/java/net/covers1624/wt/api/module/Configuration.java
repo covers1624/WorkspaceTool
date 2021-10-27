@@ -1,16 +1,17 @@
 package net.covers1624.wt.api.module;
 
+import com.google.common.collect.Streams;
 import net.covers1624.wt.api.dependency.Dependency;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Represents a Gradle Configuration.
- *
+ * <p>
  * Created by covers1624 on 30/6/19.
  */
 public interface Configuration {
@@ -19,11 +20,6 @@ public interface Configuration {
      * @return The name of the Configuration.
      */
     String getName();
-
-    /**
-     * @return True if this Configuration exports any configurations provided by {@link #getExtendsFrom()}
-     */
-    boolean isTransitive();
 
     /**
      * Any Configurations that this Configuration extends from.
@@ -47,26 +43,11 @@ public interface Configuration {
     void setExtendsFrom(Set<Configuration> extendsFrom);
 
     /**
-     * Walks the Configuration hierarchy ignoring duplicates.
-     *
-     * @param consumer The Consumer.
+     * Stream this Configuration and all configurations it extends from.
      */
-    default void walkHierarchy(Consumer<Configuration> consumer) {
-        Set<String> used = new HashSet<>();
-        used.add(getName());
-        consumer.accept(this);
-        if (isTransitive()) {
-            Deque<Configuration> deque = new ArrayDeque<>(getExtendsFrom());
-            while (!deque.isEmpty()) {
-                Configuration other = deque.pop();
-                if (used.add(other.getName())) {
-                    consumer.accept(other);
-                    if (other.isTransitive()) {
-                        deque.addAll(other.getExtendsFrom());
-                    }
-                }
-            }
-        }
+    default Stream<Configuration> streamAll() {
+        return Streams.concat(Stream.of(this), getExtendsFrom().stream().flatMap(Configuration::streamAll))
+                .distinct();
     }
 
     /**
@@ -90,7 +71,6 @@ public interface Configuration {
      */
     void setDependencies(Set<Dependency> dependencies);
 
-
     void addDependencies(Set<Dependency> dependencies);
 
     /**
@@ -99,8 +79,8 @@ public interface Configuration {
      * @return The Dependencies.s
      */
     default Set<Dependency> getAllDependencies() {
-        Set<Dependency> ret = new HashSet<>();
-        walkHierarchy(e -> ret.addAll(e.getDependencies()));
-        return ret;
+        return streamAll()
+                .flatMap(e -> e.getDependencies().stream())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

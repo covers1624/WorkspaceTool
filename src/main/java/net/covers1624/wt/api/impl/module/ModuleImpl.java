@@ -1,17 +1,25 @@
 package net.covers1624.wt.api.impl.module;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.gradle.data.ProjectData;
-import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.event.ProcessProjectDataEvent;
 import net.covers1624.wt.util.ProjectDataHelper;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import static net.covers1624.wt.util.Utils.iterable;
 
 /**
  * Created by covers1624 on 25/05/19.
@@ -23,7 +31,6 @@ public class ModuleImpl implements Module {
     private final Map<String, SourceSet> sourceSets;
     private final List<Path> excludes;
     private final Map<String, Configuration> configurations;
-    private boolean modulePerSourceSet;
 
     public ModuleImpl(String name, Path path) {
         this.name = name;
@@ -94,16 +101,6 @@ public class ModuleImpl implements Module {
         this.configurations.putAll(configurations);
     }
 
-    @Override
-    public boolean getModulePerSourceSet() {
-        return modulePerSourceSet;
-    }
-
-    @Override
-    public void setModulePerSourceSet(boolean value) {
-        modulePerSourceSet = value;
-    }
-
     public static class GradleModule extends ModuleImpl implements GradleBackedModule {
 
         private final ProjectData projectData;
@@ -119,13 +116,33 @@ public class ModuleImpl implements Module {
         }
     }
 
-    public static Module makeGradleModule(String name, Path path, WorkspaceToolContext context) {
-        WorkspaceToolModel model = context.modelCache.getModel(path, Collections.emptySet());//TODO
-        ProcessProjectDataEvent.REGISTRY.fireEvent(new ProcessProjectDataEvent(context, model.getProjectData()));
-        GradleModule module = new GradleModule(name, path, model.getProjectData());
-        ProjectDataHelper.buildModule(module, model);
-        module.addExclude(path.resolve("build"));
-        module.addExclude(path.resolve(".gradle"));
-        return module;
+    public static List<Module> makeGradleModules(String groupPrefix, ProjectData project, WorkspaceToolContext ctx) {
+        Map<String, Module> modules = new HashMap<>();
+        for (ProjectData p : iterable(project.streamAllProjects())) {
+            ProcessProjectDataEvent.REGISTRY.fireEvent(new ProcessProjectDataEvent(ctx, p));
+            modules.put(p.getProjectCoords(), new GradleModule(buildModuleName(groupPrefix, p), p.projectDir.toPath(), p));
+        }
+        return makeGradleModules(project, ctx, modules);
+    }
+
+    private static String buildModuleName(String groupPrefix, ProjectData data) {
+        String name = data.getProjectCoords().replace(':', '/');
+        if (!groupPrefix.isEmpty()) {
+            return StringUtils.appendIfMissing(groupPrefix, "/") + name;
+        }
+        return name;
+    }
+
+    private static List<Module> makeGradleModules(ProjectData project, WorkspaceToolContext ctx, Map<String, Module> modules) {
+        Module module = modules.get(project.getProjectCoords());
+        ProjectDataHelper.buildModule(module, project, modules);
+        module.addExclude(module.getPath().resolve("build"));
+        module.addExclude(module.getPath().resolve(".gradle"));
+        ImmutableList.Builder<Module> moduleList = ImmutableList.builder();
+        moduleList.add(module);
+        for (ProjectData subProject : project.subProjects.values()) {
+            moduleList.addAll(makeGradleModules(subProject, ctx, modules));
+        }
+        return moduleList.build();
     }
 }

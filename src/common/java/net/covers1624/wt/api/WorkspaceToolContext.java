@@ -8,6 +8,7 @@ import net.covers1624.wt.api.gradle.GradleManager;
 import net.covers1624.wt.api.gradle.GradleModelCache;
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.module.Module;
+import net.covers1624.wt.api.script.ModdingFramework;
 import net.covers1624.wt.api.script.WorkspaceScript;
 import net.covers1624.wt.api.workspace.WorkspaceModule;
 import net.covers1624.wt.api.workspace.WorkspaceRegistry;
@@ -62,5 +63,9 @@ public class WorkspaceToolContext {
 
     public Iterable<Module> getAllModules() {
         return Iterables.concat(frameworkModules, modules);
+    }
+
+    public boolean isFramework(Class<? extends ModdingFramework> framework) {
+        return framework.equals(workspaceScript.getFrameworkClass());
     }
 }

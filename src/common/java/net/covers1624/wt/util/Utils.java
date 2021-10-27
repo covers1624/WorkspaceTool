@@ -36,6 +36,8 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+import net.covers1624.quack.gson.MavenNotationAdapter;
+import net.covers1624.quack.maven.MavenNotation;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -82,10 +84,11 @@ public class Utils {
 
     private static boolean PRETTY_JSON = true;//Boolean.getBoolean("workspacetool.pretty_json");
     public static final Gson gson = sneaky(() -> {
-        GsonBuilder builder = new GsonBuilder()//
-                .registerTypeAdapter(File.class, new FileAdapter())//
-                .registerTypeAdapter(HashCode.class, new HashCodeAdapter())//
-                .registerTypeAdapterFactory(new LowerCaseEnumAdapterFactory());//
+        GsonBuilder builder = new GsonBuilder()
+                .registerTypeAdapter(File.class, new FileAdapter())
+                .registerTypeAdapter(HashCode.class, new HashCodeAdapter())
+                .registerTypeAdapterFactory(new LowerCaseEnumAdapterFactory())
+                .registerTypeAdapter(MavenNotation.class, new MavenNotationAdapter());
         if (PRETTY_JSON) {
             builder = builder.setPrettyPrinting();
         }

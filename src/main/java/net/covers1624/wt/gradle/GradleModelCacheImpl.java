@@ -51,16 +51,15 @@ public class GradleModelCacheImpl implements GradleModelCache {
     private static final String HASH_MODULE_DATA = "wt:module-data";
 
     //hax
-    private static final Field f_h = sneaky(() -> makeAccessible(Proxy.class.getDeclaredField("h")));
     private static final String cs_ihi = "org.gradle.tooling.internal.adapter.ProtocolToModelAdapter$InvocationHandlerImpl";
     private static final Class<?> c_ihi = sneaky(() -> Class.forName(cs_ihi));
     private static final Field f_sourceObject = sneaky(() -> makeAccessible(c_ihi.getDeclaredField("sourceObject")));
 
-    private static final Set<String> hashedFiles = Sets.newHashSet(//
-            "build.gradle",//
-            "build.properties",//
-            "gradle.properties",//
-            "settings.gradle"//
+    private static final Set<String> hashedFiles = Sets.newHashSet(
+            "build.gradle",
+            "build.properties",
+            "gradle.properties",
+            "settings.gradle"
     );
 
     private final WorkspaceToolContext context;
@@ -81,10 +80,10 @@ public class GradleModelCacheImpl implements GradleModelCache {
         HashContainer hashContainer = new HashContainer(dataDir.resolve(relPath.replace("/", "_") + "_cache.json"));
 
         //TODO, Event here to allow Forge module to add various other files.
-        List<Path> toHash = StreamSupport.stream(Iterables.concat(hashedFiles, extraHash).spliterator(), true)//
-                .map(modulePath::resolve)//
-                .filter(Files::exists)//
-                .filter(Files::isRegularFile)//
+        List<Path> toHash = StreamSupport.stream(Iterables.concat(hashedFiles, extraHash).spliterator(), true)
+                .map(modulePath::resolve)
+                .filter(Files::exists)
+                .filter(Files::isRegularFile)
                 .collect(Collectors.toList());
         if (toHash.isEmpty()) {
             throw new RuntimeException("Module without cacheable files? " + modulePath);
@@ -135,49 +134,29 @@ public class GradleModelCacheImpl implements GradleModelCache {
     }
 
     private WorkspaceToolModel getModelFromGradle(Path modulePath, Set<String> extraTasks) {
-        boolean useProjectGradle = false;
-        try (ProjectConnection connection = GradleConnector.newConnector()
-                .forProjectDirectory(modulePath.toFile())
-                .connect()) {
-            BuildEnvironment environment = connection.getModel(BuildEnvironment.class);
-            GradleVersion installed = GradleVersion.version(environment.getGradle().getGradleVersion());
-            GradleVersion requiredVersion = GradleVersion.version(GRADLE_VERSION);
-
-            logger.info("Detected Gradle version: {}", installed);
-            if (installed.compareTo(requiredVersion) >= 0) {
-                logger.info("Using project gradle version.");
-                useProjectGradle = true;
-            } else {
-                logger.info("Forcing gradle {}.", GRADLE_VERSION);
-            }
-        }
-
-        GradleConnector connector = GradleConnector.newConnector();
-        connector.forProjectDirectory(modulePath.toFile());
-        if (!useProjectGradle) {
-            connector.useGradleVersion(GRADLE_VERSION);
-        }
-
+        GradleConnector connector = GradleConnector.newConnector()
+                .useGradleVersion(context.gradleManager.getGradleVersionForProject(modulePath))
+                .forProjectDirectory(modulePath.toFile());
         try (ProjectConnection connection = connector.connect()) {
             GradleProject project = connection.getModel(GradleProject.class);
             Set<String> executeBefore = new HashSet<>();
             executeBefore.addAll(context.gradleManager.getExecuteBefore());
             executeBefore.addAll(extraTasks);
-            Set<String> availableTasks = project.getTasks().stream()//
-                    .map(Task::getName)//
+            Set<String> availableTasks = project.getTasks().stream()
+                    .map(Task::getName)
                     .collect(Collectors.toSet());
             logger.debug("Available Tasks: {}", String.join(", ", availableTasks));
-            Set<String> toExecute = executeBefore.stream()//
-                    .filter(availableTasks::contains)//
+            Set<String> toExecute = executeBefore.stream()
+                    .filter(availableTasks::contains)
                     .collect(Collectors.toSet());
-            Set<String> notExecuting = executeBefore.stream()//
-                    .filter(e -> !toExecute.contains(e))//
+            Set<String> notExecuting = executeBefore.stream()
+                    .filter(e -> !toExecute.contains(e))
                     .collect(Collectors.toSet());
             if (!notExecuting.isEmpty()) {
                 logger.info("The following tasks will not be executed: {}", String.join(", ", notExecuting));
             }
             TailGroup tailGroup = context.console.newGroupFirst();
-            WorkspaceToolModel run = connection//
+            WorkspaceToolModel run = connection
                     .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))
                     .setJvmArguments("-Xmx3G")
                     .setJvmArguments("-Dorg.gradle.daemon=false")
@@ -193,7 +172,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
 
     //Hax to retrieve the underlying object of a Proxied Model from Gradle Tooling.
     private static Object getNonProxyModel(WorkspaceToolModel model) {
-        return getField(f_sourceObject, getField(f_h, model));
+        return getField(f_sourceObject, Proxy.getInvocationHandler(model));
     }
 
 }

@@ -131,7 +131,13 @@ public class ModuleHashCheckEvent extends Event {
         private final Map<Class<?>, CachedClass> classCache = new HashMap<>();
 
         public CachedClass lookup(Class<?> clazz) {
-            return classCache.computeIfAbsent(clazz, CachedClass::new);
+            // Not a computeIfAbsent, due to CME.
+            CachedClass existing = classCache.get(clazz);
+            if (existing == null) {
+                existing = new CachedClass(clazz);
+                classCache.put(clazz, existing);
+            }
+            return existing;
         }
 
         public class CachedClass {

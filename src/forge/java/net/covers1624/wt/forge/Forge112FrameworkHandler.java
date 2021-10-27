@@ -1,8 +1,8 @@
 package net.covers1624.wt.forge;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
@@ -16,11 +16,8 @@ import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.forge.api.script.Forge112;
 import net.covers1624.wt.forge.util.AtFile;
-import net.covers1624.wt.util.MavenNotation;
 import net.covers1624.wt.util.ProjectDataHelper;
 import net.covers1624.wt.util.Utils;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,7 +27,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static net.covers1624.wt.util.Utils.sneaky;
 
@@ -50,11 +49,11 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         Path mergedAT = context.cacheDir.resolve("merged_at.cfg");
         { //AccessTransformers.
             Hasher atHasher = SHA_256.newHasher();
-            List<Path> atFiles = context.modules.parallelStream()//
-                    .flatMap(e -> e.getSourceSets().values().stream())//
-                    .flatMap(e -> e.getResources().stream())//
-                    .filter(Files::exists)//
-                    .flatMap(e -> sneaky(() -> Files.walk(e)).filter(f -> f.getFileName().toString().endsWith("_at.cfg")))//
+            List<Path> atFiles = context.modules.parallelStream()
+                    .flatMap(e -> e.getSourceSets().values().stream())
+                    .flatMap(e -> e.getResources().stream())
+                    .filter(Files::exists)
+                    .flatMap(e -> sneaky(() -> Files.walk(e)).filter(f -> f.getFileName().toString().endsWith("_at.cfg")))
                     .collect(Collectors.toList());
             atFiles.forEach(e -> LOGGER.info("Found AccessTransformer: {}", e));
             atFiles.forEach(e -> Utils.addToHasher(atHasher, e));
@@ -70,8 +69,8 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         }
 
         Path formsRt = context.cacheDir.resolve("libs/forms_rt.jar");
-        Dependency formsRtDep = new MavenDependencyImpl()//
-                .setNotation(MavenNotation.parse("org.jetbrains:forms_rt:1.0.0"))//
+        Dependency formsRtDep = new MavenDependencyImpl()
+                .setNotation(MavenNotation.parse("org.jetbrains:forms_rt:1.0.0"))
                 .setClasses(formsRt).setExport(false);
         { //GStart Login.
             Path r1 = forgeDir.resolve("src/start/java/GradleStartLogin.java");
@@ -96,16 +95,16 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
                 hashContainer.set(HASH_GSTART_LOGIN, hash1);
             }
         }
-        WorkspaceToolModel model = context.modelCache.getModel(forgeDir, emptySet());
+        WorkspaceToolModel model = context.modelCache.getModel(forgeDir, emptySet(), emptySet());
 
         Module forgeModule = new ModuleImpl.GradleModule("Forge", forgeDir, model.getProjectData());
         context.frameworkModules.add(forgeModule);
-        Map<String, Configuration> configurations = ProjectDataHelper.buildConfigurations(forgeModule, model.getProjectData());
+        Map<String, Configuration> configurations = ProjectDataHelper.buildConfigurations(forgeModule, model.getProjectData(), emptyMap());
         forgeModule.setConfigurations(configurations);
         Configuration forgeGradleMcDeps = configurations.get("forgeGradleMcDeps");
         Configuration runtime = configurations.get("runtime");
         addSourceSet(forgeModule, "main", ss -> {
-            ss.setSource("java", Arrays.asList(//
+            ss.setSource("java", Arrays.asList(
                     forgeDir.resolve("src/main/java"),// Forge's sources.
                     forgeDir.resolve("src/start/java"),// Generated GradleStartLogin from WorkspaceTool.
                     forgeDir.resolve("projects/Forge/src/main/java"),// Decompiled and patched Minecraft.
@@ -113,7 +112,7 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             ));
             ss.addResource(forgeDir.resolve("src/main/resources")); // Forge resources.
             ss.addResource(forgeDir.resolve("projects/Forge/src/main/resources"));// MinecraftResources.
-            Configuration forgeMainCompile = new ConfigurationImpl("forgeMainCompile", true);
+            Configuration forgeMainCompile = new ConfigurationImpl("forgeMainCompile");
             forgeMainCompile.addExtendsFrom(forgeGradleMcDeps);
             forgeMainCompile.addDependency(formsRtDep);
             ss.setCompileConfiguration(forgeMainCompile);
@@ -131,21 +130,10 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
 
         if (needsSetup) {
             sneaky(() -> Files.copy(mergedAT, forgeDir.resolve("src/main/resources/wt_merged_at.cfg"), REPLACE_EXISTING));
-            try (ProjectConnection connection = GradleConnector.newConnector()//
-                    .useGradleVersion(GRADLE_VERSION)//
-                    .forProjectDirectory(forgeDir.toFile())//
-                    .connect()) {
-                connection.newBuild()//
-                        .setEnvironmentVariables(ImmutableMap.of(//
-                                "GIT_BRANCH", "/" + frameworkImpl.getBranch() + LOCAL_BRANCH_SUFFIX,//
-                                "BUILD_NUMBER", "9999"//
-                        ))//
-                        .forTasks("clean", "ciWriteBuildNumber", "setupForge")//
-                        .withArguments("-si")//
-                        .setStandardOutput(System.out)//
-                        .setStandardError(System.err)//
-                        .run();
-            }
+            runForgeSetup(of(
+                            "GIT_BRANCH", "/" + frameworkImpl.getBranch() + LOCAL_BRANCH_SUFFIX,
+                            "BUILD_NUMBER", "9999"),
+                    "clean", "ciWriteBuildNumber", "setupForge");
             hashContainer.remove(HASH_MARKER_SETUP);//clear the marker.
         }
     }
@@ -153,13 +141,6 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
     private SourceSet addSourceSet(Module module, String name, Consumer<SourceSet> func) {
         SourceSet sourceSet = new SourceSetImpl(name);
         module.addSourceSet(name, sourceSet);
-        func.accept(sourceSet);
-        return sourceSet;
-    }
-
-    private Configuration addConfiguration(Module module, String name, boolean transitive, Consumer<Configuration> func) {
-        Configuration sourceSet = new ConfigurationImpl(name, transitive);
-        module.addConfiguration(name, sourceSet);
         func.accept(sourceSet);
         return sourceSet;
     }

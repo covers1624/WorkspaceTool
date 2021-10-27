@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.quack.util.SneakyUtils;
 import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.tconsole.log4j.Log4jUtils;
@@ -51,18 +52,16 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.emptySet;
 import static java.util.stream.StreamSupport.stream;
 import static net.covers1624.wt.util.Utils.unsafeCast;
 
@@ -92,7 +91,7 @@ public class WorkspaceTool {
         context.console = TailConsoleAppender.getTailConsole();
         Log4jUtils.redirectStreams();
 
-        context.projectDir = new File("").toPath().normalize().toAbsolutePath();
+        context.projectDir = Paths.get(".").normalize().toAbsolutePath();
         context.cacheDir = context.projectDir.resolve(".workspace_tool");
 
         Path workspaceScript = context.projectDir.resolve("workspace.groovy");
@@ -191,11 +190,16 @@ public class WorkspaceTool {
 
         ModuleContainerSpec moduleContainer = context.workspaceScript.getModuleContainer();
         if (!moduleContainer.getIncludes().isEmpty()) {
+            // TODO, we should instead only support individual folders, or /** to search the folder.
             Predicate<Path> matcher = moduleContainer.createMatcher();
             for (Path candidate : candidates) {
                 Path rel = context.projectDir.relativize(candidate);
                 if (matcher.test(rel)) {
-                    context.modules.add(ModuleImpl.makeGradleModule(rel.toString().replace("\\", "/"), candidate, context));
+                    // TODO, split on last slash.
+                    String group = rel.toString().replace("\\", "/").replace(candidate.getFileName().toString(), "")
+                            .replaceAll("//", "");
+                    WorkspaceToolModel model = context.modelCache.getModel(candidate, emptySet(), emptySet());
+                    context.modules.addAll(ModuleImpl.makeGradleModules(group, model.getProjectData(), context));
                 }
             }
         }
@@ -210,8 +214,11 @@ public class WorkspaceTool {
         Iterable<Module> allModules = context.getAllModules();
         //Attempt to build a ScalaSdkDependency from the modules 'main' SourceSet.
         allModules.forEach(module -> {
+            SourceSet sourceSet = module.getSourceSets().get("main");
+            if (sourceSet == null) return;
+
             ScalaSdkDependency sdkCandidate = new ScalaSdkDependencyImpl();
-            Configuration config = module.getSourceSets().get("main").getCompileConfiguration();
+            Configuration config = sourceSet.getCompileConfiguration();
             config.getAllDependencies()
                     .stream()
                     .filter(e -> e instanceof MavenDependency).map(e -> (MavenDependency) e)
@@ -232,7 +239,7 @@ public class WorkspaceTool {
                 sdkCandidate.setScalaVersion(scalaVersion);
                 config.addDependency(sdkCandidate);
                 //Attempt to nuke. boom.exe
-                config.walkHierarchy(e -> sdkCandidate.getClasspath().forEach(e.getDependencies()::remove));
+                config.streamAll().forEach(e -> sdkCandidate.getClasspath().forEach(e.getDependencies()::remove));
             }
         });
 
@@ -246,7 +253,7 @@ public class WorkspaceTool {
                             return event.getResult();
                         })
                         .filter(Objects::nonNull)
-                        .collect(Collectors.toSet())
+                        .collect(Collectors.toCollection(LinkedHashSet::new))
                 );
             }
         });
@@ -267,7 +274,7 @@ public class WorkspaceTool {
                                             }
                                             return e;
                                         })
-                                        .collect(Collectors.toSet())
+                                        .collect(Collectors.toCollection(LinkedHashSet::new))
                                 );
                             });
                 });
@@ -282,7 +289,7 @@ public class WorkspaceTool {
                             return event.getResult();
                         })
                         .filter(Objects::nonNull)
-                        .collect(Collectors.toSet())
+                        .collect(Collectors.toCollection(LinkedHashSet::new))
                 );
             }
             SourceSet testSS = module.getSourceSets().get("test");
@@ -326,6 +333,7 @@ public class WorkspaceTool {
         binding.setProperty("firstPass", firstPass);
         CompilerConfiguration configuration = new CompilerConfiguration();
         configuration.setScriptBaseClass(AbstractWorkspaceScript.class.getName());
+        configuration.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, true);
         ImportCustomizer importCustomizer = new ImportCustomizer();
         importCustomizer.addImports(
                 "net.covers1624.wt.util.JavaVersion"

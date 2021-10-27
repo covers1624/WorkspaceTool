@@ -5,6 +5,10 @@ import net.covers1624.wt.util.CopyingFileVisitor;
 import net.covers1624.wt.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.build.BuildEnvironment;
+import org.gradle.util.GradleVersion;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -24,7 +28,7 @@ import static net.covers1624.wt.util.Utils.*;
  */
 public class GradleManagerImpl implements Closeable, GradleManager {
 
-    private static final Logger logger = LogManager.getLogger("GradleManagerImpl");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Set<Object> scriptClasspathMarkerClasses = new HashSet<>();
     private final Set<String> scriptClasspathMarkerResources = new HashSet<>();
@@ -77,16 +81,16 @@ public class GradleManagerImpl implements Closeable, GradleManager {
 
             initScript = sneaky(() -> Files.createTempFile("wt_init", ".gradle"));
             tmpFiles.add(initScript);
-            logger.info("Building InitScript..");
+            LOGGER.info("Building InitScript..");
             //TODO, cache.
             //Compute our additions.
-            String depLine = Stream.concat(//
-                    scriptClasspathMarkerClasses.parallelStream()//
-                            .map(GradleManagerImpl::getJarPathForClass),//
-                    scriptClasspathMarkerResources.parallelStream()//
-                            .map(Utils::getJarPathForResource)//
-            ).parallel()//
-                    .filter(Objects::nonNull)//
+            String depLine = Stream.concat(
+                            scriptClasspathMarkerClasses.parallelStream()
+                                    .map(GradleManagerImpl::getJarPathForClass),
+                            scriptClasspathMarkerResources.parallelStream()
+                                    .map(Utils::getJarPathForResource)
+                    ).parallel()
+                    .filter(Objects::nonNull)
                     .map(p -> {
                         try {
                             if (Files.isDirectory(p)) {
@@ -106,10 +110,10 @@ public class GradleManagerImpl implements Closeable, GradleManager {
                             throwUnchecked(e);
                             return null;
                         }
-                    })//
-                    .map(Path::toString)//
+                    })
+                    .map(Path::toString)
                     .map(e -> e.replace("\\", "\\\\"))
-                    .map(e -> "'" + e + "'")//
+                    .map(e -> "'" + e + "'")
                     .collect(Collectors.joining(", ", "        classpath files([", "])"));
 
             //Read all lines.
@@ -135,14 +139,34 @@ public class GradleManagerImpl implements Closeable, GradleManager {
             scriptLines.remove(idx);
             scriptLines.add(idx, depLine);
             sneaky(() -> Files.write(initScript, scriptLines));
-            logger.info("InitScript built to: {}", initScript);
+            LOGGER.info("InitScript built to: {}", initScript);
         }
         return initScript;
     }
 
+    @Override
+    public String getGradleVersionForProject(Path projectDir) {
+        try (ProjectConnection connection = GradleConnector.newConnector()
+                .forProjectDirectory(projectDir.toFile())
+                .connect()) {
+            BuildEnvironment environment = connection.getModel(BuildEnvironment.class);
+            GradleVersion installed = GradleVersion.version(environment.getGradle().getGradleVersion());
+            GradleVersion minVersion = GradleVersion.version(MIN_GRADLE_VERSION);
+
+            LOGGER.info("Detected Gradle version: {}", installed);
+            if (installed.compareTo(minVersion) >= 0) {
+                LOGGER.info("Using project gradle version.");
+                return installed.getVersion();
+            } else {
+                LOGGER.info("Forcing gradle {}.", minVersion.getVersion());
+                return minVersion.getVersion();
+            }
+        }
+    }
+
     private static Path getJarPathForClass(Object obj) {
         if (obj instanceof Class) {
-            return Utils.getJarPathForClass((Class) obj);
+            return Utils.getJarPathForClass((Class<?>) obj);
         } else if (obj instanceof CharSequence) {
             return Utils.getJarPathForClass(obj.toString());
         }

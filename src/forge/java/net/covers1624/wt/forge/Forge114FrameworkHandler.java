@@ -1,14 +1,8 @@
 package net.covers1624.wt.forge;
 
 import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
-import net.covers1624.quack.net.download.DownloadAction;
-import net.covers1624.quack.net.download.DownloadProgressTail;
-import net.covers1624.tconsole.api.TailConsole;
-import net.covers1624.tconsole.api.TailGroup;
-import net.covers1624.tconsole.tails.TextTail;
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.dependency.SourceSetDependency;
@@ -17,46 +11,28 @@ import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.impl.dependency.MavenDependencyImpl;
 import net.covers1624.wt.api.impl.dependency.SourceSetDependencyImpl;
 import net.covers1624.wt.api.impl.module.ModuleImpl;
-import net.covers1624.wt.api.impl.module.SourceSetImpl;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.forge.api.script.Forge114;
-import net.covers1624.wt.forge.util.AtFile;
-import net.covers1624.wt.gradle.GradleProgressListener;
-import net.covers1624.wt.mc.data.AssetIndexJson;
-import net.covers1624.wt.mc.data.VersionInfoJson;
-import net.covers1624.wt.mc.data.VersionManifestJson;
-import net.covers1624.wt.util.LoggingOutputStream;
-import net.covers1624.wt.util.MavenNotation;
 import net.covers1624.wt.util.ProjectDataHelper;
 import net.covers1624.wt.util.Utils;
-import org.apache.logging.log4j.Level;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.model.build.BuildEnvironment;
-import org.gradle.util.GradleVersion;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
-import static java.text.MessageFormat.format;
+import static com.google.common.collect.ImmutableMap.of;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Created by covers1624 on 7/8/19.
  */
 @SuppressWarnings ("UnstableApiUsage")
-public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forge114> {
+public class Forge114FrameworkHandler extends AbstractForge113PlusFrameworkHandler<Forge114> {
 
     public Forge114FrameworkHandler(WorkspaceToolContext context) {
         super(context);
@@ -66,35 +42,7 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
     public void constructFrameworkModules(Forge114 frameworkImpl) {
         super.constructFrameworkModules(frameworkImpl);
 
-        Path cachedForgeAt = context.cacheDir.resolve("forge_accesstransformer.cfg");
-        Path forgeAt = forgeDir.resolve("src/main/resources/META-INF/accesstransformer.cfg");
-        Path mergedAt = context.cacheDir.resolve("merged_at.cfg");
-        if (wasCloned || !Files.exists(cachedForgeAt)) {
-            Utils.sneaky(() -> Files.copy(forgeAt, cachedForgeAt, StandardCopyOption.REPLACE_EXISTING));
-        }
-        {//AccessTransformers
-            Hasher mergedHasher = SHA_256.newHasher();
-            List<Path> atFiles = context.modules.parallelStream()//
-                    .flatMap(e -> e.getSourceSets().values().stream())//
-                    .flatMap(e -> e.getResources().stream())//
-                    .filter(Files::exists)//
-                    .flatMap(Utils.sneak(e -> Files.walk(e).filter(f -> f.getFileName().toString().equals("accesstransformer.cfg"))))//
-                    .collect(Collectors.toList());
-            atFiles.forEach(e -> LOGGER.info("Found AccessTransformer: {}", e));
-            atFiles.forEach(e -> Utils.addToHasher(mergedHasher, e));
-            Utils.addToHasher(mergedHasher, cachedForgeAt);
-            HashCode mergedHash = mergedHasher.hash();
-            if (hashContainer.check(HASH_MERGED_AT, mergedHash) || Files.notExists(mergedAt)) {
-                needsSetup = true;
-                hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
-                AtFile atFile = new AtFile().useDot();
-                atFiles.stream().map(AtFile::new).forEach(atFile::merge);
-                atFile.merge(new AtFile(cachedForgeAt));
-                atFile.write(mergedAt);
-                hashContainer.set(HASH_MERGED_AT, mergedHash);
-            }
-            Utils.sneaky(() -> Files.copy(mergedAt, forgeAt, StandardCopyOption.REPLACE_EXISTING));
-        }
+        handleAts();
 
         Path formsRt = context.cacheDir.resolve("libs/forms_rt.jar");
         Dependency formsRtDep = new MavenDependencyImpl()//
@@ -131,14 +79,9 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         forgeModule.addExclude(forgeDir.resolve("projects/clean"));
         forgeModule.addExclude(forgeDir.resolve("projects/forge/build"));
         forgeModule.addExclude(forgeDir.resolve("projects/mcp/build"));
-        ProjectData forgeSubModuleData = model.getProjectData().subProjects.stream()//
-                .filter(e -> e.name.equals("forge"))//
-                .findFirst()//
-                .orElseThrow(() -> new RuntimeException("'forge' submodule not found on Forge project."));
+        ProjectData forgeSubModuleData = requireNonNull(model.getProjectData().subProjects.get("forge"), "'forge' submodule not found on Forge project.");
 
-        forgeSubModuleData.configurations.get("installer").transitive = true;
-
-        Map<String, Configuration> configurations = ProjectDataHelper.buildConfigurations(forgeModule, forgeSubModuleData);
+        Map<String, Configuration> configurations = ProjectDataHelper.buildConfigurations(forgeModule, forgeSubModuleData, emptyMap());
         Map<String, SourceSet> sourceSets = ProjectDataHelper.buildSourceSets(forgeSubModuleData, configurations);
         //TODO, Test SourceSet is disabled, testImplementation is not being resolved.
         sourceSets.remove("test");
@@ -188,153 +131,12 @@ public class Forge114FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         });
 
         if (needsSetup) {
-            boolean useProjectGradle = false;
-            try (ProjectConnection connection = GradleConnector.newConnector()
-                    .forProjectDirectory(forgeDir.toFile())
-                    .connect()) {
-                BuildEnvironment environment = connection.getModel(BuildEnvironment.class);
-                GradleVersion installed = GradleVersion.version(environment.getGradle().getGradleVersion());
-                GradleVersion requiredVersion = GradleVersion.version(GRADLE_VERSION);
-
-                LOGGER.info("Detected Gradle version: {}", installed);
-                if (installed.compareTo(requiredVersion) >= 0) {
-                    LOGGER.info("Using project gradle version.");
-                    useProjectGradle = true;
-                } else {
-                    LOGGER.info("Forcing gradle {}.", GRADLE_VERSION);
-                }
-            }
-
-            GradleConnector connector = GradleConnector.newConnector();
-            connector.forProjectDirectory(forgeDir.toFile());
-            if (!useProjectGradle) {
-                connector.useGradleVersion(GRADLE_VERSION);
-            }
-            try (ProjectConnection connection = connector.connect()) {
-                TailGroup tailGroup = context.console.newGroupFirst();
-                connection.newBuild()//
-                        .forTasks("clean", "setup", ":forge:compileJava")
-                        .withArguments("-si")
-                        .setJvmArguments("-Xmx3G")
-                        .setJvmArguments("-Dorg.gradle.daemon=false")
-                        .setStandardOutput(new LoggingOutputStream(LOGGER, Level.INFO))
-                        .setStandardError(new LoggingOutputStream(LOGGER, Level.ERROR))
-                        .addProgressListener(new GradleProgressListener(context, tailGroup))
-                        .run();
-                context.console.removeGroup(tailGroup);
-            }
+            runForgeSetup(of(), "clean", "setup", ":forge:compileJava");
 //            Path accessList = context.cacheDir.resolve("forge_access_list.cfg.xz");
 //            AtFile atFile = AccessExtractor.extractAccess(Collections.singleton(forgeDir.resolve("projects/forge/build/classes/java/main")));
 //            atFile.write(accessList, AtFile.CompressionMethod.XZ);
             hashContainer.remove(HASH_MARKER_SETUP);//clear the marker.
         }
-        try {
-            downloadAssets(context.cacheDir.resolve("minecraft"), model.getProjectData().extraProperties.get("MC_VERSION"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private SourceSet addSourceSet(Module module, String name, Consumer<SourceSet> func) {
-        SourceSet sourceSet = new SourceSetImpl(name);
-        module.addSourceSet(name, sourceSet);
-        func.accept(sourceSet);
-        return sourceSet;
-    }
-
-    private void downloadAssets(Path mcDir, String mcVersion) throws Exception {
-        String RESOURCES_URL = "https://resources.download.minecraft.net/";
-        //Mojang uses sha1 for their assets. This is safe to ignore.
-        @SuppressWarnings ("deprecation")
-        HashFunction sha1 = Hashing.sha1();
-
-        Path assetsDir = mcDir.resolve("assets");
-        context.blackboard.put(ForgeExtension.ASSETS_PATH, assetsDir);
-        TailGroup dlGroup = context.console.newGroupFirst();
-        DownloadProgressTail.Pool tailPool = new DownloadProgressTail.Pool(dlGroup);
-        TextTail totalProgressTail = dlGroup.add(new TextTail(1));
-        totalProgressTail.setLine(0, "Downloading assests..");
-
-        Path vManifest = mcDir.resolve("version_manifest.json");
-        {
-            DownloadAction action = new DownloadAction();
-            action.setSrc("https://launchermeta.mojang.com/mc/game/version_manifest.json");
-            action.setDest(vManifest);
-            action.setUseETag(true);
-            action.setOnlyIfModified(true);
-            action.execute();
-        }
-        VersionManifestJson.Version mv = Utils.fromJson(vManifest, VersionManifestJson.class)//
-                .findVersion(mcVersion)//
-                .orElseThrow(() -> new RuntimeException("Failed to find minecraft version: " + mcVersion));
-
-        Path versionFile = mcDir.resolve(mcVersion + ".json");
-        {
-            DownloadAction action = new DownloadAction();
-            action.setSrc(mv.url);
-            action.setDest(versionFile);
-            action.setUseETag(true);
-            action.setOnlyIfModified(true);
-            action.execute();
-        }
-        VersionInfoJson versionInfo = Utils.fromJson(versionFile, VersionInfoJson.class);
-        VersionInfoJson.AssetIndex assetIndex = versionInfo.assetIndex;
-
-        context.blackboard.put(ForgeExtension.VERSION_INFO, versionInfo);
-
-        Path assetIndexFile = mcDir.resolve("assets/indexes/" + assetIndex.id + ".json");
-        {
-            DownloadAction action = new DownloadAction();
-            action.setSrc(assetIndex.url);
-            action.setDest(assetIndexFile);
-            action.setUseETag(true);
-            action.setOnlyIfModified(true);
-            action.execute();
-        }
-        AssetIndexJson indexJson = Utils.fromJson(assetIndexFile, AssetIndexJson.class);
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        indexJson.objects.forEach((name, object) -> {
-
-            String loc = object.hash.substring(0, 2) + "/" + object.hash;
-            Path out;
-            if (!indexJson.virtual) {
-                out = assetsDir.resolve("objects").resolve(loc);
-            } else {
-                out = assetsDir.resolve("virtual").resolve(assetIndex.id).resolve(name);
-            }
-
-            if (Files.exists(out)) {
-                Hasher hasher = sha1.newHasher();
-                Utils.addToHasher(hasher, out);
-                if (hasher.hash().toString().equals(object.hash)) {
-                    return;//Continue from lambda.
-                }
-            }
-            DownloadAction action = new DownloadAction();
-            action.setSrc(RESOURCES_URL + loc);
-            action.setDest(out);
-            action.setQuiet(true);
-
-            executor.submit(() -> {
-                DownloadProgressTail tail = tailPool.pop();
-                tail.setFileName(name);
-                action.setListener(tail);
-                Utils.sneaky(action::execute);
-                if (!context.console.isSupported(TailConsole.Output.STDOUT)) {
-                    LOGGER.info("Downloaded: '{}' to '{}'", action.getSrc(), action.getDest());
-                }
-                action.setListener(null);
-                tailPool.push(tail);
-            });
-        });
-
-        executor.shutdown();
-        int max = (int) executor.getTaskCount();
-
-        while (!executor.awaitTermination(200, TimeUnit.MILLISECONDS)) {
-            int done = (int) executor.getCompletedTaskCount();
-            totalProgressTail.setLine(0, format("Completed: {0}/{1}   {2}%", done, max, (int) ((double) done / max * 100)));
-        }
-        context.console.removeGroup(dlGroup);
+        downloadAssets(model.getProjectData().extraProperties.get("MC_VERSION"));
     }
 }

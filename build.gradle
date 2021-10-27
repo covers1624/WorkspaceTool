@@ -1,8 +1,7 @@
 import groovy.xml.MarkupBuilder
 import net.covers1624.gradlestuff.dependencies.ConfigurationVisitor
 import net.covers1624.gradlestuff.dependencies.ConfigurationWalker
-import net.covers1624.gradlestuff.dependencies.DependencyName
-import org.apache.commons.lang3.StringUtils
+import net.covers1624.quack.maven.MavenNotation
 
 buildscript {
     repositories() {
@@ -12,7 +11,7 @@ buildscript {
         maven { url 'https://maven.covers1624.net/' }
     }
     dependencies {
-        classpath 'net.covers1624:GradleStuff:2.1.0+'
+        classpath 'net.covers1624:GradleStuff:3.0.0+'
     }
 }
 
@@ -27,7 +26,7 @@ plugins {
 apply plugin: 'net.covers1624.ss-dependencies'
 
 group 'net.covers1624.workspace_tool'
-version '0.3.3'
+version '0.4.0'
 
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of ${archivesBaseName}, Version: ${version}"
@@ -123,7 +122,7 @@ dependencies {
     forgeCompileOnly 'org.jetbrains:annotations:22.0.0'
 
     //Gradle
-    gradleImplementation "net.covers1624:GradleStuff:2.1.0.+"
+    gradleImplementation 'net.covers1624:GradleStuff:3.0.0.+'
     gradleCompileOnly gradleApi()
     gradleCompileOnly sourceSets.common.output
     gradleCompileOnly 'org.jetbrains:annotations:22.0.0'
@@ -141,7 +140,7 @@ dependencies {
     runtimeOnly sourceSets.intellij.output
     runtimeOnly sourceSets.gradle.output
     runtimeOnly sourceSets.minecraft.output
-    runtimeOnly 'net.covers1624:GradleStuff:2.1.0.+'
+    runtimeOnly 'net.covers1624:GradleStuff:3.0.0.+'
     compileOnly 'org.jetbrains:annotations:22.0.0'
     compileOnly sourceSets.wrapper.output
     annotationProcessor 'org.apache.logging.log4j:log4j-core:2.14.1'
@@ -340,29 +339,24 @@ class Visitor implements ConfigurationVisitor {
     }
 
     @Override
-    void visitModuleDependency(DependencyName name, File classes, File sources, File javadoc) {
+    void visitModuleDependency(MavenNotation name, File classes, File sources, File javadoc) {
         def dep = dependencies.appendNode('dependency')
         dep.appendNode('groupId', name.group)
         dep.appendNode('artifactId', name.module)
         dep.appendNode('version', name.version)
         dep.appendNode('scope', scope)
-        if (StringUtils.isNotEmpty(name.classifier)) {
+        if (name.classifier != null && !name.classifier.isEmpty()) {
             dep.appendNode('classifier', name.classifier)
         }
-        if (!StringUtils.equals(name.extension, 'jar')) {
+        if (!Objects.equals(name.extension, 'jar')) {
             dep.appendNode('type', name.extension)
         }
     }
 
     @Override
     void visitSourceSetDependency(SourceSet ss) {
-        this.visitModuleDependency(new DependencyName(project.group, "wt-${ss.name}", project.version, null, 'jar'), null, null, null)
+        this.visitModuleDependency(new MavenNotation(project.group, "wt-${ss.name}", project.version, null, 'jar'), null, null, null)
     }
-
-    //@formatter:off
-    @Override void startVisit(Configuration configuration) {}
-    @Override void endVisit() {}
-    //@formatter:on
 }
 
 def copyResolvable(Configuration configuration) {

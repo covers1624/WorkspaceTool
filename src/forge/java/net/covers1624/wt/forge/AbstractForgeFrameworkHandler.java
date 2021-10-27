@@ -2,25 +2,45 @@ package net.covers1624.wt.forge;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.quack.net.download.DownloadAction;
+import net.covers1624.quack.net.download.DownloadProgressTail;
+import net.covers1624.tconsole.api.TailConsole;
+import net.covers1624.tconsole.api.TailGroup;
+import net.covers1624.tconsole.tails.TextTail;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.framework.FrameworkHandler;
 import net.covers1624.wt.forge.api.script.ForgeFramework;
+import net.covers1624.wt.gradle.GradleProgressListener;
+import net.covers1624.wt.mc.data.AssetIndexJson;
+import net.covers1624.wt.mc.data.VersionInfoJson;
+import net.covers1624.wt.mc.data.VersionManifestJson;
 import net.covers1624.wt.util.GitHelper;
 import net.covers1624.wt.util.HashContainer;
+import net.covers1624.wt.util.LoggingOutputStream;
 import net.covers1624.wt.util.Utils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import static java.text.MessageFormat.format;
 
 /**
  * Created by covers1624 on 7/8/19.
  */
 public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> implements FrameworkHandler<T> {
 
-    protected static final String GRADLE_VERSION = "4.10.3";
-    protected static final HashCode MARKER_HASH = HashCode.fromString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    protected static final HashCode MARKER_HASH = HashCode.fromString("ff");
     protected static final Logger LOGGER = LogManager.getLogger("ForgeFrameworkHandler");
     protected static final String HASH_MERGED_AT = "merged-at";
     protected static final String HASH_MARKER_SETUP = "marker-setup";
@@ -59,5 +79,129 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
             wasCloned = true;
             hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
         }
+    }
+
+    protected void runForgeSetup(Map<String, String> env, String... tasks) {
+        GradleConnector connector = GradleConnector.newConnector()
+                .useGradleVersion(context.gradleManager.getGradleVersionForProject(forgeDir))
+                .forProjectDirectory(forgeDir.toFile());
+        try (ProjectConnection connection = connector.connect()) {
+            TailGroup tailGroup = context.console.newGroupFirst();
+            connection.newBuild()
+                    .setEnvironmentVariables(env)
+                    .forTasks(tasks)
+                    .withArguments("-si")
+                    .setJvmArguments("-Xmx3G")
+                    .setJvmArguments("-Dorg.gradle.daemon=false")
+                    .setStandardOutput(new LoggingOutputStream(LOGGER, Level.INFO))
+                    .setStandardError(new LoggingOutputStream(LOGGER, Level.ERROR))
+                    .addProgressListener(new GradleProgressListener(context, tailGroup))
+                    .run();
+            context.console.removeGroup(tailGroup);
+        }
+    }
+
+    protected void downloadAssets(String mcVersion) {
+        try {
+            downloadAssets(context.cacheDir.resolve("minecraft"), mcVersion);
+        } catch (Exception e) {
+            throw new RuntimeException("An error occured whilst downloading Minecraft assets.", e);
+        }
+    }
+
+    private void downloadAssets(Path mcDir, String mcVersion) throws Exception {
+        String RESOURCES_URL = "https://resources.download.minecraft.net/";
+        //Mojang uses sha1 for their assets. This is safe to ignore.
+        @SuppressWarnings ("deprecation")
+        HashFunction sha1 = Hashing.sha1();
+
+        Path assetsDir = mcDir.resolve("assets");
+        context.blackboard.put(ForgeExtension.ASSETS_PATH, assetsDir);
+        TailGroup dlGroup = context.console.newGroupFirst();
+        DownloadProgressTail.Pool tailPool = new DownloadProgressTail.Pool(dlGroup);
+        TextTail totalProgressTail = dlGroup.add(new TextTail(1));
+        totalProgressTail.setLine(0, "Downloading assests..");
+
+        Path vManifest = mcDir.resolve("version_manifest.json");
+        {
+            DownloadAction action = new DownloadAction();
+            action.setSrc("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+            action.setDest(vManifest);
+            action.setUseETag(true);
+            action.setOnlyIfModified(true);
+            action.execute();
+        }
+        VersionManifestJson.Version mv = Utils.fromJson(vManifest, VersionManifestJson.class)//
+                .findVersion(mcVersion)//
+                .orElseThrow(() -> new RuntimeException("Failed to find minecraft version: " + mcVersion));
+
+        Path versionFile = mcDir.resolve(mcVersion + ".json");
+        {
+            DownloadAction action = new DownloadAction();
+            action.setSrc(mv.url);
+            action.setDest(versionFile);
+            action.setUseETag(true);
+            action.setOnlyIfModified(true);
+            action.execute();
+        }
+        VersionInfoJson versionInfo = Utils.fromJson(versionFile, VersionInfoJson.class);
+        VersionInfoJson.AssetIndex assetIndex = versionInfo.assetIndex;
+
+        context.blackboard.put(ForgeExtension.VERSION_INFO, versionInfo);
+
+        Path assetIndexFile = mcDir.resolve("assets/indexes/" + assetIndex.id + ".json");
+        {
+            DownloadAction action = new DownloadAction();
+            action.setSrc(assetIndex.url);
+            action.setDest(assetIndexFile);
+            action.setUseETag(true);
+            action.setOnlyIfModified(true);
+            action.execute();
+        }
+        AssetIndexJson indexJson = Utils.fromJson(assetIndexFile, AssetIndexJson.class);
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        indexJson.objects.forEach((name, object) -> {
+
+            String loc = object.hash.substring(0, 2) + "/" + object.hash;
+            Path out;
+            if (!indexJson.virtual) {
+                out = assetsDir.resolve("objects").resolve(loc);
+            } else {
+                out = assetsDir.resolve("virtual").resolve(assetIndex.id).resolve(name);
+            }
+
+            if (Files.exists(out)) {
+                Hasher hasher = sha1.newHasher();
+                Utils.addToHasher(hasher, out);
+                if (hasher.hash().toString().equals(object.hash)) {
+                    return;//Continue from lambda.
+                }
+            }
+            DownloadAction action = new DownloadAction();
+            action.setSrc(RESOURCES_URL + loc);
+            action.setDest(out);
+            action.setQuiet(true);
+
+            executor.submit(() -> {
+                DownloadProgressTail tail = tailPool.pop();
+                tail.setFileName(name);
+                action.setListener(tail);
+                Utils.sneaky(action::execute);
+                if (!context.console.isSupported(TailConsole.Output.STDOUT)) {
+                    LOGGER.info("Downloaded: '{}' to '{}'", action.getSrc(), action.getDest());
+                }
+                action.setListener(null);
+                tailPool.push(tail);
+            });
+        });
+
+        executor.shutdown();
+        int max = (int) executor.getTaskCount();
+
+        while (!executor.awaitTermination(200, TimeUnit.MILLISECONDS)) {
+            int done = (int) executor.getCompletedTaskCount();
+            totalProgressTail.setLine(0, format("Completed: {0}/{1}   {2}%", done, max, (int) ((double) done / max * 100)));
+        }
+        context.console.removeGroup(dlGroup);
     }
 }

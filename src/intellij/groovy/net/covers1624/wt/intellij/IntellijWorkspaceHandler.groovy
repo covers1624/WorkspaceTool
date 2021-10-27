@@ -23,7 +23,7 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
             wModule.path = module.path
             wModule.isGroup = true
             wModule.name = module.name.replace("/", ".")
-            wModule.output = outFolder.resolve(wModule.name.replace(".", "/"))
+            wModule.output = outFolder.resolve(wModule.name.replace(".", "_"))
             wModule.excludes = module.excludes
             modules[wModule.name] = wModule
 
@@ -41,7 +41,7 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
                         newGroup.isGroup = true
                         newGroup.name = gName.replace("/", ".")
                         newGroup.path = context.projectDir.resolve(gName)
-                        newGroup.output = outFolder.resolve(newGroup.name.replace(".", "/"))
+                        newGroup.output = outFolder.resolve(newGroup.name.replace(".", "_"))
                         modules[gName.replace("/", ".")] = newGroup
                         if (lastGroup != null) {
                             newGroup.parent = lastGroup
@@ -63,7 +63,7 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
                 ssModule.resources.addAll(ss.resources)
                 ssModule.sourceMap.putAll(ss.sourceMap)
                 ssModule.sourceSetName = ss.name
-                ssModule.output = outFolder.resolve(ssModule.name.replace(".", "/"))
+                ssModule.output = outFolder.resolve(ssModule.name.replace(".", "_"))
             }
         }
         context.allModules.each { module ->
@@ -77,7 +77,7 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
                 configs.each {
                     def scope = it.key
                     def config = it.value
-                    def dependencies = ssModule.dependencies.computeIfAbsent(scope, { new HashSet<>() })
+                    def dependencies = ssModule.dependencies.computeIfAbsent(scope, { new LinkedHashSet<>() })
                     if (config != null) {
                         config.allDependencies.each {
                             if (it instanceof SourceSetDependency) {

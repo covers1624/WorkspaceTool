@@ -4,31 +4,29 @@ import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.module.Configuration;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
  * Created by covers1624 on 30/6/19.
  */
+// TODO, Dependency transitivity needs to be fixed.
+//  At the moment we ignore dependency transitivity in some cases. We will likely need to
+//  model dependency transitives in Gradle extraction data. We can then resolve transitives
+//  this side.
 public class ConfigurationImpl implements Configuration {
 
     private final String name;
-    private final boolean transitive;
-    private final Set<Dependency> dependencies = new HashSet<>();
-    private final Set<Configuration> extendsFrom = new HashSet<>();
+    private final Set<Dependency> dependencies = new LinkedHashSet<>();
+    private final Set<Configuration> extendsFrom = new LinkedHashSet<>();
 
-    public ConfigurationImpl(String name, boolean transitive) {
+    public ConfigurationImpl(String name) {
         this.name = name;
-        this.transitive = transitive;
     }
 
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public boolean isTransitive() {
-        return transitive;
     }
 
     @Override
