@@ -6,7 +6,6 @@
 package net.covers1624.wt.api.impl.module;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.api.module.Configuration;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static net.covers1624.wt.util.Utils.iterable;
 

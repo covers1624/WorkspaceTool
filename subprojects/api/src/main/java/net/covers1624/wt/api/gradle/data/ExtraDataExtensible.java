@@ -5,8 +5,7 @@
  */
 package net.covers1624.wt.api.gradle.data;
 
-import net.covers1624.wt.api.gradle.GradleManager;
-import net.covers1624.wt.event.VersionedClass;
+import net.covers1624.wt.api.event.VersionedClass;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -15,7 +14,7 @@ import java.util.Map;
 /**
  * Implemented by {@link ProjectData} and {@link PluginData} to hold data built by ExtraModelBuilders.
  *
- * @see GradleManager
+ * @see net.covers1624.wt.api.gradle.GradleManager
  *
  * Created by covers1624 on 18/6/19.
  */

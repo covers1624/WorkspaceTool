@@ -7,7 +7,7 @@ package net.covers1624.wt.gradle;
 
 import com.google.common.collect.ImmutableMap;
 import net.covers1624.gradlestuff.sourceset.SourceSetDependencyPlugin;
-import net.covers1624.wt.event.VersionedClass;
+import net.covers1624.wt.api.event.VersionedClass;
 import net.covers1624.wt.gradle.builder.WorkspaceToolModelBuilder;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;

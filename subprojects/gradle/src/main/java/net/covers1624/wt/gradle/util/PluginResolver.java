@@ -7,11 +7,15 @@ package net.covers1624.wt.gradle.util;
 
 import net.covers1624.quack.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.Plugin;
 import org.gradle.api.plugins.PluginContainer;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.Enumeration;
@@ -21,7 +25,6 @@ import java.util.Properties;
 
 import static net.covers1624.quack.collection.ColUtils.iterable;
 import static net.covers1624.quack.util.SneakyUtils.sneak;
-import static net.covers1624.wt.util.Utils.extractRoot;
 
 /**
  * Created by covers1624 on 15/6/19.
@@ -68,5 +71,75 @@ public class PluginResolver {
 
         }
         return classToName;
+    }
+
+    // Copied from Utils in common as we can't dep on that from Gradle side.
+    @Nullable
+    public static String extractRoot(URL resourceURL, String resourcePath) {
+        if (!(StringUtils.startsWith(resourcePath, "/") || StringUtils.startsWith(resourcePath, "\\"))) {
+            return null;
+        }
+
+        String resultPath = null;
+        String protocol = resourceURL.getProtocol();
+        if ("file".equals(protocol)) {
+            String path = urlToFile(resourceURL).getPath();
+            String testPath = path.replace('\\', '/');
+            String testResourcePath = resourcePath.replace('\\', '/');
+            if (StringUtils.endsWithIgnoreCase(testPath, testResourcePath)) {
+                resultPath = path.substring(0, path.length() - resourcePath.length());
+            }
+        } else if ("jar".equals(protocol)) {
+            Pair<String, String> paths = splitJarUrl(resourceURL.getFile());
+            if (paths != null && paths.getLeft() != null) {
+                resultPath = paths.getLeft().replace("\\", "/");
+            }
+        } else if ("jrt".equals(protocol)) {
+            return null;
+        }
+
+        if (resultPath == null) {
+            return null;
+        }
+
+        return StringUtils.removeEnd(resultPath, "/");
+    }
+
+    @Nullable
+    public static Pair<String, String> splitJarUrl(String url) {
+        int pivot = url.indexOf("!/");
+        if (pivot < 0) {
+            return null;
+        }
+
+        String resourcePath = url.substring(pivot + 2);
+        String jarPath = url.substring(0, pivot);
+
+        if (jarPath.startsWith("jar:")) {
+            jarPath = jarPath.substring("jar".length() + 1);
+        }
+
+        if (jarPath.startsWith("file")) {
+            try {
+                jarPath = urlToFile(new URL(jarPath)).getPath().replace('\\', '/');
+            } catch (Exception e) {
+                jarPath = jarPath.substring("file".length());
+                if (jarPath.startsWith("://")) {
+                    jarPath = jarPath.substring("://".length());
+                } else if (StringUtils.startsWith(jarPath, ":")) {
+                    jarPath = jarPath.substring(1);
+                }
+            }
+        }
+
+        return Pair.of(jarPath, resourcePath);
+    }
+
+    public static File urlToFile(URL url) {
+        try {
+            return new File(url.toURI().getSchemeSpecificPart());
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("URL='" + url.toString() + "'", e);
+        }
     }
 }

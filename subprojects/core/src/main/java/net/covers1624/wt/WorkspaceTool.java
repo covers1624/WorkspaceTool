@@ -5,7 +5,6 @@
  */
 package net.covers1624.wt;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import groovy.lang.Binding;
@@ -149,14 +148,19 @@ public class WorkspaceTool {
         context.mixinInstantiator.addMixinTarget(RunConfig.class, DefaultRunConfig.class);
         context.mixinInstantiator.addMixinTarget(ModuleSpec.class, ModuleSpecImpl.class);
 
+        // WT-Gradle module
         context.gradleManager.includeClassMarker("net.covers1624.wt.gradle.WorkspaceToolGradlePlugin");
+        // GradleStuff
         context.gradleManager.includeClassMarker("net.covers1624.gradlestuff.sourceset.SourceSetDependencyPlugin");
+        // API
         context.gradleManager.includeClassMarker(ProjectData.class);
+        // Guava
         context.gradleManager.includeClassMarker(ImmutableMap.class);
-        context.gradleManager.includeClassMarker(Gson.class);
+        // Lang3
         context.gradleManager.includeClassMarker(StringUtils.class);
+        // Commons text
         context.gradleManager.includeClassMarker(StringSubstitutor.class);
-        context.gradleManager.includeClassMarker(MoreObjects.class);
+        // Quack
         context.gradleManager.includeClassMarker(SneakyUtils.class);
 
         context.gradleManager.includeResourceMarker("gradle_plugin.marker");

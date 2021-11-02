@@ -87,6 +87,7 @@ public class ForgeExtension implements Extension {
         registry.registerFrameworkHandler(Forge114.class, Forge114FrameworkHandler::new);
         registry.registerFrameworkHandler(Forge117.class, Forge117FrameworkHandler::new);
 
+        // Add WT Forge-Gradle module.
         gradleManager.includeClassMarker("net.covers1624.wt.forge.gradle.FGDataBuilder");
         gradleManager.addDataBuilder("net.covers1624.wt.forge.gradle.FGDataBuilder");
         gradleManager.executeBefore("genSrgs", "mergeJars");

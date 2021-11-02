@@ -11,7 +11,7 @@ import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.api.gradle.data.*;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.api.gradle.model.impl.WorkspaceToolModelImpl;
-import net.covers1624.wt.event.VersionedClass;
+import net.covers1624.wt.api.event.VersionedClass;
 import net.covers1624.wt.gradle.util.PluginResolver;
 import org.codehaus.groovy.runtime.InvokerHelper;
 import org.gradle.api.Plugin;

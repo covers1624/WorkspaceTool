@@ -6,15 +6,14 @@
 package net.covers1624.wt.forge.gradle;
 
 import groovy.lang.MetaProperty;
+import net.covers1624.quack.collection.ColUtils;
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.quack.util.SneakyUtils;
+import net.covers1624.wt.api.event.VersionedClass;
 import net.covers1624.wt.api.gradle.data.ConfigurationData;
 import net.covers1624.wt.api.gradle.data.PluginData;
 import net.covers1624.wt.api.gradle.data.ProjectData;
-import net.covers1624.wt.event.VersionedClass;
 import net.covers1624.wt.forge.gradle.data.*;
 import net.covers1624.wt.gradle.builder.ExtraDataBuilder;
-import net.covers1624.wt.util.ColUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.gradle.api.Project;
@@ -203,14 +202,18 @@ public class FGDataBuilder implements ExtraDataBuilder {
             Configuration configMappings = configurations.getByName("forgeGradleMcpMappings");
             Configuration configMcpData = configurations.getByName("forgeGradleMcpData");
 
-            Dependency mappingsArtifact = ColUtils.head(configMappings.getDependencies());
-            Dependency mcpDataArtifact = ColUtils.head(configMcpData.getDependencies());
+            Dependency mappingsArtifact = ColUtils.headOption(configMappings.getDependencies())
+                    .orElseThrow(() -> new RuntimeException("Empty."));
+            Dependency mcpDataArtifact = ColUtils.headOption(configMcpData.getDependencies())
+                    .orElseThrow(() -> new RuntimeException("Empty."));
 
             data.mappingsArtifact = zipNotationOf(mappingsArtifact);
             data.mcpDataArtifact = zipNotationOf(mcpDataArtifact);
 
-            data.mappings = ColUtils.head(configMappings.getResolvedConfiguration().getFiles());
-            data.data = ColUtils.head(configMcpData.getResolvedConfiguration().getFiles());
+            data.mappings = ColUtils.headOption(configMappings.getResolvedConfiguration().getFiles())
+                    .orElseThrow(() -> new RuntimeException("Empty"));
+            data.data = ColUtils.headOption(configMcpData.getResolvedConfiguration().getFiles())
+                    .orElseThrow(() -> new RuntimeException("Empty"));
 
             data.mergedJar = getProperty(mergeJars, "outJar");
 

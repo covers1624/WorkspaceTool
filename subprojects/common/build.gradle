@@ -2,13 +2,12 @@ plugins {
     id 'groovy'
 }
 
-// TODO, common should be somewhat splitup, or anything specifically required by and only used by gradle sub-project
-//  moved to the gradle sub-project. This module should _really_ use the same lang version as core.
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
 archivesBaseName = 'wt-common'
 
 dependencies {
+    api project(":api")
     api 'org.ow2.asm:asm:9.2'
     api 'org.ow2.asm:asm-commons:9.2'
     api 'org.apache.logging.log4j:log4j-core:2.14.1'

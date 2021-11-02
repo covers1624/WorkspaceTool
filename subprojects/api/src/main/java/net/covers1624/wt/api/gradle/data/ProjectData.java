@@ -6,7 +6,7 @@
 package net.covers1624.wt.api.gradle.data;
 
 import com.google.common.collect.Streams;
-import net.covers1624.wt.event.VersionedClass;
+import net.covers1624.wt.api.event.VersionedClass;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;

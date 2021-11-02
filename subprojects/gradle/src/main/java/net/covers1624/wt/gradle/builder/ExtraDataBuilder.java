@@ -7,7 +7,7 @@ package net.covers1624.wt.gradle.builder;
 
 import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.api.gradle.data.PluginData;
-import net.covers1624.wt.event.VersionedClass;
+import net.covers1624.wt.api.event.VersionedClass;
 import org.gradle.api.Project;
 
 /**

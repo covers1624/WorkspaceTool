@@ -7,7 +7,7 @@ package net.covers1624.wt.api.gradle.data;
 
 import com.google.common.base.MoreObjects;
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.wt.event.VersionedClass;
+import net.covers1624.wt.api.event.VersionedClass;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;

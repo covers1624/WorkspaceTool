@@ -1,11 +1,10 @@
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
-archivesBaseName = 'wt-gradle'
+archivesBaseName = 'wt-forge-gradle'
 
 dependencies {
     api project(":api")
-    api 'net.covers1624:GradleStuff:3.0.0.9'
-
+    api project(":gradle")
     compileOnly gradleApi()
 }
 

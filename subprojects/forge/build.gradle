@@ -5,11 +5,10 @@ archivesBaseName = 'wt-forge'
 dependencies {
     api project(":common")
     api project(":minecraft")
+    api project(":forge-gradle")
     api 'net.minecraftforge:srgutils:0.4.3'
 
     compileOnly project(':core')
-    compileOnly project(':gradle')
-    compileOnly gradleApi()
 }
 
 publishing {

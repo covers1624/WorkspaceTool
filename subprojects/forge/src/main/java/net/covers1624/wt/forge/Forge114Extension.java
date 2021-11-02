@@ -5,38 +5,28 @@
  */
 package net.covers1624.wt.forge;
 
-import com.electronwill.nightconfig.core.UnmodifiableConfig;
-import com.electronwill.nightconfig.core.file.FileConfig;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.gradle.data.ConfigurationData;
 import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;
 import net.covers1624.wt.api.module.Module;
-import net.covers1624.wt.api.module.SourceSet;
-import net.covers1624.wt.api.script.module.ModuleContainerSpec;
-import net.covers1624.wt.api.script.module.ModuleSpec;
 import net.covers1624.wt.api.script.runconfig.RunConfig;
 import net.covers1624.wt.event.ProcessModulesEvent;
 import net.covers1624.wt.event.ProcessProjectDataEvent;
 import net.covers1624.wt.event.ProcessWorkspaceModulesEvent;
 import net.covers1624.wt.forge.api.export.ForgeExportedData;
 import net.covers1624.wt.forge.api.script.Forge114;
-import net.covers1624.wt.forge.api.script.Forge114ModuleSpec;
 import net.covers1624.wt.forge.api.script.Forge114RunConfig;
-import net.covers1624.wt.forge.api.script.ModuleModsContainer;
 import net.covers1624.wt.forge.gradle.data.FG3McpMappingData;
 import net.covers1624.wt.mc.data.VersionInfoJson;
 import net.covers1624.wt.util.Utils;
 import org.apache.logging.log4j.util.Strings;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 import static net.covers1624.wt.forge.ForgeExtension.*;
 
 /**

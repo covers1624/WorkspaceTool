@@ -5,15 +5,14 @@
  */
 package net.covers1624.wt.api.gradle.data;
 
-import net.covers1624.wt.api.gradle.GradleManager;
-import net.covers1624.wt.event.VersionedClass;
+import net.covers1624.wt.api.event.VersionedClass;
 
 import java.io.Serializable;
 
 /**
  * Super interface for all data extracted by ExtraModelBuilders
  *
- * @see GradleManager
+ * @see net.covers1624.wt.api.gradle.GradleManager
  *
  * Created by covers1624 on 18/6/19.
  */

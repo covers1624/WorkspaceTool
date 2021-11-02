@@ -7,7 +7,7 @@ package net.covers1624.wt.api.gradle.model.impl;
 
 import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
-import net.covers1624.wt.event.VersionedClass;
+import net.covers1624.wt.api.event.VersionedClass;
 
 /**
  * An implementation of {@link WorkspaceToolModel}
