@@ -1,9 +1,11 @@
 package net.covers1624.wt.wrapper.maven;
 
+import net.covers1624.quack.maven.MavenNotation;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
@@ -63,8 +65,8 @@ public class MavenResolver {
                 .collect(Collectors.toList());
     }
 
-    public Set<File> resolve(MavenNotation notation) throws Exception {
-        Artifact artifact = notation.toArtifact();
+    public List<Path> resolve(MavenNotation notation) throws Exception {
+        Artifact artifact = toArtifact(notation);
 
         VersionRangeRequest versionRangeRequest = new VersionRangeRequest();
         versionRangeRequest.setArtifact(artifact);
@@ -83,7 +85,10 @@ public class MavenResolver {
         return artifactResults.stream()
                 .map(ArtifactResult::getArtifact)
                 .map(Artifact::getFile)
-                .collect(Collectors.toSet());
+                .map(File::toPath)
+                .map(Path::toAbsolutePath)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     private static String resolvePlaceholders(String value) {
@@ -101,4 +106,7 @@ public class MavenResolver {
         return result.toString();
     }
 
+    public static Artifact toArtifact(MavenNotation notation) {
+        return new DefaultArtifact(notation.group, notation.module, notation.classifier, notation.extension, notation.version);
+    }
 }

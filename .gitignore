@@ -6,6 +6,7 @@
 
 !README.md
 !LICENSE.txt
+!wrapper-proguard.pro
 
 !gradle/
 !settings.gradle

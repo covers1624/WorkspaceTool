@@ -1,28 +1,23 @@
 package net.covers1624.wt.wrapper.json;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import net.covers1624.wt.wrapper.java.JavaVersion;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedHashMap;
 
 /**
  * Created by covers1624 on 20/8/20.
  */
 public class WrapperProperties {
 
-    private static final Gson gson = new Gson();
-
     public String artifact;
     @SerializedName ("main_class")
     public String mainClass;
-    public Map<String, String> repos = new HashMap<>();
+    @SerializedName ("required_java")
+    public JavaVersion requiredJava;
+    public LinkedHashMap<String, String> repos = new LinkedHashMap<>();
 
     public WrapperProperties() {
     }
@@ -30,44 +25,23 @@ public class WrapperProperties {
     private WrapperProperties(WrapperProperties other) {
         this.artifact = other.artifact;
         this.mainClass = other.mainClass;
+        this.requiredJava = other.requiredJava;
         this.repos.putAll(other.repos);
     }
 
+    // TODO, is it worth keeping local overrides?
     public static WrapperProperties compute(Path workspacePropsPath) {
-        WrapperProperties defaultProps = parse(WrapperProperties.class.getResourceAsStream("/properties.json"), "/properties.json");
+        WrapperProperties defaultProps = JsonUtils.parse(WrapperProperties.class.getResourceAsStream("/properties.json"), WrapperProperties.class);
         if (!Files.exists(workspacePropsPath)) {
             return defaultProps;
         }
-        WrapperProperties workspaceProps = parse(workspacePropsPath);
-        WrapperProperties ret = new WrapperProperties(defaultProps);
-        if (workspaceProps.artifact != null) {
-            ret.artifact = workspaceProps.artifact;
-        }
-        if (workspaceProps.mainClass != null) {
-            ret.mainClass = workspaceProps.mainClass;
-        }
 
-        if (!workspaceProps.repos.isEmpty()) {
-            ret.repos.clear();
-            ret.repos.putAll(workspaceProps.repos);
-        }
+        // If the user has a '.workspace_tool/properties.json', load additional repo urls.
+        WrapperProperties workspaceProps = JsonUtils.parse(workspacePropsPath, WrapperProperties.class);
+        WrapperProperties ret = new WrapperProperties(defaultProps);
+        ret.repos = new LinkedHashMap<>();
+        ret.repos.putAll(workspaceProps.repos);
+        ret.repos.putAll(defaultProps.repos);
         return ret;
     }
-
-    public static WrapperProperties parse(Path path) {
-        try {
-            return parse(Files.newInputStream(path), path.toAbsolutePath().toString());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read file: " + path.toAbsolutePath(), e);
-        }
-    }
-
-    private static WrapperProperties parse(InputStream is, String path) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            return gson.fromJson(reader, WrapperProperties.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read WorkspaceTool properties from: " + path, e);
-        }
-    }
-
 }

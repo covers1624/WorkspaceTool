@@ -1,3 +1,4 @@
+import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner
 import groovy.xml.MarkupBuilder
 import net.covers1624.gradlestuff.dependencies.ConfigurationVisitor
 import net.covers1624.gradlestuff.dependencies.ConfigurationWalker
@@ -11,6 +12,7 @@ buildscript {
         maven { url 'https://maven.covers1624.net/' }
     }
     dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.1.0'
         classpath 'net.covers1624:GradleStuff:3.0.0+'
     }
 }
@@ -20,6 +22,7 @@ plugins {
     id 'groovy'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id "org.jetbrains.gradle.plugin.idea-ext" version "1.0.1"
 }
 
 //Converts source set output's to proper Dependencies in a configuration.
@@ -54,14 +57,11 @@ repositories {
 
 configurations {
     common
-    mavenResolver
     forgeImplementation.extendsFrom common
     gradleImplementation.extendsFrom common
     intellijImplementation.extendsFrom common
     implementation.extendsFrom common
     commonImplementation.extendsFrom common
-    implementation.extendsFrom mavenResolver
-    wrapperImplementation.extendsFrom mavenResolver
     minecraftImplementation.extendsFrom common
 
     runtimeClasspath.extendsFrom commonRuntimeClasspath
@@ -98,19 +98,8 @@ dependencies {
     common 'org.apache.commons:commons-collections4:4.4'
     common 'codechicken:ChickenASM:2.0.0.+'
     common 'net.covers1624:TailConsole:1.1.0.4'
-    common 'net.covers1624:Quack:0.3.7.29'
+    common 'net.covers1624:Quack:0.4.0.31'
     commonCompileOnly 'org.jetbrains:annotations:22.0.0'
-
-    //mavenResolver
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-api:1.7.2'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-spi:1.7.2'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-impl:1.7.2'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-util:1.7.2'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-connector-basic:1.7.2'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-transport-http:1.7.2'
-    mavenResolver 'org.apache.maven.resolver:maven-resolver-transport-file:1.7.2'
-    mavenResolver 'org.apache.maven:maven-model-builder:3.8.1'
-    mavenResolver 'org.apache.maven:maven-resolver-provider:3.8.1'
 
     //Forge
     forgeImplementation 'net.minecraftforge:srgutils:0.4.3'
@@ -155,8 +144,32 @@ dependencies {
     //Wrapper
     wrapperImplementation 'com.google.code.gson:gson:2.8.8'
     wrapperImplementation 'org.apache.commons:commons-lang3:3.12.0'
+    wrapperImplementation 'org.apache.commons:commons-compress:1.21'
     wrapperImplementation 'org.slf4j:slf4j-simple:1.7.32'
-    wrapperCompileOnly 'org.jetbrains:annotations:22.0.0'
+    wrapperImplementation 'org.ow2.asm:asm:9.2'
+    wrapperImplementation 'net.covers1624:Quack:0.4.0.31'
+
+    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-api:1.7.2'
+    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-spi:1.7.2'
+    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-impl:1.7.2'
+    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-util:1.7.2'
+    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-connector-basic:1.7.2'
+    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-transport-http:1.7.2'
+    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-transport-file:1.7.2'
+    wrapperImplementation 'org.apache.maven:maven-model-builder:3.8.1'
+    wrapperImplementation 'org.apache.maven:maven-resolver-provider:3.8.1'
+
+    wrapperImplementation('net.rubygrapefruit:native-platform:0.21') {
+        transitive = false
+    }
+    wrapperImplementation('net.rubygrapefruit:native-platform-windows-amd64:0.21') {
+        transitive = false
+    }
+    wrapperImplementation('net.rubygrapefruit:native-platform-windows-i386:0.21') {
+        transitive = false
+    }
+    wrapperImplementation 'org.jetbrains:annotations:22.0.0'
+    wrapperImplementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     testImplementation sourceSets.intellij.output
 
@@ -197,32 +210,72 @@ task minecraftJar(type: Jar) {
     from sourceSets.minecraft.output
 }
 
-task wrapperJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+task wrapperShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
     baseName 'wt-wrapper'
+    classifier 'all'
 
-    minimize()
     configurations = [copyResolvable(project.configurations.wrapperImplementation)]
 
     from sourceSets.wrapper.output
-    manifest {
-        attributes 'Main-Class': "net.covers1624.wt.wrapper.Main"
-    }
 
     exclude 'META-INF/maven/**'
     exclude 'META-INF/plexus/**'
     exclude 'META-INF/sisu/**'
     exclude 'module-info.class'
+    exclude '**/Log4j2Plugins.dat'
+    exclude '**/package.html'
+    exclude 'about.html'
+    exclude 'LICENSE.txt'
+}
 
-    relocate 'com.google', 'net.covers1624.repack.com.google'
-    relocate 'javax.inject', 'net.covers1624.repack.javax.inject'
-    relocate 'org.apache', 'net.covers1624.repack.org.apache'
-    relocate 'org.codehaus', 'net.covers1624.repack.org.codehaus'
-    relocate 'org.eclipse', 'net.covers1624.repack.org.eclipse'
-    relocate 'org.slf4j', 'net.covers1624.repack.org.slf4j'
-    relocate 'joptsimple', 'net.covers1624.repack.joptsimple'
+task pgShrinkWrapper(type: proguard.gradle.ProGuardTask, dependsOn: wrapperShadowJar) {
+    ext {
+        inputJar = wrapperShadowJar.archiveFile.get().asFile
+        outputDir = file("${buildDir}/proguard")
+        outputJar = file("${outputDir}/wt-wrapper.jar")
+        config = 'wrapper-proguard.pro'
+    }
+    inputs.file inputJar
+    inputs.file config
+
+    outputDir.mkdirs()
+
+    injars inputJar
+    outjars outputJar
+
+    def javaHome = System.getProperty('java.home')
+    if (System.getProperty('java.version').startsWith('1.')) {
+        libraryjars "${javaHome}/lib/rt.jar"
+    } else {
+        libraryjars "${javaHome}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+        libraryjars "${javaHome}/jmods/java.desktop.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+        libraryjars "${javaHome}/jmods/java.logging.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+        libraryjars "${javaHome}/jmods/jdk.unsupported.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+    }
+
+    configuration config
+    doLast {
+        logger.lifecycle("PG Shrunk to: ${outputJar.length() / 1024}kb from: ${inputJar.length() / 1024}kb")
+    }
+}
+
+task wrapperJar(type: Jar, dependsOn: pgShrinkWrapper) {
+    baseName 'wt-wrapper'
+    from zipTree(pgShrinkWrapper.outputJar)
+    manifest {
+        attributes 'Main-Class': "net.covers1624.wt.wrapper.Main"
+    }
+    from 'LICENSE.txt'
 }
 
 build.dependsOn(commonJar, forgeJar, gradleJar, intellijJar, minecraftJar, wrapperJar)
+
+idea.project.settings {
+    delegateActions {
+        delegateBuildRunToGradle = false
+        testRunner = TestRunner.PLATFORM
+    }
+}
 
 publishing {
     repositories {
