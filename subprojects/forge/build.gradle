@@ -1,0 +1,23 @@
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+
+archivesBaseName = 'wt-forge'
+
+dependencies {
+    api project(":common")
+    api project(":minecraft")
+    api 'net.minecraftforge:srgutils:0.4.3'
+
+    compileOnly project(':core')
+    compileOnly project(':gradle')
+    compileOnly gradleApi()
+}
+
+publishing {
+    publications {
+        publication(MavenPublication) {
+            artifactId archivesBaseName
+
+            from components['java']
+        }
+    }
+}

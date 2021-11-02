@@ -1,0 +1,20 @@
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+archivesBaseName = 'wt-gradle'
+
+dependencies {
+    api project(":common")
+    api 'net.covers1624:GradleStuff:3.0.0.9'
+
+    compileOnly gradleApi()
+}
+
+publishing {
+    publications {
+        publication(MavenPublication) {
+            artifactId archivesBaseName
+
+            from components['java']
+        }
+    }
+}

@@ -1,0 +1,17 @@
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+
+archivesBaseName = 'wt-minecraft'
+
+dependencies {
+    api project(":common")
+}
+
+publishing {
+    publications {
+        publication(MavenPublication) {
+            artifactId archivesBaseName
+
+            from components['java']
+        }
+    }
+}

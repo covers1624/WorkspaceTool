@@ -1,419 +1,94 @@
 import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner
-import groovy.xml.MarkupBuilder
-import net.covers1624.gradlestuff.dependencies.ConfigurationVisitor
-import net.covers1624.gradlestuff.dependencies.ConfigurationWalker
-import net.covers1624.quack.maven.MavenNotation
 
 buildscript {
     repositories() {
         mavenLocal()
         jcenter()
         mavenCentral()
-        maven { url 'https://maven.covers1624.net/' }
     }
     dependencies {
         classpath 'com.guardsquare:proguard-gradle:7.1.0'
-        classpath 'net.covers1624:GradleStuff:3.0.0+'
     }
 }
 
 plugins {
-    id 'java'
-    id 'groovy'
-    id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
     id "org.jetbrains.gradle.plugin.idea-ext" version "1.0.1"
 }
-
-//Converts source set output's to proper Dependencies in a configuration.
-apply plugin: 'net.covers1624.ss-dependencies'
 
 group 'net.covers1624.workspace_tool'
 version '0.4.0'
 
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
-println "Starting build of ${archivesBaseName}, Version: ${version}"
+println "Starting build of WorkspaceTool, Version: ${version}"
 
-sourceCompatibility = 1.8
+subprojects { subProject ->
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
 
-sourceSets {
-    common
-    forge
-    create('gradle')
-    intellij
-    main
-    minecraft
-    create('wrapper')
-}
+    group rootProject.group
+    version rootProject.version
 
-repositories {
-    mavenLocal()
-    jcenter()
-    mavenCentral()
-    maven { url 'https://maven.covers1624.net/' }
-    maven { url 'https://files.minecraftforge.net/maven/' }
-    maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
-}
-
-configurations {
-    common
-    forgeImplementation.extendsFrom common
-    gradleImplementation.extendsFrom common
-    intellijImplementation.extendsFrom common
-    implementation.extendsFrom common
-    commonImplementation.extendsFrom common
-    minecraftImplementation.extendsFrom common
-
-    runtimeClasspath.extendsFrom commonRuntimeClasspath
-    runtimeClasspath.extendsFrom forgeRuntimeClasspath
-    runtimeClasspath.extendsFrom gradleRuntimeClasspath
-    runtimeClasspath.extendsFrom intellijRuntimeClasspath
-    runtimeClasspath.extendsFrom minecraftRuntimeClasspath
-}
-
-dependencies {
-
-    //Common
-    common 'org.ow2.asm:asm:9.2'
-    common 'org.ow2.asm:asm-commons:9.2'
-    common 'org.apache.logging.log4j:log4j-core:2.14.1'
-    common 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
-    common 'org.apache.logging.log4j:log4j-jul:2.14.1'
-    common 'com.google.code.gson:gson:2.8.8'
-    common 'com.google.guava:guava:31.0.1-jre'
-    common 'org.codehaus.groovy:groovy:3.0.8'
-    common 'org.codehaus.groovy:groovy-xml:3.0.8'
-    common 'org.apache.commons:commons-text:1.9'
-    common 'org.apache.commons:commons-lang3:3.12.0'
-    common 'org.apache.maven:maven-artifact:3.8.1'
-    common 'it.unimi.dsi:fastutil:8.5.6'
-    common 'org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r'
-    common 'org.apache.httpcomponents:httpclient:4.5.13'
-    common 'commons-io:commons-io:2.11.0'
-    common 'com.electronwill.night-config:core:3.6.4'
-    common 'com.electronwill.night-config:toml:3.6.4'
-    common 'com.opencsv:opencsv:5.5.2'
-    common 'org.tukaani:xz:1.9'
-    common 'org.apache.commons:commons-compress:1.21'
-    common 'org.apache.commons:commons-collections4:4.4'
-    common 'codechicken:ChickenASM:2.0.0.+'
-    common 'net.covers1624:TailConsole:1.1.0.4'
-    common 'net.covers1624:Quack:0.4.0.31'
-    commonCompileOnly 'org.jetbrains:annotations:22.0.0'
-
-    //Forge
-    forgeImplementation 'net.minecraftforge:srgutils:0.4.3'
-    forgeImplementation sourceSets.minecraft.output
-    forgeCompileOnly sourceSets.common.output
-    forgeCompileOnly sourceSets.main.output
-    forgeCompileOnly sourceSets.gradle.output
-    forgeCompileOnly gradleApi()
-    forgeCompileOnly 'org.jetbrains:annotations:22.0.0'
-
-    //Gradle
-    gradleImplementation 'net.covers1624:GradleStuff:3.0.0.+'
-    gradleCompileOnly gradleApi()
-    gradleCompileOnly sourceSets.common.output
-    gradleCompileOnly 'org.jetbrains:annotations:22.0.0'
-
-    //Intellij
-    intellijCompileOnly sourceSets.common.output
-    intellijCompileOnly sourceSets.main.output
-
-    //Main
-    implementation 'org.gradle:gradle-tooling-api:4.10.3'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
-    implementation 'org.apache.logging.log4j:log4j-jul:2.14.1'
-    implementation sourceSets.common.output
-    runtimeOnly sourceSets.forge.output
-    runtimeOnly sourceSets.intellij.output
-    runtimeOnly sourceSets.gradle.output
-    runtimeOnly sourceSets.minecraft.output
-    runtimeOnly 'net.covers1624:GradleStuff:3.0.0.+'
-    compileOnly 'org.jetbrains:annotations:22.0.0'
-    compileOnly sourceSets.wrapper.output
-    annotationProcessor 'org.apache.logging.log4j:log4j-core:2.14.1'
-
-    //Minecraft
-    minecraftCompileOnly sourceSets.common.output
-
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
-    testImplementation 'org.apache.logging.log4j:log4j-core:2.14.1:tests'
-
-    //Wrapper
-    wrapperImplementation 'com.google.code.gson:gson:2.8.8'
-    wrapperImplementation 'org.apache.commons:commons-lang3:3.12.0'
-    wrapperImplementation 'org.apache.commons:commons-compress:1.21'
-    wrapperImplementation 'org.slf4j:slf4j-simple:1.7.32'
-    wrapperImplementation 'org.ow2.asm:asm:9.2'
-    wrapperImplementation 'net.covers1624:Quack:0.4.0.31'
-
-    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-api:1.7.2'
-    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-spi:1.7.2'
-    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-impl:1.7.2'
-    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-util:1.7.2'
-    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-connector-basic:1.7.2'
-    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-transport-http:1.7.2'
-    wrapperImplementation 'org.apache.maven.resolver:maven-resolver-transport-file:1.7.2'
-    wrapperImplementation 'org.apache.maven:maven-model-builder:3.8.1'
-    wrapperImplementation 'org.apache.maven:maven-resolver-provider:3.8.1'
-
-    wrapperImplementation('net.rubygrapefruit:native-platform:0.21') {
-        transitive = false
-    }
-    wrapperImplementation('net.rubygrapefruit:native-platform-windows-amd64:0.21') {
-        transitive = false
-    }
-    wrapperImplementation('net.rubygrapefruit:native-platform-windows-i386:0.21') {
-        transitive = false
-    }
-    wrapperImplementation 'org.jetbrains:annotations:22.0.0'
-    wrapperImplementation 'com.google.code.findbugs:jsr305:3.0.2'
-
-    testImplementation sourceSets.intellij.output
-
-}
-
-jar {
-    baseName 'wt-core'
-    from sourceSets.main.output
-}
-
-task commonJar(type: Jar) {
-    baseName 'wt-common'
-    dependsOn compileCommonJava, compileCommonGroovy
-    from sourceSets.common.output
-}
-
-task forgeJar(type: Jar) {
-    baseName 'wt-forge'
-    dependsOn compileForgeJava, compileForgeGroovy
-    from sourceSets.forge.output
-}
-
-task gradleJar(type: Jar) {
-    baseName 'wt-gradle'
-    dependsOn compileGradleJava, compileGradleGroovy
-    from sourceSets.gradle.output
-}
-
-task intellijJar(type: Jar) {
-    baseName 'wt-intellij'
-    dependsOn compileIntellijJava, compileIntellijGroovy
-    from sourceSets.intellij.output
-}
-
-task minecraftJar(type: Jar) {
-    baseName 'wt-minecraft'
-    dependsOn compileMinecraftJava, compileMinecraftGroovy
-    from sourceSets.minecraft.output
-}
-
-task wrapperShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
-    baseName 'wt-wrapper'
-    classifier 'all'
-
-    configurations = [copyResolvable(project.configurations.wrapperImplementation)]
-
-    from sourceSets.wrapper.output
-
-    exclude 'META-INF/maven/**'
-    exclude 'META-INF/plexus/**'
-    exclude 'META-INF/sisu/**'
-    exclude 'module-info.class'
-    exclude '**/Log4j2Plugins.dat'
-    exclude '**/package.html'
-    exclude 'about.html'
-    exclude 'LICENSE.txt'
-}
-
-task pgShrinkWrapper(type: proguard.gradle.ProGuardTask, dependsOn: wrapperShadowJar) {
-    ext {
-        inputJar = wrapperShadowJar.archiveFile.get().asFile
-        outputDir = file("${buildDir}/proguard")
-        outputJar = file("${outputDir}/wt-wrapper.jar")
-        config = 'wrapper-proguard.pro'
-    }
-    inputs.file inputJar
-    inputs.file config
-
-    outputDir.mkdirs()
-
-    injars inputJar
-    outjars outputJar
-
-    def javaHome = System.getProperty('java.home')
-    if (System.getProperty('java.version').startsWith('1.')) {
-        libraryjars "${javaHome}/lib/rt.jar"
-    } else {
-        libraryjars "${javaHome}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-        libraryjars "${javaHome}/jmods/java.desktop.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-        libraryjars "${javaHome}/jmods/java.logging.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-        libraryjars "${javaHome}/jmods/jdk.unsupported.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url 'https://maven.covers1624.net/' }
+        maven { url 'https://files.minecraftforge.net/maven/' }
+        maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
     }
 
-    configuration config
-    doLast {
-        logger.lifecycle("PG Shrunk to: ${outputJar.length() / 1024}kb from: ${inputJar.length() / 1024}kb")
+    publishing {
+        repositories {
+            if (System.getenv('MAVEN_PASS')) {
+                maven {
+                    url "https://nexus.covers1624.net/repository/maven-releases/"
+                    credentials {
+                        username 'covers1624'
+                        password System.getenv('MAVEN_PASS')
+                    }
+                }
+            }
+        }
+        publications {
+            publication(MavenPublication) {
+                pom {
+                    name = 'WorkspaceTool'
+                    description = 'WorkspaceTool, A Minecraft Modding workspace tool.'
+                    url = 'https://github.com/covers1624/WorkspaceTool'
+
+                    scm {
+                        url = 'https://github.com/covers1624/WorkspaceTool'
+                        connection = 'scm:git:git://github.com/covers1624/WorkspaceTool.git'
+                        connection = 'scm:git:git@github.com:covers1624/WorkspaceTool.git'
+                    }
+
+                    issueManagement {
+                        system = 'github'
+                        url = 'https://github.com/covers1624/WorkspaceTool/issues'
+                    }
+                    licenses {
+                        license {
+                            name = "MIT"
+                            url = 'https://raw.githubusercontent.com/covers1624/WorkspaceTool/master/LICENSE.txt'
+                            distribution = 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'covers1624'
+                            name = 'covers1624'
+                        }
+                    }
+                }
+            }
+        }
     }
 }
-
-task wrapperJar(type: Jar, dependsOn: pgShrinkWrapper) {
-    baseName 'wt-wrapper'
-    from zipTree(pgShrinkWrapper.outputJar)
-    manifest {
-        attributes 'Main-Class': "net.covers1624.wt.wrapper.Main"
-    }
-    from 'LICENSE.txt'
-}
-
-build.dependsOn(commonJar, forgeJar, gradleJar, intellijJar, minecraftJar, wrapperJar)
 
 idea.project.settings {
     delegateActions {
         delegateBuildRunToGradle = false
         testRunner = TestRunner.PLATFORM
     }
-}
-
-publishing {
-    repositories {
-        if (System.getenv('MAVEN_PASS')) {
-            maven {
-                url "https://nexus.covers1624.net/repository/maven-releases/"
-                credentials {
-                    username 'covers1624'
-                    password System.getenv('MAVEN_PASS')
-                }
-            }
-        }
-    }
-    publications {
-        'wt-core'(MavenPublication) {
-            groupId = project.group
-            artifactId = 'wt-core'
-            version = project.version
-            artifact jar
-            addDependencies(pom, sourceSets.main)
-        }
-        'wt-common'(MavenPublication) {
-            groupId = project.group
-            artifactId = 'wt-common'
-            version = project.version
-            artifact commonJar
-            addDependencies(pom, sourceSets.common)
-        }
-        'wt-forge'(MavenPublication) {
-            groupId = project.group
-            artifactId = 'wt-forge'
-            version = project.version
-            artifact forgeJar
-            addDependencies(pom, sourceSets.forge)
-        }
-        'wt-gradle'(MavenPublication) {
-            groupId = project.group
-            artifactId = 'wt-gradle'
-            version = project.version
-            artifact gradleJar
-            addDependencies(pom, sourceSets.gradle)
-        }
-        'wt-intellij'(MavenPublication) {
-            groupId = project.group
-            artifactId = 'wt-intellij'
-            version = project.version
-            artifact intellijJar
-            addDependencies(pom, sourceSets.intellij)
-        }
-        'wt-wrapper'(MavenPublication) {
-            groupId = project.group
-            artifactId = 'wt-wrapper'
-            version = project.version
-            artifact wrapperJar
-            addDependencies(pom, sourceSets.wrapper)
-        }
-        'wt-minecraft'(MavenPublication) {
-            groupId = project.group
-            artifactId = 'wt-minecraft'
-            version = project.version
-            artifact minecraftJar
-            addDependencies(pom, sourceSets.minecraft)
-        }
-    }
-}
-
-def addDependencies(pom, SourceSet ss) {
-    pom.withXml {
-        def walker = new ConfigurationWalker(dependencies)
-        def dependencies = it.asNode().appendNode('dependencies')
-        def visitor = new Visitor(dependencies, project)
-        def compileConfig = configurations.findByName(ss.compileConfigurationName)
-        def implementationConfig = configurations.findByName(ss.implementationConfigurationName)
-        def runtimeConfig = configurations.findByName(ss.runtimeConfigurationName)
-        def runtimeOnlyConfig = configurations.findByName(ss.runtimeOnlyConfigurationName)
-        def compileOnlyConfig = configurations.findByName(ss.compileOnlyConfigurationName)
-        visitor.scope = 'compile'
-        walker.walkTree([compileConfig, implementationConfig], visitor, false, false, true)
-        visitor.scope = 'runtime'
-        walker.walkTree([runtimeConfig, runtimeOnlyConfig], visitor, false, false, true)
-        visitor.scope = 'provided'
-        walker.walkTree([compileOnlyConfig], visitor, false, false, true)
-    }
-}
-
-def markupPom(XmlProvider provider, Closure closure) {
-    def node = markupXml(closure)
-    provider.asNode().append(node)
-}
-
-def markupXml(Closure closure) {
-    def xml = new StringWriter()
-    def b = new MarkupBuilder(xml)
-    Closure copy = closure.clone()
-    copy.setResolveStrategy(Closure.DELEGATE_FIRST)
-    copy.setDelegate(b)
-    if (copy.getMaximumNumberOfParameters() == 0) {
-        copy.call()
-    } else {
-        copy.call(b)
-    }
-    return new XmlParser().parseText(xml.toString())
-}
-
-class Visitor implements ConfigurationVisitor {
-
-    final Project project
-    final Node dependencies
-    String scope
-
-    Visitor(dependencies, project) {
-        this.dependencies = dependencies
-        this.project = project
-    }
-
-    @Override
-    void visitModuleDependency(MavenNotation name, File classes, File sources, File javadoc) {
-        def dep = dependencies.appendNode('dependency')
-        dep.appendNode('groupId', name.group)
-        dep.appendNode('artifactId', name.module)
-        dep.appendNode('version', name.version)
-        dep.appendNode('scope', scope)
-        if (name.classifier != null && !name.classifier.isEmpty()) {
-            dep.appendNode('classifier', name.classifier)
-        }
-        if (!Objects.equals(name.extension, 'jar')) {
-            dep.appendNode('type', name.extension)
-        }
-    }
-
-    @Override
-    void visitSourceSetDependency(SourceSet ss) {
-        this.visitModuleDependency(new MavenNotation(project.group, "wt-${ss.name}", project.version, null, 'jar'), null, null, null)
-    }
-}
-
-def copyResolvable(Configuration configuration) {
-    var copy = configuration.copy()
-    copy.canBeResolved = true
-    return copy
 }

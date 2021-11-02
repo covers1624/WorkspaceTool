@@ -1,0 +1,14 @@
+# Exclude all
+/*
+
+# Include important folders.
+!src/
+
+# Include other important files.
+!proguard.pro
+
+# Include important git files.
+!.gitignore
+
+# Include gradle related files
+!build.gradle
