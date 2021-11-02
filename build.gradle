@@ -5,9 +5,11 @@ buildscript {
         mavenLocal()
         jcenter()
         mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
         classpath 'com.guardsquare:proguard-gradle:7.1.0'
+        classpath 'gradle.plugin.org.cadixdev.gradle:licenser:0.6.1'
     }
 }
 
@@ -25,6 +27,7 @@ subprojects { subProject ->
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
+    apply plugin: 'org.cadixdev.licenser'
 
     group rootProject.group
     version rootProject.version
@@ -50,6 +53,18 @@ subprojects { subProject ->
                 }
             }
         }
+
+        license {
+            header = rootProject.file("LICENSE-header.txt")
+            properties {
+                year = new Date().format("yyyy")
+            }
+            newLine false
+
+            include 'net/covers1624/wt/**'
+            exclude 'net/covers1624/wt/util/pattern/**'
+        }
+
         publications {
             publication(MavenPublication) {
                 pom {
