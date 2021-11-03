@@ -6,49 +6,45 @@
 package net.covers1624.wt.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Table;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
+import net.covers1624.quack.gson.FileAdapter;
+import net.covers1624.quack.gson.HashCodeAdapter;
+import net.covers1624.quack.gson.LowerCaseEnumAdapterFactory;
 import net.covers1624.quack.gson.MavenNotationAdapter;
+import net.covers1624.quack.io.IOUtils;
 import net.covers1624.quack.maven.MavenNotation;
+import net.covers1624.quack.util.HashUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.annotation.WillNotClose;
 import java.io.*;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 
 /**
  * Created by covers1624 on 6/01/19.
@@ -56,90 +52,18 @@ import static java.nio.file.StandardOpenOption.WRITE;
 @SuppressWarnings ({ "ResultOfMethodCallIgnored", "UnstableApiUsage" })
 public class Utils {
 
-    //REEEEEE Gradle.
-    private static final Logger logger = LoggerFactory.getLogger("Utils");
+    private static final Logger LOGGER = LogManager.getLogger(Utils.class);
 
-    //32k buffer.
-    private static final ThreadLocal<byte[]> bufferCache = ThreadLocal.withInitial(() -> new byte[32 * 1024]);
     private static final char[] HEX_CHARS = "0123456789ABCDEF".toCharArray();
-    private static final Map<String, String> jfsArgsCreate = ImmutableMap.of("create", "true");
 
-    private static boolean PRETTY_JSON = true;//Boolean.getBoolean("workspacetool.pretty_json");
     public static final Gson gson = sneaky(() -> {
         GsonBuilder builder = new GsonBuilder()
                 .registerTypeAdapter(File.class, new FileAdapter())
                 .registerTypeAdapter(HashCode.class, new HashCodeAdapter())
                 .registerTypeAdapterFactory(new LowerCaseEnumAdapterFactory())
                 .registerTypeAdapter(MavenNotation.class, new MavenNotationAdapter());
-        if (PRETTY_JSON) {
-            builder = builder.setPrettyPrinting();
-        }
         return builder.create();
     });
-
-    public static Runnable sneak(ThrowingRunnable<Throwable> tr) {
-        return () -> sneaky(tr);
-    }
-
-    public static <T, R> Function<T, R> sneak(ThrowingFunction<T, R, Throwable> tf) {
-        return e -> sneaky(() -> tf.apply(e));
-    }
-
-    public static void sneaky(ThrowingRunnable<Throwable> tr) {
-        try {
-            tr.run();
-        } catch (Throwable t) {
-            throwUnchecked(t);
-        }
-    }
-
-    public static <T> T sneaky(ThrowingProducer<T, Throwable> tp) {
-        try {
-            return tp.get();
-        } catch (Throwable t) {
-            throwUnchecked(t);
-            return null;//Un possible
-        }
-    }
-
-    public static <T> Consumer<T> sneakyL(ThrowingConsumer<T, Throwable> tc) {
-        return t -> {
-            try {
-                tc.accept(t);
-            } catch (Throwable th) {
-                throwUnchecked(th);
-            }
-        };
-    }
-
-    @SuppressWarnings ("unchecked")
-    public static <T> T unsafeCast(Object object) {
-        return (T) object;
-    }
-
-    /**
-     * Throws an exception without compiler warnings.
-     */
-    @SuppressWarnings ("unchecked")
-    public static <T extends Throwable> void throwUnchecked(Throwable t) throws T {
-        throw (T) t;
-    }
-
-    public static void doLoudly(ThrowingRunnable<Throwable> runnable) {
-        try {
-            runnable.run();
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
-    }
-
-    public static <T> T doLoudly(ThrowingProducer<T, Throwable> producer) {
-        try {
-            return producer.get();
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
-    }
 
     /**
      * Wrapper for {@link Gson#fromJson(Reader, Class)} except from a file.
@@ -213,26 +137,6 @@ public class Utils {
         } catch (IOException e) {
             throw new RuntimeException("Unable to write json to file. " + path);
         }
-    }
-
-    /**
-     * Represents this Enumeration as an Iterable.
-     *
-     * @param enumeration The Enumeration.
-     * @param <E>         The Type.
-     * @return The Iterable.
-     */
-    public static <E> Iterable<E> toIterable(Enumeration<E> enumeration) {
-        return () -> new Iterator<E>() {
-            //@formatter:off
-            @Override public boolean hasNext() { return enumeration.hasMoreElements(); }
-            @Override public E next() { return enumeration.nextElement(); }
-            //@formatter:on
-        };
-    }
-
-    public static <T> Iterable<T> iterable(Stream<T> stream) {
-        return stream::iterator;
     }
 
     /**
@@ -319,80 +223,6 @@ public class Utils {
     }
 
     /**
-     * Reads all lines of a file to a List of strings.
-     * Charset defaults to UTF_8
-     *
-     * @param file The File.
-     * @return The lines.
-     */
-    public static List<String> readLines(File file) {
-        return readLines(file, StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Reads all lines of a file to a list of strings.
-     *
-     * @param file    The File.
-     * @param charset The Charset.
-     * @return The lines.
-     */
-    public static List<String> readLines(File file, Charset charset) {
-        try {
-            return Files.readAllLines(file.toPath(), charset);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to read file to lines.", e);
-        }
-    }
-
-    /**
-     * Reads an InputStream to a byte array.
-     *
-     * @param is The InputStream.
-     * @return The bytes.
-     * @throws IOException If something is bork.
-     */
-    public static byte[] toBytes(@WillNotClose InputStream is) throws IOException {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        copy(is, os);
-        return os.toByteArray();
-    }
-
-    public static InputStream toInputStream(byte[] bytes) {
-        return new ByteArrayInputStream(bytes);
-    }
-
-    /**
-     * Copies a File from one location to another.
-     *
-     * @param in  From.
-     * @param out To.
-     */
-    public static void copyFile(File in, File out) {
-        try (FileInputStream fis = new FileInputStream(in)) {
-            try (FileOutputStream fos = new FileOutputStream(makeFile(out))) {
-                copy(fis, fos);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to copy file from: '" + in + "', to: '" + out + "'.", e);
-        }
-    }
-
-    /**
-     * Copies the content of an InputStream to an OutputStream.
-     *
-     * @param is The InputStream.
-     * @param os The OutputStream.
-     * @throws IOException If something is bork.
-     */
-    public static void copy(@WillNotClose InputStream is, @WillNotClose OutputStream os) throws IOException {
-        byte[] buffer = bufferCache.get();
-        int len;
-        while ((len = is.read(buffer)) != -1) {
-            os.write(buffer, 0, len);
-        }
-    }
-
-    /**
      * Copies the content of the provided resource to the provided Hasher.
      *
      * @param hasher   The hasher.
@@ -400,7 +230,7 @@ public class Utils {
      */
     public static void addToHasher(Hasher hasher, String resource) {
         try (InputStream is = Utils.class.getResourceAsStream(resource)) {
-            addToHasher(hasher, is);
+            HashUtils.addToHasher(hasher, is);
         } catch (IOException e) {
             throw new RuntimeException("Unable to read resource: " + resource, e);
         }
@@ -415,7 +245,7 @@ public class Utils {
     public static void addToHasher(Hasher hasher, File file) {
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(file)) {
-                addToHasher(hasher, fis);
+                HashUtils.addToHasher(hasher, fis);
             } catch (IOException e) {
                 throw new RuntimeException("Unable to read file: " + file, e);
             }
@@ -425,25 +255,10 @@ public class Utils {
     public static void addToHasher(Hasher hasher, Path path) {
         if (Files.exists(path)) {
             try (InputStream is = Files.newInputStream(path)) {
-                addToHasher(hasher, is);
+                HashUtils.addToHasher(hasher, is);
             } catch (IOException e) {
                 throw new RuntimeException("Unable to read file: " + path, e);
             }
-        }
-    }
-
-    /**
-     * Copies the content of the provided InputStream to the provided Hasher.
-     *
-     * @param hasher The hasher.
-     * @param is     The InputStream.
-     * @throws IOException If something is bork.
-     */
-    public static void addToHasher(Hasher hasher, @WillNotClose InputStream is) throws IOException {
-        byte[] buffer = bufferCache.get();
-        int len;
-        while ((len = is.read(buffer)) != -1) {
-            hasher.putBytes(buffer, 0, len);
         }
     }
 
@@ -487,48 +302,6 @@ public class Utils {
         return commonPath;
     }
 
-    public static FileSystem getJarFileSystem(File file, boolean create) throws IOException {
-        return getJarFileSystem(file.toURI(), create);
-    }
-
-    public static FileSystem getJarFileSystem(Path path, boolean create) throws IOException {
-        return getJarFileSystem(path.toUri(), create);
-    }
-
-    public static FileSystem getJarFileSystem(URI path, boolean create) throws IOException {
-        URI jarURI;
-        try {
-            jarURI = new URI("jar:file", null, path.getPath(), "");
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        }
-        return getFileSystem(jarURI, create ? jfsArgsCreate : Collections.emptyMap());
-    }
-
-    public static FileSystem getFileSystem(URI uri) throws IOException {
-        return getFileSystem(uri, Collections.emptyMap());
-    }
-
-    public static FileSystem getFileSystem(URI uri, Map<String, ?> env) throws IOException {
-        FileSystem fs;
-        boolean owner = true;
-        try {
-            fs = FileSystems.newFileSystem(uri, env);
-        } catch (FileSystemAlreadyExistsException e) {
-            fs = FileSystems.getFileSystem(uri);
-            owner = false;
-        }
-        return owner ? fs : protectClose(fs);
-    }
-
-    public static FileSystem protectClose(FileSystem fs) {
-        return new DelegateFileSystem(fs) {
-            @Override
-            public void close() {
-            }
-        };
-    }
-
     public static Path getJarPathForClass(String aClass) {
         String resourceRoot = getResourceRoot(Utils.class, "/" + aClass.replace('.', '/') + ".class");
         return resourceRoot != null ? new File(resourceRoot).getAbsoluteFile().toPath() : null;
@@ -554,7 +327,7 @@ public class Utils {
 
     public static String extractRoot(URL resourceURL, String resourcePath) {
         if (!(StringUtils.startsWith(resourcePath, "/") || StringUtils.startsWith(resourcePath, "\\"))) {
-            logger.warn("precondition failed: " + resourcePath);
+            LOGGER.warn("precondition failed: " + resourcePath);
             return null;
         }
 
@@ -577,7 +350,7 @@ public class Utils {
         }
 
         if (resultPath == null) {
-            logger.warn("cannot extract '" + resourcePath + "' from '" + resourceURL + "'");
+            LOGGER.warn("cannot extract '" + resourcePath + "' from '" + resourceURL + "'");
             return null;
         }
 
@@ -676,7 +449,7 @@ public class Utils {
     public static void extractResource(String resource, File file) {
         try (InputStream is = Utils.class.getResourceAsStream(resource)) {
             try (FileOutputStream fos = new FileOutputStream(makeFile(file))) {
-                copy(is, fos);
+                IOUtils.copy(is, fos);
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to extract resource '" + resource + "' to file '" + file + "'.", e);
@@ -696,22 +469,11 @@ public class Utils {
                 Files.createDirectories(parent);
             }
             try (OutputStream fos = Files.newOutputStream(to, WRITE, CREATE)) {
-                copy(is, fos);
+                IOUtils.copy(is, fos);
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to extract resource '" + resource + "' to file '" + to + "'.", e);
         }
-    }
-
-    public static String makePad(int num) {
-        if (num == 0) {
-            return "";
-        }
-        StringBuilder builder = new StringBuilder(num);
-        for (int i = 0; i < num; i++) {
-            builder.append(" ");
-        }
-        return builder.toString();
     }
 
     /**
@@ -747,86 +509,5 @@ public class Utils {
     @SuppressWarnings ("unchecked")
     public static <T> T getField(Field field, Object instance) {
         return (T) sneaky(() -> makeAccessible(field).get(instance));
-    }
-
-    /**
-     * A simple TypeAdapter for Files.
-     * Maps a single String to a File.
-     */
-    private static class FileAdapter extends TypeAdapter<File> {
-
-        @Override
-        public void write(JsonWriter out, File value) throws IOException {
-            if (value == null) {
-                out.nullValue();
-                return;
-            }
-            out.value(value.getAbsolutePath());
-        }
-
-        @Override
-        public File read(JsonReader in) throws IOException {
-            if (in.peek() == JsonToken.NULL) {
-                in.nextNull();
-                return null;
-            }
-            return new File(in.nextString());
-        }
-    }
-
-    private static class HashCodeAdapter extends TypeAdapter<HashCode> {
-
-        @Override
-        public void write(JsonWriter out, HashCode value) throws IOException {
-            if (value == null) {
-                out.nullValue();
-                return;
-            }
-            out.value(value.toString());
-        }
-
-        @Override
-        public HashCode read(JsonReader in) throws IOException {
-            if (in.peek() == JsonToken.NULL) {
-                in.nextNull();
-                return null;
-            }
-            return HashCode.fromString(in.nextString());
-        }
-    }
-
-    @SuppressWarnings ("unchecked")
-    private static class LowerCaseEnumAdapterFactory implements TypeAdapterFactory {
-
-        @Override
-        public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-            if (!type.getRawType().isEnum()) {
-                return null;
-            }
-            Map<String, T> lookup = new HashMap<>();
-            for (T e : (T[]) type.getRawType().getEnumConstants()) {
-                lookup.put(e.toString().toLowerCase(Locale.ROOT), e);
-            }
-            return new TypeAdapter<T>() {
-                @Override
-                public void write(JsonWriter out, T value) throws IOException {
-                    if (value == null) {
-                        out.nullValue();
-                    } else {
-                        out.value(value.toString().toLowerCase());
-                    }
-                }
-
-                @Override
-                public T read(JsonReader in) throws IOException {
-                    if (in.peek() == JsonToken.NULL) {
-                        in.nextNull();
-                        return null;
-                    }
-                    String name = in.nextString();
-                    return name == null ? null : lookup.get(name.toLowerCase(Locale.ROOT));
-                }
-            };
-        }
     }
 }

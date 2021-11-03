@@ -9,8 +9,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.quack.util.HashUtils;
 import net.covers1624.wt.api.event.VersionedClass;
-import net.covers1624.wt.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -125,7 +125,7 @@ public class ModuleHashCheckEvent extends Event {
     public void putClassBytes(String cName) {
         try (InputStream is = ModuleHashCheckEvent.class.getResourceAsStream("/" + cName.replace(".", "/") + ".class")) {
             Hasher hasher = sha256.newHasher();
-            Utils.addToHasher(hasher, is);
+            HashUtils.addToHasher(hasher, is);
             extraHashes.put(cName, hasher.hash());
         } catch (IOException e) {
             LOGGER.error("Unable to get bytes of class {}", cName, e);

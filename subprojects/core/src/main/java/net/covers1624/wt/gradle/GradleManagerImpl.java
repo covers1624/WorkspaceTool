@@ -5,8 +5,8 @@
  */
 package net.covers1624.wt.gradle;
 
+import net.covers1624.quack.io.CopyingFileVisitor;
 import net.covers1624.wt.api.gradle.GradleManager;
-import net.covers1624.wt.util.CopyingFileVisitor;
 import net.covers1624.wt.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +26,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static net.covers1624.quack.io.IOUtils.getJarFileSystem;
+import static net.covers1624.quack.util.SneakyUtils.*;
 import static net.covers1624.wt.util.Utils.*;
 
 /**
@@ -96,26 +98,21 @@ public class GradleManagerImpl implements Closeable, GradleManager {
                                     .map(Utils::getJarPathForResource)
                     ).parallel()
                     .filter(Objects::nonNull)
-                    .map(p -> {
-                        try {
-                            if (Files.isDirectory(p)) {
-                                String str = p.toString();
-                                int idx = str.indexOf("/out/");
-                                String prefix = "wt_tmp_jar" + (idx > 0 ? "_" + str.substring(idx + 5).replace("/", "_") : "");
-                                Path tmpJar = Files.createTempFile(prefix, ".jar");
-                                Files.delete(tmpJar);//ZipFileSystem assumptions.
-                                tmpFiles.add(tmpJar);
-                                try (FileSystem jarFS = getJarFileSystem(tmpJar, true)) {
-                                    Files.walkFileTree(p, new CopyingFileVisitor(p, jarFS.getPath("/")));
-                                }
-                                return tmpJar;
+                    .map(sneak(p -> {
+                        if (Files.isDirectory(p)) {
+                            String str = p.toString();
+                            int idx = str.indexOf("/out/");
+                            String prefix = "wt_tmp_jar" + (idx > 0 ? "_" + str.substring(idx + 5).replace("/", "_") : "");
+                            Path tmpJar = Files.createTempFile(prefix, ".jar");
+                            Files.delete(tmpJar);//ZipFileSystem assumptions.
+                            tmpFiles.add(tmpJar);
+                            try (FileSystem jarFS = getJarFileSystem(tmpJar, true)) {
+                                Files.walkFileTree(p, new CopyingFileVisitor(p, jarFS.getPath("/")));
                             }
-                            return p;
-                        } catch (IOException e) {
-                            throwUnchecked(e);
-                            return null;
+                            return tmpJar;
                         }
-                    })
+                        return p;
+                    }))
                     .map(Path::toString)
                     .map(e -> e.replace("\\", "\\\\"))
                     .map(e -> "'" + e + "'")

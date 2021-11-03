@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.covers1624.wt.util.Utils.iterable;
+import static net.covers1624.quack.collection.ColUtils.iterable;
 
 /**
  * Created by covers1624 on 25/05/19.

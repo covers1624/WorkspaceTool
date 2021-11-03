@@ -36,7 +36,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
-import static net.covers1624.wt.util.Utils.sneaky;
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 
 /**
  * Created by covers1624 on 10/7/19.

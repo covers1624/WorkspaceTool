@@ -5,6 +5,7 @@
  */
 package net.covers1624.wt.forge;
 
+import net.covers1624.quack.collection.TypedMap;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.api.Extension;
 import net.covers1624.wt.api.ExtensionDetails;
@@ -34,7 +35,6 @@ import net.covers1624.wt.forge.remap.SRGToMCPRemapper;
 import net.covers1624.wt.mc.data.VersionInfoJson;
 import net.covers1624.wt.util.JarRemapper;
 import net.covers1624.wt.util.JarStripper;
-import net.covers1624.wt.util.TypedMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;

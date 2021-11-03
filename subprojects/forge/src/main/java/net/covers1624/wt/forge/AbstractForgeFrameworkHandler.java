@@ -39,6 +39,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static java.text.MessageFormat.format;
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 
 /**
  * Created by covers1624 on 7/8/19.
@@ -79,7 +80,7 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
         gitHelper.setCommit(frameworkImpl.getCommit());
         gitHelper.setBranchSuffix(LOCAL_BRANCH_SUFFIX);
 
-        if (Utils.sneaky(gitHelper::validate)) {
+        if (sneaky(gitHelper::validate)) {
             needsSetup = true;
             wasCloned = true;
             hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
@@ -191,7 +192,7 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
                 DownloadProgressTail tail = tailPool.pop();
                 tail.setFileName(name);
                 action.setListener(tail);
-                Utils.sneaky(action::execute);
+                sneaky(action::execute);
                 if (!context.console.isSupported(TailConsole.Output.STDOUT)) {
                     LOGGER.info("Downloaded: '{}' to '{}'", action.getSrc(), action.getDest());
                 }

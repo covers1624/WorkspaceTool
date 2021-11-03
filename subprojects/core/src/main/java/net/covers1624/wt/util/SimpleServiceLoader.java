@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.ServiceConfigurationError;
 import java.util.Set;
 
+import static net.covers1624.quack.collection.ColUtils.iterable;
+
 /**
  * Basically a re-implementation of ServiceLoader that does things a little bit differently.
  *
@@ -55,7 +57,7 @@ public class SimpleServiceLoader<S> {
     public void poll() {
         newServices.clear();
         try {
-            for (URL url : Utils.toIterable(classLoader.getResources(PREFIX + serviceClazz.getName()))) {
+            for (URL url : iterable(classLoader.getResources(PREFIX + serviceClazz.getName()))) {
                 try (LineNumberReader reader = new LineNumberReader(new InputStreamReader(url.openStream()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {

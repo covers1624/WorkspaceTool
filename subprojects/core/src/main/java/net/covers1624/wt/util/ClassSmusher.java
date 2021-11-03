@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static net.covers1624.quack.io.IOUtils.toBytes;
+import static net.covers1624.quack.util.SneakyUtils.throwUnchecked;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -172,9 +174,9 @@ public class ClassSmusher {
     public static ClassReader readerFor(Class<?> clazz) throws IOException {
         try (InputStream is = ClassSmusher.class.getResourceAsStream("/" + asmName(clazz) + ".class")) {
             if (is == null) {
-                Utils.throwUnchecked(new ClassNotFoundException(clazz.getName()));
+                throwUnchecked(new ClassNotFoundException(clazz.getName()));
             }
-            return new ClassReader(Utils.toBytes(is));
+            return new ClassReader(toBytes(is));
         }
     }
 }

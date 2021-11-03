@@ -6,8 +6,8 @@
 package net.covers1624.wt.forge.util;
 
 import com.google.common.base.Strings;
-import net.covers1624.wt.util.ThrowingFunction;
-import net.covers1624.wt.util.Utils;
+import net.covers1624.quack.util.SneakyUtils;
+import net.covers1624.quack.util.SneakyUtils.ThrowingFunction;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
@@ -22,6 +22,8 @@ import java.util.zip.InflaterInputStream;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static net.covers1624.quack.collection.ColUtils.iterable;
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 import static net.covers1624.wt.util.ParameterFormatter.format;
 
 /**
@@ -59,7 +61,7 @@ public class AtFile {
     private void parse(Path atFile, CompressionMethod cMethod) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(cMethod.wrapInput(Files.newInputStream(atFile))))) {
             boolean foundEntries = false;
-            for (String _line : Utils.iterable(reader.lines())) {
+            for (String _line : iterable(reader.lines())) {
                 String line = _line;
                 int hashIdx = line.indexOf('#');
                 String lineComment = null;
@@ -269,7 +271,7 @@ public class AtFile {
 
     public void write(Path outputFile, CompressionMethod cMethod) {
         if (Files.exists(outputFile)) {
-            Utils.sneaky(() -> Files.delete(outputFile));
+            sneaky(() -> Files.delete(outputFile));
         }
         try (PrintWriter writer = new PrintWriter(cMethod.wrapOutput(Files.newOutputStream(outputFile, WRITE, CREATE)))) {
             for (String s : fileComment) {
@@ -485,8 +487,8 @@ public class AtFile {
         XZ(XZCompressorInputStream::new, XZCompressorOutputStream::new),
         ZIP(InflaterInputStream::new, DeflaterOutputStream::new);
 
-        private ThrowingFunction<InputStream, InputStream, IOException> isFunc;
-        private ThrowingFunction<OutputStream, OutputStream, IOException> osFunc;
+        private final ThrowingFunction<InputStream, InputStream, IOException> isFunc;
+        private final ThrowingFunction<OutputStream, OutputStream, IOException> osFunc;
 
         CompressionMethod(ThrowingFunction<InputStream, InputStream, IOException> isFunc, ThrowingFunction<OutputStream, OutputStream, IOException> osFunc) {
             this.isFunc = isFunc;

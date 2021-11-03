@@ -19,6 +19,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
+
 /**
  * Created by covers1624 on 26/10/21.
  */
@@ -33,15 +35,15 @@ public abstract class AbstractForge113PlusFrameworkHandler<T extends ForgeFramew
         Path forgeAt = forgeDir.resolve("src/main/resources/META-INF/accesstransformer.cfg");
         Path mergedAt = context.cacheDir.resolve("merged_at.cfg");
         if (wasCloned || !Files.exists(cachedForgeAt)) {
-            Utils.sneaky(() -> Files.copy(forgeAt, cachedForgeAt, StandardCopyOption.REPLACE_EXISTING));
+            sneaky(() -> Files.copy(forgeAt, cachedForgeAt, StandardCopyOption.REPLACE_EXISTING));
         }
         {//AccessTransformers
             Hasher mergedHasher = SHA_256.newHasher();
-            List<Path> atFiles = context.modules.parallelStream()//
-                    .flatMap(e -> e.getSourceSets().values().stream())//
-                    .flatMap(e -> e.getResources().stream())//
-                    .filter(Files::exists)//
-                    .flatMap(Utils.sneak(e -> Files.walk(e).filter(f -> f.getFileName().toString().equals("accesstransformer.cfg"))))//
+            List<Path> atFiles = context.modules.parallelStream()
+                    .flatMap(e -> e.getSourceSets().values().stream())
+                    .flatMap(e -> e.getResources().stream())
+                    .filter(Files::exists)
+                    .flatMap(e -> sneaky(() -> Files.walk(e).filter(f -> f.getFileName().toString().equals("accesstransformer.cfg"))))
                     .collect(Collectors.toList());
             atFiles.forEach(e -> LOGGER.info("Found AccessTransformer: {}", e));
             atFiles.forEach(e -> Utils.addToHasher(mergedHasher, e));
@@ -56,7 +58,7 @@ public abstract class AbstractForge113PlusFrameworkHandler<T extends ForgeFramew
                 atFile.write(mergedAt);
                 hashContainer.set(HASH_MERGED_AT, mergedHash);
             }
-            Utils.sneaky(() -> Files.copy(mergedAt, forgeAt, StandardCopyOption.REPLACE_EXISTING));
+            sneaky(() -> Files.copy(mergedAt, forgeAt, StandardCopyOption.REPLACE_EXISTING));
         }
     }
 }

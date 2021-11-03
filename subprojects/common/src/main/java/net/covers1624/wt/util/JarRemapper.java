@@ -5,6 +5,7 @@
  */
 package net.covers1624.wt.util;
 
+import net.covers1624.quack.io.IOUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -18,6 +19,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.Manifest;
+
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 
 /**
  * A simple Jar remapper.
@@ -35,11 +38,11 @@ public class JarRemapper {
     public void process(Path input, Path output) {
         if (Files.notExists(output)) {
             if (Files.notExists(output.getParent())) {
-                Utils.sneaky(() -> Files.createDirectories(output.getParent()));
+                sneaky(() -> Files.createDirectories(output.getParent()));
             }
         }
-        try (FileSystem inFs = Utils.getJarFileSystem(input, true);//
-             FileSystem outFs = Utils.getJarFileSystem(output, true)) {
+        try (FileSystem inFs = IOUtils.getJarFileSystem(input, true);
+             FileSystem outFs = IOUtils.getJarFileSystem(output, true)) {
             Path inRoot = inFs.getPath("/");
             Path outRoot = outFs.getPath("/");
             Files.walkFileTree(inRoot, new Visitor(inRoot, outRoot, remapper));

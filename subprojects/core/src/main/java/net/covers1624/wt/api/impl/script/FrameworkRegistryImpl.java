@@ -9,16 +9,13 @@ import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.framework.FrameworkHandler;
 import net.covers1624.wt.api.framework.FrameworkRegistry;
 import net.covers1624.wt.api.script.ModdingFramework;
-import net.covers1624.wt.api.gradle.GradleManager;
-import net.covers1624.wt.api.gradle.GradleModelCache;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static net.covers1624.wt.util.Utils.unsafeCast;
+import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
 
 /**
  * Created by covers1624 on 13/05/19.

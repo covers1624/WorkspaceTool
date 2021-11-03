@@ -8,6 +8,7 @@ package net.covers1624.wt.util.tree;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wt.util.Utils;
 import net.covers1624.wt.util.tree.cache.CacheNode;
 import net.covers1624.wt.util.tree.cache.ClassTreeCache;
@@ -21,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 
 /**
  * Created by covers1624 on 3/17/20.
@@ -41,7 +44,7 @@ public class ClassTree {
     }
 
     public void loadClasses(Path path) {
-        Utils.sneaky(() -> Files.walk(path))//
+        sneaky(() -> Files.walk(path))//
                 .filter(Files::isRegularFile)//
                 .filter(e -> e.getFileName().toString().endsWith(".class"))//
                 .forEach(file -> {
@@ -56,7 +59,7 @@ public class ClassTree {
     }
 
     public void loadClass(InputStream is) {
-        byte[] bytes = Utils.sneaky(() -> Utils.toBytes(is));
+        byte[] bytes = sneaky(() -> IOUtils.toBytes(is));
         ClassReader reader = new ClassReader(bytes);
         String className = reader.getClassName();
         HashCode hashCode = sha256.hashBytes(bytes);

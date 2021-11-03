@@ -8,7 +8,6 @@ package net.covers1624.wt.forge.util;
 import net.covers1624.wt.forge.util.AccessUsageFile.FieldUsageNode;
 import net.covers1624.wt.forge.util.AccessUsageFile.MethodUsageNode;
 import net.covers1624.wt.forge.util.AccessUsageFile.TypeUsageNode;
-import net.covers1624.wt.util.Utils;
 import org.objectweb.asm.*;
 
 import java.io.InputStream;
@@ -16,10 +15,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static net.covers1624.quack.util.SneakyUtils.sneak;
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 import static net.covers1624.wt.forge.util.AtFile.AccessChange.*;
 import static net.covers1624.wt.forge.util.AtFile.FinalChange.MARK;
 import static net.covers1624.wt.forge.util.AtFile.FinalChange.NONE;
@@ -62,11 +62,11 @@ public class AccessExtractor {
 
     private static void processClasses(Set<Path> paths, Consumer<ClassReader> consumer) {
         paths.stream()//
-                .flatMap(Utils.sneak(e -> Files.walk(e)))//
+                .flatMap(e -> sneaky(() -> Files.walk(e)))//
                 .filter(e -> e.getFileName().toString().endsWith(".class"))//
                 .filter(Files::exists)//
                 .distinct()//
-                .forEach(Utils.sneakyL(e -> {
+                .forEach(sneak(e -> {
                     try (InputStream is = Files.newInputStream(e)) {
                         ClassReader reader = new ClassReader(is);
                         consumer.accept(reader);

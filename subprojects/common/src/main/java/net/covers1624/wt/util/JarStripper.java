@@ -5,10 +5,14 @@
  */
 package net.covers1624.wt.util;
 
+import net.covers1624.quack.io.IOUtils;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.Predicate;
+
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 
 /**
  * Created by covers1624 on 16/12/19.
@@ -18,14 +22,14 @@ public class JarStripper {
     public static void stripJar(Path input, Path output, Predicate<Path> predicate) {
         if (Files.notExists(output)) {
             if (Files.notExists(output.getParent())) {
-                Utils.sneaky(() -> Files.createDirectories(output.getParent()));
+                sneaky(() -> Files.createDirectories(output.getParent()));
             }
         }
         if (Files.exists(output)) {
-            Utils.sneaky(() -> Files.delete(output));
+            sneaky(() -> Files.delete(output));
         }
-        try (FileSystem inFs = Utils.getJarFileSystem(input, true);//
-             FileSystem outFs = Utils.getJarFileSystem(output, true)) {
+        try (FileSystem inFs = IOUtils.getJarFileSystem(input, true);
+             FileSystem outFs = IOUtils.getJarFileSystem(output, true)) {
             Path inRoot = inFs.getPath("/");
             Path outRoot = outFs.getPath("/");
             Files.walkFileTree(inRoot, new Visitor(inRoot, outRoot, predicate));

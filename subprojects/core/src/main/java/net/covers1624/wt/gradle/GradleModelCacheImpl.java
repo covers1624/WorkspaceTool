@@ -25,8 +25,6 @@ import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.Task;
-import org.gradle.tooling.model.build.BuildEnvironment;
-import org.gradle.util.GradleVersion;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -40,6 +38,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 import static net.covers1624.wt.util.Utils.*;
 
 /**

@@ -7,10 +7,11 @@ package net.covers1624.wt.api.impl.mixin;
 
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.util.ClassSmusher;
-import net.covers1624.wt.util.Utils;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
 
 /**
  * Created by covers1624 on 8/8/19.
@@ -47,7 +48,7 @@ public class DefaultMixinInstantiator implements MixinInstantiator {
             throw new RuntimeException("No mixin registered for class." + clazz);
         }
         try {
-            return Utils.unsafeCast(mixinTarget.getMixinClass().newInstance());
+            return unsafeCast(mixinTarget.getMixinClass().newInstance());
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException("Failed to instantiate mixin class.");
         }

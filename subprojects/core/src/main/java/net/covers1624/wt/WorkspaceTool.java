@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.StreamSupport.stream;
-import static net.covers1624.wt.util.Utils.unsafeCast;
+import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
 
 /**
  * Created by covers1624 on 13/05/19.

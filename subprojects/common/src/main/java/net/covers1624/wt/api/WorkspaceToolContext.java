@@ -6,6 +6,7 @@
 package net.covers1624.wt.api;
 
 import com.google.common.collect.Iterables;
+import net.covers1624.quack.collection.TypedMap;
 import net.covers1624.tconsole.api.TailConsole;
 import net.covers1624.wt.api.dependency.DependencyLibrary;
 import net.covers1624.wt.api.framework.FrameworkRegistry;
@@ -17,7 +18,6 @@ import net.covers1624.wt.api.script.ModdingFramework;
 import net.covers1624.wt.api.script.WorkspaceScript;
 import net.covers1624.wt.api.workspace.WorkspaceModule;
 import net.covers1624.wt.api.workspace.WorkspaceRegistry;
-import net.covers1624.wt.util.TypedMap;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
