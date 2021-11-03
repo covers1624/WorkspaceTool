@@ -43,7 +43,7 @@ public class LibraryDependencyImpl extends AbstractDependency implements Library
 
     @Override
     public LibraryDependency setLibraryName(String name) {
-        this.libraryName = name;
+        libraryName = name;
         return this;
     }
 

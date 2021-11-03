@@ -6,7 +6,6 @@
 package net.covers1624.wt;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import net.covers1624.quack.maven.MavenNotation;
@@ -78,7 +77,7 @@ public class WorkspaceTool {
     private static final Logger logger = LogManager.getLogger("WorkspaceTool");
 
     //    private WTClassLoader classLoader;
-    private List<Extension> extensions = new ArrayList<>();
+    private final List<Extension> extensions = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         //        ClassLoader classLoader = WorkspaceTool.class.getClassLoader();

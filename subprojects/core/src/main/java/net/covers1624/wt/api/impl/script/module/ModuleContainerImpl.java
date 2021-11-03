@@ -8,7 +8,6 @@ package net.covers1624.wt.api.impl.script.module;
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.script.module.ModuleSpec;
-import net.covers1624.wt.util.PredicateCollectors;
 import net.covers1624.wt.util.pattern.PatternMatcherFactory;
 
 import java.nio.file.Path;

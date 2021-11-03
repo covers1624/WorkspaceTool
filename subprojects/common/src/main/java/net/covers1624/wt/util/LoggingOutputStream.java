@@ -18,7 +18,7 @@ public class LoggingOutputStream extends OutputStream {
 
     private final Logger logger;
     private final Level level;
-    private StringBuilder buffer = new StringBuilder();
+    private final StringBuilder buffer = new StringBuilder();
 
     public LoggingOutputStream(Logger logger, Level level) {
         this.logger = logger;

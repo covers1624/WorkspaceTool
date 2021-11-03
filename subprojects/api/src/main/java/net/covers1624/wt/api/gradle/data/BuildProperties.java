@@ -11,7 +11,7 @@ import java.util.Set;
  * Passed to WorkspaceTool's ModelBuilder gradle side.
  *
  * @see net.covers1624.wt.api.gradle.GradleManager
- *
+ * <p>
  * Created by covers1624 on 18/6/19.
  */
 public interface BuildProperties {

@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.ClassNode;
@@ -39,7 +38,7 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * Simple class Mixin Generator.
  * Basically class Squishing, no overlaps allowed.
- *
+ * <p>
  * Created by covers1624 on 8/8/19.
  */
 public class ClassSmusher {
@@ -169,7 +168,6 @@ public class ClassSmusher {
     public static String asmName(Class<?> clazz) {
         return clazz.getName().replace(".", "/");
     }
-
 
     public static ClassReader readerFor(Class<?> clazz) throws IOException {
         try (InputStream is = ClassSmusher.class.getResourceAsStream("/" + asmName(clazz) + ".class")) {

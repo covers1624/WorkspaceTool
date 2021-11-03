@@ -57,7 +57,7 @@ public class ScalaSdkDependencyImpl extends AbstractDependency implements ScalaS
 
     @Override
     public ScalaSdkDependency setScalaVersion(ScalaVersion version) {
-        this.scalaVersion = version;
+        scalaVersion = version;
         return this;
     }
 

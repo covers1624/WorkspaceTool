@@ -23,7 +23,7 @@ import java.util.Map;
 public class DefaultRunConfigContainer extends GroovyObjectSupport implements RunConfigContainer {
 
     private final MixinInstantiator mixinInstantiator;
-    private Map<String, RunConfig> runConfigs = new HashMap<>();
+    private final Map<String, RunConfig> runConfigs = new HashMap<>();
 
     public DefaultRunConfigContainer(MixinInstantiator mixinInstantiator) {
         this.mixinInstantiator = mixinInstantiator;

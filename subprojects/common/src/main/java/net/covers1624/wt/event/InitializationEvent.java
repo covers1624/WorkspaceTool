@@ -10,7 +10,7 @@ import net.covers1624.wt.api.WorkspaceToolContext;
 /**
  * Called at the beginning of WorkspaceTool's LifeCycle to add any extra functionality to
  * WorkspaceTool subsystems.
- *
+ * <p>
  * Created by covers1624 on 30/6/19.
  */
 public class InitializationEvent extends Event {

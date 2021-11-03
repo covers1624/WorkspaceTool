@@ -13,8 +13,8 @@ import java.io.Serializable;
  * Super interface for all data extracted by ExtraModelBuilders
  *
  * @see net.covers1624.wt.api.gradle.GradleManager
- *
+ * <p>
  * Created by covers1624 on 18/6/19.
  */
 @VersionedClass (1)
-public interface ExtraData extends Serializable {}
+public interface ExtraData extends Serializable { }

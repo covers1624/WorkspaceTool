@@ -9,9 +9,9 @@ import net.covers1624.wt.api.WorkspaceToolContext;
 
 /**
  * Called after Modules have been constructed and Dependencies have been processed.
- *
+ * <p>
  * Used by the ForgeExtension for FMLCoreMods and TweakClasses in RunConfigurations.
- *
+ * <p>
  * Created by covers1624 on 30/6/19.
  */
 public class ProcessModulesEvent extends Event {

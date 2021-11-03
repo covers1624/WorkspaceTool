@@ -18,7 +18,7 @@ public class EventRegistry<E extends Event> {
     private final Class<E> target;
 
     @SuppressWarnings ("unchecked")
-    private Listener<E>[][] listeners = new Listener[Event.Priority.values().length][0];
+    private final Listener<E>[][] listeners = new Listener[Event.Priority.values().length][0];
 
     public EventRegistry(Class<E> target) {
         this(null, target);

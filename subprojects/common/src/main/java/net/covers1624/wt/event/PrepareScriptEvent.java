@@ -13,7 +13,7 @@ import java.nio.file.Path;
 /**
  * Called when a WorkspaceScript is being prepared for execution.
  * Use this to provide any groovy imports or whatever.
- *
+ * <p>
  * Created by covers1624 on 30/6/19.
  */
 public class PrepareScriptEvent extends Event {

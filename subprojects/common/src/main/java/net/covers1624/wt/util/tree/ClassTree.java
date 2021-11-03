@@ -9,7 +9,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import net.covers1624.quack.io.IOUtils;
-import net.covers1624.wt.util.Utils;
 import net.covers1624.wt.util.tree.cache.CacheNode;
 import net.covers1624.wt.util.tree.cache.ClassTreeCache;
 import org.apache.logging.log4j.LogManager;

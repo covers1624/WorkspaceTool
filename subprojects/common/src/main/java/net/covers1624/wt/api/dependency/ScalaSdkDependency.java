@@ -38,7 +38,6 @@ public interface ScalaSdkDependency extends Dependency {
 
     ScalaSdkDependency setLibraries(List<MavenDependency> libraries);
 
-
     /**
      * {@inheritDoc}
      */

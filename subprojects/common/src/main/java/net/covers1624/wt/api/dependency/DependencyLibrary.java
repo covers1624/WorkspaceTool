@@ -9,7 +9,7 @@ import net.covers1624.wt.api.module.Module;
 
 /**
  * A library of dependencies. That's all really..
- *
+ * <p>
  * Created by covers1624 on 20/7/19.
  */
 public interface DependencyLibrary {

@@ -8,7 +8,6 @@ package net.covers1624.wt.api.impl.module;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.module.Configuration;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 

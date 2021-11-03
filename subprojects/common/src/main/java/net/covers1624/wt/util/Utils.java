@@ -391,7 +391,7 @@ public class Utils {
         try {
             return new File(url.toURI().getSchemeSpecificPart());
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("URL='" + url.toString() + "'", e);
+            throw new IllegalArgumentException("URL='" + url + "'", e);
         }
     }
 

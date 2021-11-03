@@ -10,7 +10,7 @@ import java.util.stream.Collector;
 
 /**
  * Operations for collecting a stream of Predicates together.
- *
+ * <p>
  * Created by covers1624 on 23/05/19.
  */
 public class PredicateCollectors {

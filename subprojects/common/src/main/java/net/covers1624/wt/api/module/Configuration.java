@@ -8,7 +8,6 @@ package net.covers1624.wt.api.module;
 import com.google.common.collect.Streams;
 import net.covers1624.wt.api.dependency.Dependency;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;

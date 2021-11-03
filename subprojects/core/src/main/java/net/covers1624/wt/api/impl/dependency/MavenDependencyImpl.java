@@ -6,8 +6,8 @@
 package net.covers1624.wt.api.impl.dependency;
 
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.wt.api.gradle.data.ConfigurationData;
 import net.covers1624.wt.api.dependency.MavenDependency;
+import net.covers1624.wt.api.gradle.data.ConfigurationData;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -82,19 +82,19 @@ public class MavenDependencyImpl extends AbstractDependency implements MavenDepe
 
     @Override
     public MavenDependency setClasses(Path path) {
-        this.classes = path;
+        classes = path;
         return this;
     }
 
     @Override
     public MavenDependency setJavadoc(Path path) {
-        this.javadoc = path;
+        javadoc = path;
         return this;
     }
 
     @Override
     public MavenDependency setSources(Path path) {
-        this.sources = path;
+        sources = path;
         return this;
     }
 

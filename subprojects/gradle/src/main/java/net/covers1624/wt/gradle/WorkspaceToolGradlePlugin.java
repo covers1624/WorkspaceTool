@@ -19,7 +19,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
  * Created by covers1624 on 29/05/19.
  */
 @SuppressWarnings ("UnstableApiUsage")
-@VersionedClass(1)
+@VersionedClass (1)
 public class WorkspaceToolGradlePlugin implements Plugin<Gradle> {
 
     @Override
@@ -36,4 +36,4 @@ public class WorkspaceToolGradlePlugin implements Plugin<Gradle> {
         project.apply(ImmutableMap.of("plugin", SourceSetDependencyPlugin.class));
         project.getSubprojects().forEach(this::applySourceSetPlugin);
     }
- }
+}

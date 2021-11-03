@@ -43,6 +43,7 @@ public class AdoptiumRelease {
     }
 
     public static class VersionData {
+
         public String semver;
     }
 }

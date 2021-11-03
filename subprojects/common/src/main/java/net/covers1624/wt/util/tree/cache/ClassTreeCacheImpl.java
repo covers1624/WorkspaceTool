@@ -88,7 +88,7 @@ public class ClassTreeCacheImpl implements ClassTreeCache, Serializable {
 
         public CacheNodeImpl(TreeClassNode node, HashCode hashCode, int contentLength) {
             this.node = node;
-            this.className = node.name;
+            className = node.name;
             this.hashCode = hashCode;
             this.contentLength = contentLength;
         }

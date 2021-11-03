@@ -6,7 +6,6 @@
 package net.covers1624.wt.forge.util;
 
 import com.google.common.base.Strings;
-import net.covers1624.quack.util.SneakyUtils;
 import net.covers1624.quack.util.SneakyUtils.ThrowingFunction;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
@@ -31,7 +30,7 @@ import static net.covers1624.wt.util.ParameterFormatter.format;
  */
 public class AtFile {
 
-    private List<String> fileComment = new ArrayList<>();
+    private final List<String> fileComment = new ArrayList<>();
     private final Map<String, AtClass> classMap = new LinkedHashMap<>();
     private boolean useDot;
     private boolean groupByPackage;
@@ -430,7 +429,7 @@ public class AtFile {
         public String seg;
 
         AccessChange() {
-            this.seg = name().toLowerCase();
+            seg = name().toLowerCase();
         }
 
         public static AccessChange fromName(String name) {
@@ -443,7 +442,7 @@ public class AtFile {
         }
 
         public AccessChange merge(AccessChange other) {
-            if (this.ordinal() > other.ordinal()) {
+            if (ordinal() > other.ordinal()) {
                 return other;
             }
             return this;
@@ -475,7 +474,7 @@ public class AtFile {
         }
 
         public FinalChange merge(FinalChange other) {
-            if (this.ordinal() > other.ordinal()) {
+            if (ordinal() > other.ordinal()) {
                 return other;
             }
             return this;

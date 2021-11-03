@@ -8,7 +8,6 @@ package net.covers1624.wt.forge;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import net.covers1624.wt.api.WorkspaceToolContext;
-import net.covers1624.wt.forge.AbstractForgeFrameworkHandler;
 import net.covers1624.wt.forge.api.script.ForgeFramework;
 import net.covers1624.wt.forge.util.AtFile;
 import net.covers1624.wt.util.Utils;

@@ -38,9 +38,9 @@ public class ModuleImpl implements Module {
     public ModuleImpl(String name, Path path) {
         this.name = name;
         this.path = path;
-        this.sourceSets = new HashMap<>();
-        this.excludes = new ArrayList<>();
-        this.configurations = new HashMap<>();
+        sourceSets = new HashMap<>();
+        excludes = new ArrayList<>();
+        configurations = new HashMap<>();
         if (!path.getFileSystem().provider().getScheme().equals("file")) {
             throw new RuntimeException("Path is not on the default filesystem.");
         }

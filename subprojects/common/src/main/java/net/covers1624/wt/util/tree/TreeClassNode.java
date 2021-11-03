@@ -6,7 +6,6 @@
 package net.covers1624.wt.util.tree;
 
 import com.google.common.collect.Streams;
-import org.apache.commons.collections.map.LinkedMap;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -15,7 +14,6 @@ import org.objectweb.asm.Opcodes;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -61,29 +59,29 @@ public class TreeClassNode implements Serializable {
     }
 
     public void copyFrom(TreeClassNode other) {
-        this.loaded = other.loaded;
-        this.access = other.access;
-        this.name = other.name;
-        this.signature = other.signature;
-        this.superClass = tree.getClassNode(other.superClass.name);
+        loaded = other.loaded;
+        access = other.access;
+        name = other.name;
+        signature = other.signature;
+        superClass = tree.getClassNode(other.superClass.name);
 
-        this.interfaces.clear();
+        interfaces.clear();
         other.interfaces.forEach((name, node) -> interfaces.put(name, tree.getClassNode(node.name)));
 
-        this.innerClasses.clear();
+        innerClasses.clear();
         other.innerClasses.forEach((name, node) -> innerClasses.put(name, tree.getClassNode(node.name)));
 
-        this.fields.clear();
+        fields.clear();
         other.fields.forEach((name, node) -> fields.put(name, tree.getClassNode(node.owner.name).getField(name)));
 
-        this.fields.clear();
+        fields.clear();
         other.fields.forEach((name, node) -> {
             TreeFieldNode newNode = tree.getClassNode(node.owner.name).getField(node.name);
             newNode.copyFrom(node);
             fields.put(name, newNode);
         });
 
-        this.methods.clear();
+        methods.clear();
         other.methods.forEach((name, node) -> {
             TreeMethodNode newNode = tree.getClassNode(node.owner.name).getMethod(node.name, node.desc);
             newNode.copyFrom(node);
@@ -131,11 +129,11 @@ public class TreeClassNode implements Serializable {
 
         @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-            TreeClassNode.this.loaded = true;
+            loaded = true;
             TreeClassNode.this.access = access;
             TreeClassNode.this.name = name;
             TreeClassNode.this.signature = signature;
-            TreeClassNode.this.superClass = tree.getClassNode(superName);
+            superClass = tree.getClassNode(superName);
             TreeClassNode.this.interfaces.clear();
             Arrays.stream(interfaces).map(tree::getClassNode).forEach(e -> TreeClassNode.this.interfaces.put(e.name, e));
         }

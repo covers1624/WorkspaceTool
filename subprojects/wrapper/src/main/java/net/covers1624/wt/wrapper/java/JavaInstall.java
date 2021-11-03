@@ -25,7 +25,7 @@ public class JavaInstall {
     public final boolean isOpenJ9;
 
     public JavaInstall(Path javaHome, String vendor, String implName, String implVersion, String runtimeName, String runtimeVersion, boolean x64) {
-        this.langVersion = requireNonNull(JavaVersion.parse(implVersion), "Unable to parse java version: " + implVersion);
+        langVersion = requireNonNull(JavaVersion.parse(implVersion), "Unable to parse java version: " + implVersion);
         this.javaHome = javaHome;
         this.vendor = vendor;
         this.implName = implName;

@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 /**
  * Required on all Extension classes.
  * Provides the user some information on what the Extension is.
- *
+ * <p>
  * Created by covers1624 on 17/6/19.
  */
 @Target (ElementType.TYPE)

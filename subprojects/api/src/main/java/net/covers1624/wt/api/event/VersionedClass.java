@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 /**
  * Used on classes provided to {@link net.covers1624.wt.event.ModuleHashCheckEvent#putVersionedClass},
  * see {@link net.covers1624.wt.event.ModuleHashCheckEvent#putVersionedClass} for more information.
- *
+ * <p>
  * Created by covers1624 on 9/7/19.
  */
 @Target (ElementType.TYPE)

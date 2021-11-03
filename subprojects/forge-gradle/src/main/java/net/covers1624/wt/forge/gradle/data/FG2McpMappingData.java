@@ -6,8 +6,8 @@
 package net.covers1624.wt.forge.gradle.data;
 
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.wt.api.gradle.data.ExtraData;
 import net.covers1624.wt.api.event.VersionedClass;
+import net.covers1624.wt.api.gradle.data.ExtraData;
 
 import java.io.File;
 

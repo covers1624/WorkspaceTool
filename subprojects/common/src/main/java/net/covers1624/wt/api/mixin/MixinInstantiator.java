@@ -8,7 +8,7 @@ package net.covers1624.wt.api.mixin;
 /**
  * Low orbit ion cannon solution to an ant hill.
  * Allows for registering classes that can have mixin components added to them.
- *
+ * <p>
  * Created by covers1624 on 8/8/19.
  */
 public interface MixinInstantiator {
@@ -27,7 +27,7 @@ public interface MixinInstantiator {
      * Class hierarchy is not analysed, more specifically,
      * the methods that exist in the provided template are pasted
      * into the output class.
-     *
+     * <p>
      * Duplicate methods and fields are not allowed.
      *
      * @param targetIFace The target to mix-into.

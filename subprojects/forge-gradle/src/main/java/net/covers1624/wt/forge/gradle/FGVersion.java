@@ -39,11 +39,11 @@ public class FGVersion implements Serializable {
     }
 
     public boolean isFG2() {
-        return this.equals(FG22) || this.equals(FG23);
+        return equals(FG22) || equals(FG23);
     }
 
     public boolean isFG3Compatible() {
-        return this.equals(FG30) || effectiveVersion.equals(FG30);
+        return equals(FG30) || effectiveVersion.equals(FG30);
     }
 
     @Override

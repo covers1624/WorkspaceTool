@@ -36,7 +36,7 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     public static final String MI_PROP = "mixinInstantiator";
 
     private boolean firstPass;
-    private DefaultScriptDepsContainer scriptDeps = new DefaultScriptDepsContainer();
+    private final DefaultScriptDepsContainer scriptDeps = new DefaultScriptDepsContainer();
     private FrameworkRegistry frameworkRegistry;
     private WorkspaceRegistry workspaceRegistry;
     private MixinInstantiator mixinInstantiator;
@@ -45,7 +45,7 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     private ModdingFramework framework;
     private Workspace workspace;
     private ModuleContainerSpec moduleContainer;
-    private Map<String, String> depOverrides = new HashMap<>();
+    private final Map<String, String> depOverrides = new HashMap<>();
     private JavaVersion javaVersion = JavaVersion.JAVA_8;
 
     public AbstractWorkspaceScript() {

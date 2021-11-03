@@ -27,7 +27,7 @@ public class GradleProgressListener implements ProgressListener {
     public GradleProgressListener(WorkspaceToolContext context, TailGroup group) {
         this.context = context;
         this.group = group;
-        this.tail = group.add(new TextTail(2));
+        tail = group.add(new TextTail(2));
         tail.setLine(0, "===============================");
         tail.setLine(1, "IDLE...");
     }

@@ -133,8 +133,8 @@ public class VersionInfoJson {
         public static final String ARCH = System.getProperty("os.arch");
         private static OS currentOS;
 
-        private String name;
-        private String[] aliases;
+        private final String name;
+        private final String[] aliases;
 
         OS(String name, String... aliases) {
             this.name = name;

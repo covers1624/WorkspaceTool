@@ -15,7 +15,7 @@ import java.util.Map;
  * Implemented by {@link ProjectData} and {@link PluginData} to hold data built by ExtraModelBuilders.
  *
  * @see net.covers1624.wt.api.gradle.GradleManager
- *
+ * <p>
  * Created by covers1624 on 18/6/19.
  */
 @VersionedClass (1)

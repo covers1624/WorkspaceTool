@@ -71,7 +71,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
 
     public GradleModelCacheImpl(WorkspaceToolContext context) {
         this.context = context;
-        this.dataDir = context.cacheDir.resolve("gradle_data");
+        dataDir = context.cacheDir.resolve("gradle_data");
         if (!Files.exists(dataDir)) {
             sneaky(() -> Files.createDirectories(dataDir));
         }

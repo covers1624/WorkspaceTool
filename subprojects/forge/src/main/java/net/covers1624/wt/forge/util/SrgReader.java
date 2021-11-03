@@ -20,7 +20,7 @@ public class SrgReader {
 
     /**
      * Reads the specified SRG File, giving each element to the LineConsumer.
-     *
+     * <p>
      * See {@link LineConsumer#consume(LineType, String[])} for indexes.
      *
      * @param file     The File to read.
@@ -32,7 +32,7 @@ public class SrgReader {
 
     /**
      * Reads the specified SRG File, giving each element to the LineConsumer.
-     *
+     * <p>
      * See {@link LineConsumer#consume(LineType, String[])} for indexes.
      *
      * @param path     The Path to read.
@@ -88,27 +88,27 @@ public class SrgReader {
         /**
          * Called for each line in an SRG file.
          * ArrayIndexes:
-         *
+         * <p>
          * PACKAGE:
          * 0 = Old Package
          * 1 = New Package
-         *
+         * <p>
          * CLASS:
          * 0 = Old Class
          * 1 = New Class
-         *
+         * <p>
          * FIELD:
          * 0 = Old Class
          * 1 = Old Name
-         *
+         * <p>
          * 2 = New Class
          * 3 = New name
-         *
+         * <p>
          * METHOD:
          * 0 = Old Class
          * 1 = Old Name
          * 2 = Old Desc
-         *
+         * <p>
          * 3 = New Class
          * 4 = New Name
          * 5 = New Desc

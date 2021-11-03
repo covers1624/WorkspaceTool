@@ -25,7 +25,7 @@ import java.util.Map;
 public class DependencyRemapper {
 
     private static final Logger logger = LogManager.getLogger("DependencyRemapper");
-    private static final java.lang.reflect.Type gsonType = new TypeToken<Map<String, RemappedData>>() {}.getType();
+    private static final java.lang.reflect.Type gsonType = new TypeToken<Map<String, RemappedData>>() { }.getType();
 
     private final Path cacheDir;
     private final Path cacheFile;

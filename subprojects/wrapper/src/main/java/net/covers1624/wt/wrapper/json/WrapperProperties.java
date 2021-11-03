@@ -28,10 +28,10 @@ public class WrapperProperties {
     }
 
     private WrapperProperties(WrapperProperties other) {
-        this.artifact = other.artifact;
-        this.mainClass = other.mainClass;
-        this.requiredJava = other.requiredJava;
-        this.repos.putAll(other.repos);
+        artifact = other.artifact;
+        mainClass = other.mainClass;
+        requiredJava = other.requiredJava;
+        repos.putAll(other.repos);
     }
 
     // TODO, is it worth keeping local overrides?

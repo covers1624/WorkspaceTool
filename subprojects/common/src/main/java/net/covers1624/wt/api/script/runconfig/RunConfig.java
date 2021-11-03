@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * A RunConfiguration, Called by scripts.
- *
+ * <p>
  * TODO, Support alternate JREs
  * Created by covers1624 on 23/7/19.
  */

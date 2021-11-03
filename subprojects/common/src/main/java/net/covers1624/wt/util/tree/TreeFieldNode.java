@@ -57,7 +57,7 @@ public class TreeFieldNode implements Serializable {
     }
 
     public FieldVisitor visitField(TreeClassNode owner, int access, String name, String desc, String signature) {
-        this.loaded = true;
+        loaded = true;
         this.owner = owner;
         this.access = access;
         this.name = name;

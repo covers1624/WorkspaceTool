@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public class ModuleModsContainerImpl extends GroovyObjectSupport implements ModuleModsContainer {
 
-    private Map<String, String> modSourceSets = new HashMap<>();
+    private final Map<String, String> modSourceSets = new HashMap<>();
 
     @Override
     public Object invokeMethod(String name, Object args) {

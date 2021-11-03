@@ -5,14 +5,14 @@
  */
 package net.covers1624.wt.api.gradle.model;
 
-import net.covers1624.wt.api.gradle.data.ProjectData;
 import net.covers1624.wt.api.event.VersionedClass;
+import net.covers1624.wt.api.gradle.data.ProjectData;
 
 import java.io.Serializable;
 
 /**
  * Data Model for data extracted from Gradle.
- *
+ * <p>
  * Created by covers1624 on 15/6/19.
  */
 @VersionedClass (1)

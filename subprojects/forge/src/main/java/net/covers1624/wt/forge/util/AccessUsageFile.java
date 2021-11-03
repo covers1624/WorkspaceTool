@@ -6,9 +6,6 @@
 package net.covers1624.wt.forge.util;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static net.covers1624.wt.forge.util.AtFile.*;
 
 /**
  * Created by covers1624 on 18/11/19.

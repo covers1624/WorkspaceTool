@@ -7,7 +7,7 @@ package net.covers1624.wt.api.dependency;
 
 /**
  * A Dependency that is stored in a {@link DependencyLibrary}
- *
+ * <p>
  * Created by covers1624 on 30/6/19.
  */
 public interface LibraryDependency extends Dependency {

@@ -7,7 +7,7 @@ package net.covers1624.wt.event;
 
 /**
  * Represents an event that has a result.
- *
+ * <p>
  * Created by covers1624 on 30/6/19.
  */
 public class ResultEvent<T> extends Event {
@@ -22,7 +22,7 @@ public class ResultEvent<T> extends Event {
 
     public void setResult(T thing) {
         this.thing = thing;
-        this.hasResult = true;
+        hasResult = true;
     }
 
     public T getResult() {

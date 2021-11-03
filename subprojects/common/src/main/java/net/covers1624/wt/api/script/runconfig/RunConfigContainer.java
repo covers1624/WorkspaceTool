@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * A simple container that holds RunConfigurations.
- *
+ * <p>
  * RunConfigurations are built with GroovyMagic.
  *
  * <pre>
@@ -19,7 +19,7 @@ import java.util.Map;
  *         }
  *     }
  * </pre>
- *
+ * <p>
  * Created by covers1624 on 23/7/19.
  */
 public interface RunConfigContainer {

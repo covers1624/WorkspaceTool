@@ -12,7 +12,7 @@ import net.covers1624.wt.api.module.Module;
 
 /**
  * Called to process the dependency on a Module's Configuration.
- *
+ * <p>
  * Created by covers1624 on 26/7/19.
  */
 public class ProcessDependencyEvent extends ResultEvent<Dependency> {

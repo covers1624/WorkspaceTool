@@ -13,7 +13,7 @@ import java.util.Map;
 
 /**
  * Represents a Gradle SourceSet(kinda)
- *
+ * <p>
  * Created by covers1624 on 27/05/19.
  */
 public interface SourceSet {
@@ -57,7 +57,6 @@ public interface SourceSet {
      * @param paths The Paths.
      */
     void setSource(String name, List<Path> paths);
-
 
     void addSource(String name, List<Path> paths);
 

@@ -55,24 +55,24 @@ public class TreeMethodNode implements Serializable {
      * @param other The other node to copy data from.
      */
     public void copyFrom(TreeMethodNode other) {
-        this.loaded = other.loaded;
-        this.owner = tree.getClassNode(other.owner.name);
-        this.access = other.access;
-        this.name = other.name;
-        this.desc = other.desc;
-        this.signature = other.signature;
-        this.exceptions.clear();
-        other.exceptions.stream().map(e -> e.name).map(tree::getClassNode).forEach(this.exceptions::add);
-        this.returnType = new Parameter().copyFrom(tree, other.returnType);
-        this.parameters = new Parameter[other.parameters.length];
+        loaded = other.loaded;
+        owner = tree.getClassNode(other.owner.name);
+        access = other.access;
+        name = other.name;
+        desc = other.desc;
+        signature = other.signature;
+        exceptions.clear();
+        other.exceptions.stream().map(e -> e.name).map(tree::getClassNode).forEach(exceptions::add);
+        returnType = new Parameter().copyFrom(tree, other.returnType);
+        parameters = new Parameter[other.parameters.length];
         for (int i = 0; i < other.parameters.length; i++) {
-            this.parameters[i] = new Parameter().copyFrom(tree, other.parameters[i]);
+            parameters[i] = new Parameter().copyFrom(tree, other.parameters[i]);
         }
     }
 
     public MethodVisitor visitMethod(TreeClassNode owner, int access, String name, String desc, String signature, String[] exceptions) {
         this.owner = owner;
-        this.loaded = true;
+        loaded = true;
         this.access = access;
         this.name = name;
         this.desc = desc;

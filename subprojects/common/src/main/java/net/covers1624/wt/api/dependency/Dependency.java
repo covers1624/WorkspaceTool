@@ -7,7 +7,7 @@ package net.covers1624.wt.api.dependency;
 
 /**
  * Represents a dependency.
- *
+ * <p>
  * Created by covers1624 on 30/6/19.
  */
 public interface Dependency extends Cloneable {

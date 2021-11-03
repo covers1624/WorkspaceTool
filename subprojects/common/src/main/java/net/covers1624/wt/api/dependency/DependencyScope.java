@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 /**
  * Represents the basic scopes provided by Intellij.
- *
+ * <p>
  * Created by covers1624 on 8/01/19.
  */
 public enum DependencyScope implements Serializable {

@@ -9,7 +9,7 @@ import net.covers1624.wt.api.script.runconfig.RunConfig;
 
 /**
  * This is runtime mixed into {@link RunConfig}
- *
+ * <p>
  * Created by covers1624 on 8/8/19.
  */
 public interface IntellijRunConfig extends RunConfig {

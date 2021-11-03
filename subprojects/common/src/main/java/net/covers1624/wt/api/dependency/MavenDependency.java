@@ -11,7 +11,7 @@ import java.nio.file.Path;
 
 /**
  * Represents a Dependency that exists on Maven.
- *
+ * <p>
  * TODO, this could probably return a List of Paths for classes, sources and javadoc.
  * Created by covers1624 on 30/6/19.
  */

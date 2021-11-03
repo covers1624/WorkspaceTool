@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  * Data model for a SourceSet.
- *
+ * <p>
  * Created by covers1624 on 31/05/19.
  */
 @VersionedClass (1)

@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
  */
 public class DependencyLibraryImpl implements DependencyLibrary {
 
-    private Map<MavenNotation, LibraryDependency> dependencies = Collections.synchronizedMap(new HashMap<>());
-    private Map<String, LibraryDependency> scalaDependencies = Collections.synchronizedMap(new HashMap<>());
+    private final Map<MavenNotation, LibraryDependency> dependencies = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, LibraryDependency> scalaDependencies = Collections.synchronizedMap(new HashMap<>());
 
     @Override
     public Iterable<LibraryDependency> getDependencies() {

@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static net.covers1624.quack.io.IOUtils.getJarFileSystem;
-import static net.covers1624.quack.util.SneakyUtils.*;
-import static net.covers1624.wt.util.Utils.*;
+import static net.covers1624.quack.util.SneakyUtils.sneak;
+import static net.covers1624.quack.util.SneakyUtils.sneaky;
 
 /**
  * Created by covers1624 on 13/6/19.

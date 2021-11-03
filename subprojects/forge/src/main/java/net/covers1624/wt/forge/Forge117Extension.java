@@ -83,7 +83,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 .map(e -> e.getFileName().toString().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", ""))
                 .collect(Collectors.joining(","));
         if (!StringUtils.isEmpty(ignoreList)) {
-            ignoreList += ',' ;
+            ignoreList += ',';
         }
 
         String mcVersion = rootProject.extraProperties.get("MC_VERSION");

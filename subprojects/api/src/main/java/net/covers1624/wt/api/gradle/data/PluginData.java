@@ -14,7 +14,7 @@ import java.util.Set;
 
 /**
  * Data model for plugins loaded on a Gradle instance.
- *
+ * <p>
  * Created by covers1624 on 1/06/19.
  */
 @VersionedClass (1)

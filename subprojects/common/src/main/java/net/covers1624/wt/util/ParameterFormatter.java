@@ -10,7 +10,7 @@ import java.util.*;
 
 /**
  * Supports parameter formatting as used in ParameterizedMessage and ReusableParameterizedMessage.
- *
+ * <p>
  * Covers1624:
  * Modifications:
  * Made everything public.
@@ -49,7 +49,7 @@ public final class ParameterFormatter {
     private static final char DELIM_STOP = '}';
     private static final char ESCAPE_CHAR = '\\';
 
-    private static ThreadLocal<SimpleDateFormat> threadLocalSimpleDateFormat = new ThreadLocal<>();
+    private static final ThreadLocal<SimpleDateFormat> threadLocalSimpleDateFormat = new ThreadLocal<>();
 
     private ParameterFormatter() {
     }

@@ -20,14 +20,14 @@ import java.util.Objects;
 
 /**
  * A simple container for Hashes.
- *
+ * <p>
  * Created by covers1624 on 5/01/19.
  */
 @SuppressWarnings ("UnstableApiUsage")
 public class HashContainer {
 
     private static final Logger logger = LogManager.getLogger("HashContainer");
-    private static final Type gsonType = new TypeToken<Map<String, HashCode>>() {}.getType();
+    private static final Type gsonType = new TypeToken<Map<String, HashCode>>() { }.getType();
 
     private final Path hashFile;
     public Map<String, HashCode> hashes;
