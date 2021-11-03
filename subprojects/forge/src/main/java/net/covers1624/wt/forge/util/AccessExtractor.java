@@ -31,21 +31,21 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public class AccessExtractor {
 
-    private static final Set<Handle> META_FACTORIES = new HashSet<>(Arrays.asList(//
-            new Handle(//
-                    Opcodes.H_INVOKESTATIC,//
-                    "java/lang/invoke/LambdaMetafactory",//
-                    "metafactory",//
-                    "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",//
-                    false//
-            ),//
-            new Handle(//
-                    Opcodes.H_INVOKESTATIC,//
-                    "java/lang/invoke/LambdaMetafactory",//
-                    "altMetafactory",//
-                    "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;",//
-                    false//
-            )//
+    private static final Set<Handle> META_FACTORIES = new HashSet<>(Arrays.asList(
+            new Handle(
+                    Opcodes.H_INVOKESTATIC,
+                    "java/lang/invoke/LambdaMetafactory",
+                    "metafactory",
+                    "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+                    false
+            ),
+            new Handle(
+                    Opcodes.H_INVOKESTATIC,
+                    "java/lang/invoke/LambdaMetafactory",
+                    "altMetafactory",
+                    "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;",
+                    false
+            )
     ));
 
     public static AtFile extractAccess(Set<Path> paths) {
@@ -61,11 +61,11 @@ public class AccessExtractor {
     }
 
     private static void processClasses(Set<Path> paths, Consumer<ClassReader> consumer) {
-        paths.stream()//
-                .flatMap(e -> sneaky(() -> Files.walk(e)))//
-                .filter(e -> e.getFileName().toString().endsWith(".class"))//
-                .filter(Files::exists)//
-                .distinct()//
+        paths.stream()
+                .flatMap(e -> sneaky(() -> Files.walk(e)))
+                .filter(e -> e.getFileName().toString().endsWith(".class"))
+                .filter(Files::exists)
+                .distinct()
                 .forEach(sneak(e -> {
                     try (InputStream is = Files.newInputStream(e)) {
                         ClassReader reader = new ClassReader(is);

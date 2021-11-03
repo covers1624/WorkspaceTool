@@ -62,8 +62,8 @@ public class ModuleGroupImpl implements ModuleGroupSpec {
         if (patterns.isEmpty()) {
             return include ? path -> true : path -> false;
         }
-        return patterns.stream()//
-                .map(pattern -> PatternMatcherFactory.getPatternMatcher(include, caseSensitive, pattern))//
+        return patterns.stream()
+                .map(pattern -> PatternMatcherFactory.getPatternMatcher(include, caseSensitive, pattern))
                 .collect(PredicateCollectors.union());
     }
 

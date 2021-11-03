@@ -95,11 +95,11 @@ public class TreeClassNode implements Serializable {
         if (!loaded) {
             return Stream.empty();
         }
-        return Streams.concat(//
-                Stream.of(this),//
-                Streams.concat(Stream.of(superClass),//
-                        interfaces.values().stream()//
-                ).flatMap(TreeClassNode::getHierarchy)//
+        return Streams.concat(
+                Stream.of(this),
+                Streams.concat(Stream.of(superClass),
+                        interfaces.values().stream()
+                ).flatMap(TreeClassNode::getHierarchy)
         ).distinct();
     }
 

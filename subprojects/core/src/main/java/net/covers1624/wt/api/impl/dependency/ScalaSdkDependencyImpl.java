@@ -111,18 +111,18 @@ public class ScalaSdkDependencyImpl extends AbstractDependency implements ScalaS
             return false;
         }
         ScalaSdkDependency other = (ScalaSdkDependency) obj;
-        return other.getScalaVersion().equals(getScalaVersion())//
-                && other.getVersion().equals(getVersion())//
-                && other.getScalac().equals(getScalac())//
+        return other.getScalaVersion().equals(getScalaVersion())
+                && other.getVersion().equals(getVersion())
+                && other.getScalac().equals(getScalac())
                 && other.getLibraries().equals(getLibraries());
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)//
-                .add("scalaVersion", scalaVersion)//
-                .add("version", version)//
-                .add("scalac", scalac)//
+        return MoreObjects.toStringHelper(this)
+                .add("scalaVersion", scalaVersion)
+                .add("version", version)
+                .add("scalac", scalac)
                 .add("libraries", libraries).toString();
     }
 

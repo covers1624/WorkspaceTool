@@ -22,8 +22,8 @@ public class VersionManifestJson {
     public List<Version> versions = new ArrayList<>();
 
     public Optional<Version> findVersion(String version) {
-        return versions.stream()//
-                .filter(v -> v.id.equalsIgnoreCase(version))//
+        return versions.stream()
+                .filter(v -> v.id.equalsIgnoreCase(version))
                 .findFirst();
     }
 

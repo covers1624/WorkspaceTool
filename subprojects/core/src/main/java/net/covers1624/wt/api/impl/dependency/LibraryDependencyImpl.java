@@ -71,8 +71,8 @@ public class LibraryDependencyImpl extends AbstractDependency implements Library
             return false;
         }
         LibraryDependency other = (LibraryDependency) obj;
-        return other.getDependency().equals(getDependency())//
-                && other.getLibraryName().equals(getLibraryName())//
+        return other.getDependency().equals(getDependency())
+                && other.getLibraryName().equals(getLibraryName())
                 && other.getExport() == getExport();
     }
 

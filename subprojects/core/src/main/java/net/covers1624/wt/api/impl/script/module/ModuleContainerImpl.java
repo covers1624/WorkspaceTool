@@ -88,8 +88,8 @@ public class ModuleContainerImpl implements ModuleContainerSpec {
         if (patterns.isEmpty()) {
             return include ? path -> true : path -> false;
         }
-        List<Predicate<Path>> predicates = patterns.stream()//
-                .map(pattern -> PatternMatcherFactory.getPatternMatcher(include, caseSensitive, pattern))//
+        List<Predicate<Path>> predicates = patterns.stream()
+                .map(pattern -> PatternMatcherFactory.getPatternMatcher(include, caseSensitive, pattern))
                 .collect(Collectors.toList());
         if (predicates.size() == 1) {
             return predicates.get(0);
@@ -101,9 +101,6 @@ public class ModuleContainerImpl implements ModuleContainerSpec {
             }
             return predicate;
         }
-//        return patterns.stream()//
-//                .map(pattern -> PatternMatcherFactory.getPatternMatcher(include, caseSensitive, pattern))//
-//                .collect(PredicateCollectors.union());
     }
 
 }

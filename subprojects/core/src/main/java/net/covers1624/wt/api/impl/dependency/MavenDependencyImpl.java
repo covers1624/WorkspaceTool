@@ -118,10 +118,10 @@ public class MavenDependencyImpl extends AbstractDependency implements MavenDepe
             return false;
         }
         MavenDependency other = (MavenDependency) obj;
-        return other.getNotation().equals(getNotation())//
-                && other.getExport() == getExport()//
-                && Objects.equals(other.getClasses(), getClasses())//
-                && Objects.equals(other.getJavadoc(), getJavadoc())//
+        return other.getNotation().equals(getNotation())
+                && other.getExport() == getExport()
+                && Objects.equals(other.getClasses(), getClasses())
+                && Objects.equals(other.getJavadoc(), getJavadoc())
                 && Objects.equals(other.getSources(), getSources());
     }
 

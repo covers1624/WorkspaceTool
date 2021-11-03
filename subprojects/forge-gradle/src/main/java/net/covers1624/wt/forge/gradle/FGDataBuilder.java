@@ -78,19 +78,19 @@ public class FGDataBuilder implements ExtraDataBuilder {
                 throw new RuntimeException("Unable to resolve classpath configuration.");
             }
             Set<ResolvedArtifact> artifacts = classpath.getResolvedConfiguration().getResolvedArtifacts();
-            Optional<ResolvedArtifact> fgArtifact = artifacts.parallelStream()//
-                    .map(e -> Pair.of(e, e.getModuleVersion().getId()))//
-                    .filter(e -> e.getRight().getGroup().equals("net.minecraftforge.gradle"))//
-                    .filter(e -> e.getRight().getName().equals("ForgeGradle"))//
-                    .map(Pair::getLeft)//
+            Optional<ResolvedArtifact> fgArtifact = artifacts.parallelStream()
+                    .map(e -> Pair.of(e, e.getModuleVersion().getId()))
+                    .filter(e -> e.getRight().getGroup().equals("net.minecraftforge.gradle"))
+                    .filter(e -> e.getRight().getName().equals("ForgeGradle"))
+                    .map(Pair::getLeft)
                     .findFirst();
             if (!fgArtifact.isPresent()) {
                 LOGGER.error("Unable to find ForgeGradle artifact in buildscript classpath configuration.");
-                LOGGER.debug("Found artifacts: '{}'", artifacts.parallelStream()//
-                        .map(ResolvedArtifact::getModuleVersion)//
-                        .map(ResolvedModuleVersion::getId)//
-                        .map(Object::toString)//
-                        .collect(Collectors.joining(", "))//
+                LOGGER.debug("Found artifacts: '{}'", artifacts.parallelStream()
+                        .map(ResolvedArtifact::getModuleVersion)
+                        .map(ResolvedModuleVersion::getId)
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", "))
                 );
                 return;
             }

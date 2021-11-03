@@ -137,8 +137,8 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
             action.setOnlyIfModified(true);
             action.execute();
         }
-        VersionManifestJson.Version mv = Utils.fromJson(vManifest, VersionManifestJson.class)//
-                .findVersion(mcVersion)//
+        VersionManifestJson.Version mv = Utils.fromJson(vManifest, VersionManifestJson.class)
+                .findVersion(mcVersion)
                 .orElseThrow(() -> new RuntimeException("Failed to find minecraft version: " + mcVersion));
 
         Path versionFile = mcDir.resolve(mcVersion + ".json");

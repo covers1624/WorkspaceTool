@@ -44,9 +44,9 @@ public class ClassTree {
     }
 
     public void loadClasses(Path path) {
-        sneaky(() -> Files.walk(path))//
-                .filter(Files::isRegularFile)//
-                .filter(e -> e.getFileName().toString().endsWith(".class"))//
+        sneaky(() -> Files.walk(path))
+                .filter(Files::isRegularFile)
+                .filter(e -> e.getFileName().toString().endsWith(".class"))
                 .forEach(file -> {
                     //logger.info("Loading {}", file);
                     try (InputStream is = Files.newInputStream(file)) {

@@ -76,7 +76,7 @@ public class SourceSetDependencyImpl extends AbstractDependency implements Sourc
             return false;
         }
         SourceSetDependency other = (SourceSetDependency) obj;
-        return other.getModule().getName().equals(getModule().getName())//
+        return other.getModule().getName().equals(getModule().getName())
                 && other.getSourceSet().equals(getSourceSet());
     }
 

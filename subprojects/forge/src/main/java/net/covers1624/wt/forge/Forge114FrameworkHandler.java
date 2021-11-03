@@ -50,8 +50,8 @@ public class Forge114FrameworkHandler extends AbstractForge113PlusFrameworkHandl
         handleAts();
 
         Path formsRt = context.cacheDir.resolve("libs/forms_rt.jar");
-        Dependency formsRtDep = new MavenDependencyImpl()//
-                .setNotation(MavenNotation.parse("org.jetbrains:forms_rt:1.0.0"))//
+        Dependency formsRtDep = new MavenDependencyImpl()
+                .setNotation(MavenNotation.parse("org.jetbrains:forms_rt:1.0.0"))
                 .setClasses(formsRt).setExport(false);
         { //GStart Login.
             Path r1 = forgeDir.resolve("src/userdev/java/net/minecraftforge/userdev/WTLaunchLogin.java");

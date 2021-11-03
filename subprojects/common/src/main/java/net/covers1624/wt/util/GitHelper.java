@@ -108,11 +108,11 @@ public class GitHelper {
             git.reset().setRef("HEAD").setMode(ResetCommand.ResetType.HARD).call();
             git.clean().setIgnore(false).setCleanDirectories(true).setForce(true).call();
             if (git.branchList().call().stream().noneMatch(e -> e.getName().equals("refs/heads/" + branch))) {
-                git.checkout()//
-                        .setCreateBranch(true)//
-                        .setName(branch)//
-                        .setStartPoint("origin/" + branch)//
-                        .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)//
+                git.checkout()
+                        .setCreateBranch(true)
+                        .setName(branch)
+                        .setStartPoint("origin/" + branch)
+                        .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
                         .call();
             } else {
                 git.checkout().setName(branch).call();
