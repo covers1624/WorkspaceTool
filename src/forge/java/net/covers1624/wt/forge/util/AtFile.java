@@ -229,8 +229,12 @@ public class AtFile {
     public void merge(AtFile other) {
         other.classMap.forEach((cName, cNode) -> {
             AtClass atClass = getClass(cName);
-            atClass.mergeAccess(cNode.accessChange);
-            atClass.mergeFinal(cNode.finalChange);
+            if (cNode.accessChange != null) {
+                atClass.mergeAccess(cNode.accessChange);
+            }
+            if (atClass.finalChange != null) {
+                atClass.mergeFinal(cNode.finalChange);
+            }
             cNode.methods.forEach((mName, mNode) -> {
                 AtMethod atMethod = atClass.methods.get("*()");
                 if (atMethod == null) {
