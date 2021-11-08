@@ -10,6 +10,7 @@
 # Include other important files.
 !README.md
 !LICENSE.txt
+!LICENSE-header.txt
 
 # Include Gradle related files.
 !gradle/
