@@ -3,10 +3,11 @@
  *
  * Copyright (c) 2018-2021 covers1624 <https://github.com/covers1624>
  */
-package net.covers1624.wt.wrapper.json;
+package net.covers1624.wt.java;
 
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
+import net.covers1624.wt.util.JsonUtils;
 
 import java.lang.reflect.Type;
 import java.nio.file.Path;

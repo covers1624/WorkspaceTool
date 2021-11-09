@@ -6,11 +6,11 @@
 package net.covers1624.wt.wrapper;
 
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.wt.wrapper.java.JDKManager;
-import net.covers1624.wt.wrapper.java.JavaInstall;
-import net.covers1624.wt.wrapper.java.JavaUtils;
+import net.covers1624.wt.java.JDKManager;
+import net.covers1624.wt.java.JavaInstall;
+import net.covers1624.wt.java.JavaUtils;
+import net.covers1624.wt.util.JsonUtils;
 import net.covers1624.wt.wrapper.json.JDKProperties;
-import net.covers1624.wt.wrapper.json.JsonUtils;
 import net.covers1624.wt.wrapper.json.WrapperProperties;
 import net.covers1624.wt.wrapper.maven.MavenResolver;
 import org.apache.commons.lang3.StringUtils;

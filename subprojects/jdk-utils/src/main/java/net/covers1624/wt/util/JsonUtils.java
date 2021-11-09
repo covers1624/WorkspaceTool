@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2018-2021 covers1624 <https://github.com/covers1624>
  */
-package net.covers1624.wt.wrapper.json;
+package net.covers1624.wt.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -17,6 +17,7 @@ import java.nio.file.Path;
 /**
  * Created by covers1624 on 31/10/21.
  */
+// TODO Move to Quack, somehow.
 public class JsonUtils {
 
     public static Gson GSON = new GsonBuilder()

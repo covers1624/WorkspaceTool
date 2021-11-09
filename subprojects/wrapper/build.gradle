@@ -8,11 +8,10 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 archivesBaseName = 'wt-wrapper'
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.8.8'
+    implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.apache.commons:commons-compress:1.21'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
-    implementation 'org.ow2.asm:asm:9.2'
     implementation 'net.covers1624:Quack:0.4.0.31'
 
     implementation 'org.apache.maven.resolver:maven-resolver-api:1.7.2'
@@ -25,15 +24,7 @@ dependencies {
     implementation 'org.apache.maven:maven-model-builder:3.8.1'
     implementation 'org.apache.maven:maven-resolver-provider:3.8.1'
 
-    implementation('net.rubygrapefruit:native-platform:0.21') {
-        transitive = false
-    }
-    implementation('net.rubygrapefruit:native-platform-windows-amd64:0.21') {
-        transitive = false
-    }
-    implementation('net.rubygrapefruit:native-platform-windows-i386:0.21') {
-        transitive = false
-    }
+    implementation project(':jdk-utils')
 
     implementation 'org.jetbrains:annotations:22.0.0'
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
@@ -104,4 +95,8 @@ publishing {
             artifact realJar
         }
     }
+}
+
+repositories {
+    mavenCentral()
 }

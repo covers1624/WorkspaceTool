@@ -6,7 +6,8 @@
 package net.covers1624.wt.wrapper.json;
 
 import com.google.gson.annotations.SerializedName;
-import net.covers1624.wt.wrapper.java.JavaVersion;
+import net.covers1624.wt.java.JavaVersion;
+import net.covers1624.wt.util.JsonUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

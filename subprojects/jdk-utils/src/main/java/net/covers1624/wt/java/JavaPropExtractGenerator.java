@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2018-2021 covers1624 <https://github.com/covers1624>
  */
-package net.covers1624.wt.wrapper.java;
+package net.covers1624.wt.java;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;

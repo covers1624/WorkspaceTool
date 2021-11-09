@@ -3,9 +3,8 @@
  *
  * Copyright (c) 2018-2021 covers1624 <https://github.com/covers1624>
  */
-package net.covers1624.wt.wrapper.java;
+package net.covers1624.wt.java;
 
-import net.covers1624.wt.wrapper.Main;
 import net.rubygrapefruit.platform.MissingRegistryEntryException;
 import net.rubygrapefruit.platform.Native;
 import net.rubygrapefruit.platform.WindowsRegistry;
@@ -85,8 +84,6 @@ public class WindowsJavaLocator extends JavaLocator {
         findJavasInFolder(installs, Paths.get(System.getProperty("user.home"), ".gradle/jdks"));
         // Intellij installed
         findJavasInFolder(installs, Paths.get(System.getProperty("user.home"), ".jdks"));
-        // Workspace installed JDK's
-        findJavasInFolder(installs, Main.WT_JDKS);
         return new ArrayList<>(installs.values());
     }
 

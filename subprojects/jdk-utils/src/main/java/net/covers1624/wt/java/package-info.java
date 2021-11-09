@@ -9,7 +9,7 @@
 @FieldsAreNonnullByDefault
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package net.covers1624.wt.wrapper.java;
+package net.covers1624.wt.java;
 
 import net.covers1624.quack.annotation.FieldsAreNonnullByDefault;
 import net.covers1624.quack.annotation.MethodsReturnNonnullByDefault;

@@ -3,14 +3,13 @@
  *
  * Copyright (c) 2018-2021 covers1624 <https://github.com/covers1624>
  */
-package net.covers1624.wt.wrapper.java;
+package net.covers1624.wt.java;
 
 import com.google.gson.reflect.TypeToken;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.quack.net.download.DownloadAction;
 import net.covers1624.quack.net.download.DownloadListener;
-import net.covers1624.wt.wrapper.json.AdoptiumRelease;
-import net.covers1624.wt.wrapper.json.JsonUtils;
+import net.covers1624.wt.util.JsonUtils;
 import net.rubygrapefruit.platform.internal.Platform;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
