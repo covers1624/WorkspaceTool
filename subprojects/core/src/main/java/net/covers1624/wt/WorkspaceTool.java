@@ -91,6 +91,7 @@ public class WorkspaceTool {
     private void run(String[] args) throws Exception {
         WorkspaceToolContext context = new WorkspaceToolContext();
         context.console = TailConsoleAppender.getTailConsole();
+        Runtime.getRuntime().addShutdownHook(new Thread(context.console::shutdown));
         Log4jUtils.redirectStreams();
 
         context.projectDir = Paths.get(".").normalize().toAbsolutePath();
