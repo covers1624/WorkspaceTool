@@ -107,8 +107,6 @@ public class ClassSmusher {
                         ctor.visitMethodInsn(INVOKEVIRTUAL, cName, mName, "()V", false);
                     } else if (method.name.equals("<clinit>")) {
                         InsnListSection section = new InsnListSection(method.instructions).copy();
-                        //Drop first 2 instructions, always ALOAD0, INVOKESPECIAL since we skip debug.
-                        section = section.drop(2);
                         //If return is the only thing left, its pointless.
                         if (section.size() == 1) {
                             continue;

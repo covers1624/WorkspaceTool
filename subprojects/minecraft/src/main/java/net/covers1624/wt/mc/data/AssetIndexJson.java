@@ -15,7 +15,7 @@ public class AssetIndexJson {
     public Map<String, AssetObject> objects;
     public boolean virtual;
 
-    public class AssetObject {
+    public static class AssetObject {
 
         public String hash;
         public int size;

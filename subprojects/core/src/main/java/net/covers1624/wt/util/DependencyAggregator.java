@@ -15,10 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by covers1624 on 10/7/19.
@@ -44,7 +41,7 @@ public class DependencyAggregator {
                     .forEach(dep -> {
                         MavenNotation notation = dep.getNotation();
                         Map<ArtifactVersion, MavenDependency> versions = versionTable.computeIfAbsent(getKey(notation), e -> new TreeMap<>());
-                        versions.put(new DefaultArtifactVersion(notation.version), dep);
+                        versions.put(new DefaultArtifactVersion(Objects.requireNonNull(notation.version)), dep);
                     });
             configuration.getDependencies().stream()
                     .filter(e -> e instanceof ScalaSdkDependency)

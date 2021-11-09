@@ -25,7 +25,7 @@ public class VersionInfoJson {
     public Map<String, Download> downloads;
     public AssetIndex assetIndex;
 
-    public class AssetIndex {
+    public static class AssetIndex {
 
         public String id;
         public HashCode sha1;
@@ -39,13 +39,13 @@ public class VersionInfoJson {
         }
     }
 
-    public class Download {
+    public static class Download {
 
         public URL url;
         public HashCode sha1;
     }
 
-    public class Library {
+    public static class Library {
 
         public MavenNotation name;
         public Extract extract;
@@ -77,17 +77,17 @@ public class VersionInfoJson {
             }
         }
 
-        public class Extract {
+        public static class Extract {
 
             public List<String> exclude = new ArrayList<>();
         }
 
-        public class Rule {
+        public static class Rule {
 
             public String action;
             public OSRestriction os;
 
-            public class OSRestriction {
+            public static class OSRestriction {
 
                 public OS os;
                 public String version;

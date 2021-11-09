@@ -11,6 +11,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import net.covers1624.quack.net.download.DownloadAction;
 import net.covers1624.quack.net.download.DownloadProgressTail;
+import net.covers1624.tconsole.ConsumingOutputStream;
 import net.covers1624.tconsole.api.TailConsole;
 import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.tconsole.tails.TextTail;
@@ -23,9 +24,7 @@ import net.covers1624.wt.mc.data.VersionInfoJson;
 import net.covers1624.wt.mc.data.VersionManifestJson;
 import net.covers1624.wt.util.GitHelper;
 import net.covers1624.wt.util.HashContainer;
-import net.covers1624.wt.util.LoggingOutputStream;
 import net.covers1624.wt.util.Utils;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gradle.tooling.GradleConnector;
@@ -99,8 +98,8 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
                     .withArguments("-si")
                     .setJvmArguments("-Xmx3G")
                     .setJvmArguments("-Dorg.gradle.daemon=false")
-                    .setStandardOutput(new LoggingOutputStream(LOGGER, Level.INFO))
-                    .setStandardError(new LoggingOutputStream(LOGGER, Level.ERROR))
+                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
+                    .setStandardError(new ConsumingOutputStream(LOGGER::error))
                     .addProgressListener(new GradleProgressListener(context, tailGroup))
                     .run();
             context.console.removeGroup(tailGroup);

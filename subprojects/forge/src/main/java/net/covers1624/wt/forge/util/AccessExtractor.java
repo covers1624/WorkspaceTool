@@ -196,7 +196,7 @@ public class AccessExtractor {
             } else if (type.getSort() == Type.METHOD) {
                 handleType(type.getReturnType());
                 for (Type argType : type.getArgumentTypes()) {
-                    handleType(type);
+                    handleType(argType);
                 }
             } else if (type.getSort() == Type.ARRAY) {
                 handleType(type.getElementType());

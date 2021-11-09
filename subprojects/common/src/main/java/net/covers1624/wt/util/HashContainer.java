@@ -23,10 +23,8 @@ import java.util.Objects;
  * <p>
  * Created by covers1624 on 5/01/19.
  */
-@SuppressWarnings ("UnstableApiUsage")
 public class HashContainer {
 
-    private static final Logger logger = LogManager.getLogger("HashContainer");
     private static final Type gsonType = new TypeToken<Map<String, HashCode>>() { }.getType();
 
     private final Path hashFile;

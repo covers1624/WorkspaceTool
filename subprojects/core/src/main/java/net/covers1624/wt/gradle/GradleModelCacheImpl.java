@@ -11,13 +11,13 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.tconsole.ConsumingOutputStream;
 import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.gradle.GradleModelCache;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.event.ModuleHashCheckEvent;
 import net.covers1624.wt.util.HashContainer;
-import net.covers1624.wt.util.LoggingOutputStream;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -164,8 +164,8 @@ public class GradleModelCacheImpl implements GradleModelCache {
                     .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))
                     .setJvmArguments("-Xmx3G")
                     .setJvmArguments("-Dorg.gradle.daemon=false")
-                    .setStandardOutput(new LoggingOutputStream(logger, Level.INFO))
-                    .setStandardError(new LoggingOutputStream(logger, Level.ERROR))
+                    .setStandardOutput(new ConsumingOutputStream(logger::info))
+                    .setStandardError(new ConsumingOutputStream(logger::error))
                     .addProgressListener(new GradleProgressListener(context, tailGroup))
                     .withArguments("-si", "-I", context.gradleManager.getInitScript().toAbsolutePath().toString())
                     .forTasks(toExecute).run();

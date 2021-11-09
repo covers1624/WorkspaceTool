@@ -17,14 +17,16 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
+
 /**
  * Created by covers1624 on 23/7/19.
  */
 public class WorkspaceRegistryImpl implements WorkspaceRegistry {
 
     private final Map<Class<? extends Workspace>, Function<MixinInstantiator, ? extends Workspace>> scriptFactories = new HashMap<>();
-    private final Map<Class<? extends Workspace>, Supplier<? extends WorkspaceHandler>> handlerFactories = new HashMap<>();
-    private final Map<Class<? extends Workspace>, Function<WorkspaceToolContext, ? extends WorkspaceWriter>> writerFactories = new HashMap<>();
+    private final Map<Class<? extends Workspace>, Supplier<? extends WorkspaceHandler<?>>> handlerFactories = new HashMap<>();
+    private final Map<Class<? extends Workspace>, Function<WorkspaceToolContext, ? extends WorkspaceWriter<?>>> writerFactories = new HashMap<>();
 
     @Override
     public <T extends Workspace> void registerScriptImpl(Class<T> apiClazz, Function<MixinInstantiator, T> factory) {
@@ -47,13 +49,12 @@ public class WorkspaceRegistryImpl implements WorkspaceRegistry {
     }
 
     @Override
-    @SuppressWarnings ("unchecked")
     public <T extends Workspace> WorkspaceHandler<T> constructWorkspaceHandlerImpl(Class<T> apiClazz) {
-        Supplier<WorkspaceHandler<T>> factory = (Supplier<WorkspaceHandler<T>>) handlerFactories.get(apiClazz);
+        Supplier<? extends WorkspaceHandler<?>> factory = handlerFactories.get(apiClazz);
         if (factory == null) {
             throw new RuntimeException("No factory registered for type: " + apiClazz);
         }
-        return factory.get();
+        return unsafeCast(factory.get());
     }
 
     @Override
@@ -62,13 +63,12 @@ public class WorkspaceRegistryImpl implements WorkspaceRegistry {
     }
 
     @Override
-    @SuppressWarnings ("unchecked")
     public <T extends Workspace> WorkspaceWriter<T> getWorkspaceWriter(Class<T> apiClazz, WorkspaceToolContext context) {
-        Function<WorkspaceToolContext, ? extends WorkspaceWriter> factory = writerFactories.get(apiClazz);
+        Function<WorkspaceToolContext, ? extends WorkspaceWriter<?>> factory = writerFactories.get(apiClazz);
         if (factory == null) {
             throw new IllegalArgumentException("No writer registered for type: " + apiClazz);
         }
-        return factory.apply(context);
+        return unsafeCast(factory.apply(context));
     }
 
 }

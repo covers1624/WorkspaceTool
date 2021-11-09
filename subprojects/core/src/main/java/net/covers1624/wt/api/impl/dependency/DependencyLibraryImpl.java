@@ -48,11 +48,11 @@ public class DependencyLibraryImpl implements DependencyLibrary {
         }
         config.streamAll().forEach(c -> c.setDependencies(c.getDependencies().stream()
                 .map(e -> {
-                    if (e instanceof MavenDependency) {
-                        return resolve((MavenDependency) e);
+                    if (e instanceof MavenDependency dep) {
+                        return resolve(dep);
                     }
-                    if (e instanceof ScalaSdkDependency) {
-                        return resolve((ScalaSdkDependency) e);
+                    if (e instanceof ScalaSdkDependency dep) {
+                        return resolve(dep);
                     }
                     return e;
                 })

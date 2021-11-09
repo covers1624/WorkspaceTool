@@ -150,8 +150,7 @@ public class ForgeExtension implements Extension {
             remapper.ifPresent(remapper -> {
                 Module module = event.getModule();
                 Configuration config = event.getDependencyConfig();
-                if (dep instanceof MavenDependency) {
-                    MavenDependency mvnDep = (MavenDependency) dep;
+                if (dep instanceof MavenDependency mvnDep) {
                     MavenNotation notation = mvnDep.getNotation();
                     if (notation.group.startsWith("deobf.")) {
                         event.setResult(null);
@@ -179,8 +178,7 @@ public class ForgeExtension implements Extension {
                 }
             });
             //HACK, Remove Scala classes from Scorge jar.
-            if (dep instanceof MavenDependency) {
-                MavenDependency mvnDep = (MavenDependency) dep;
+            if (dep instanceof MavenDependency mvnDep) {
                 if (mvnDep.getNotation().group.equals("net.minecraftforge") && mvnDep.getNotation().module.equals("Scorge")) {
                     String path = mvnDep.getNotation().toPath();
                     Path output = context.cacheDir.resolve("scorge_strip").resolve(path);

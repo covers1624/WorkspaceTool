@@ -49,7 +49,7 @@ public class Forge114Extension extends AbstractForge113PlusExtension {
         ProjectData forgeSubProject = requireNonNull(rootProject.subProjects.get("forge"), "Missing forge submodule.");
         Map<String, String> envVars = new HashMap<>();
         String mcVersion = rootProject.extraProperties.get("MC_VERSION");
-        VersionInfoJson versionInfo = context.blackboard.get(VERSION_INFO);
+        VersionInfoJson versionInfo = requireNonNull(context.blackboard.get(VERSION_INFO));
 
         envVars.put("assetIndex", versionInfo.assetIndex.id);
         envVars.put("assetDirectory", context.blackboard.get(ASSETS_PATH).toAbsolutePath().toString());

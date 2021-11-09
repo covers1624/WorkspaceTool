@@ -15,7 +15,6 @@ import java.util.Set;
  * adding DataBuilders for {@link ExtraData}'s, and Gradle Tasks to execute before
  * anything is done.
  * <p>
- * TODO, we now completely depend on gradle. Some restrictions could be lifted here.
  * Created by covers1624 on 17/6/19.
  */
 public interface GradleManager {

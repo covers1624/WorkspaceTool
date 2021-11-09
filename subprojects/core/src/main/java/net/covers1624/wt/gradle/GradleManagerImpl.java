@@ -14,6 +14,7 @@ import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.build.BuildEnvironment;
 import org.gradle.util.GradleVersion;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -45,6 +46,7 @@ public class GradleManagerImpl implements Closeable, GradleManager {
 
     private final Set<Path> tmpFiles = new HashSet<>();
 
+    @Nullable
     private Path initScript;
 
     @Override
@@ -84,65 +86,64 @@ public class GradleManagerImpl implements Closeable, GradleManager {
 
     @Override
     public Path getInitScript() {
-        if (initScript == null) {
+        if (initScript != null) return initScript;
 
-            initScript = sneaky(() -> Files.createTempFile("wt_init", ".gradle"));
-            tmpFiles.add(initScript);
-            LOGGER.info("Building InitScript..");
-            //TODO, cache.
-            //Compute our additions.
-            String depLine = Stream.concat(
-                            scriptClasspathMarkerClasses.parallelStream()
-                                    .map(GradleManagerImpl::getJarPathForClass),
-                            scriptClasspathMarkerResources.parallelStream()
-                                    .map(Utils::getJarPathForResource)
-                    ).parallel()
-                    .filter(Objects::nonNull)
-                    .map(sneak(p -> {
-                        if (Files.isDirectory(p)) {
-                            String str = p.toString();
-                            int idx = str.indexOf("/out/");
-                            String prefix = "wt_tmp_jar" + (idx > 0 ? "_" + str.substring(idx + 5).replace("/", "_") : "");
-                            Path tmpJar = Files.createTempFile(prefix, ".jar");
-                            Files.delete(tmpJar);//ZipFileSystem assumptions.
-                            tmpFiles.add(tmpJar);
-                            try (FileSystem jarFS = getJarFileSystem(tmpJar, true)) {
-                                Files.walkFileTree(p, new CopyingFileVisitor(p, jarFS.getPath("/")));
-                            }
-                            return tmpJar;
+        initScript = sneaky(() -> Files.createTempFile("wt_init", ".gradle"));
+        tmpFiles.add(initScript);
+        LOGGER.info("Building InitScript..");
+        //TODO, cache.
+        //Compute our additions.
+        String depLine = Stream.concat(
+                        scriptClasspathMarkerClasses.parallelStream()
+                                .map(GradleManagerImpl::getJarPathForClass),
+                        scriptClasspathMarkerResources.parallelStream()
+                                .map(Utils::getJarPathForResource)
+                ).parallel()
+                .filter(Objects::nonNull)
+                .map(sneak(p -> {
+                    if (Files.isDirectory(p)) {
+                        String str = p.toString();
+                        int idx = str.indexOf("/out/");
+                        String prefix = "wt_tmp_jar" + (idx > 0 ? "_" + str.substring(idx + 5).replace("/", "_") : "");
+                        Path tmpJar = Files.createTempFile(prefix, ".jar");
+                        Files.delete(tmpJar);//ZipFileSystem assumptions.
+                        tmpFiles.add(tmpJar);
+                        try (FileSystem jarFS = getJarFileSystem(tmpJar, true)) {
+                            Files.walkFileTree(p, new CopyingFileVisitor(p, jarFS.getPath("/")));
                         }
-                        return p;
-                    }))
-                    .map(Path::toString)
-                    .map(e -> e.replace("\\", "\\\\"))
-                    .map(e -> "'" + e + "'")
-                    .collect(Collectors.joining(", ", "        classpath files([", "])"));
+                        return tmpJar;
+                    }
+                    return p;
+                }))
+                .map(Path::toString)
+                .map(e -> e.replace("\\", "\\\\"))
+                .map(e -> "'" + e + "'")
+                .collect(Collectors.joining(", ", "        classpath files([", "])"));
 
-            //Read all lines.
-            List<String> scriptLines;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(GradleManagerImpl.class.getResourceAsStream("/templates/gradle/init.gradle")))) {
-                scriptLines = reader.lines().collect(Collectors.toList());
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to read template.", e);
-            }
-            int idx = -1;
-            //find our marker line.
-            for (int i = 0; i < scriptLines.size(); i++) {
-                String line = scriptLines.get(i);
-                if (line.contains("$ { DEPENDENCIES }")) {
-                    idx = i;
-                    break;
-                }
-            }
-            //remove marker and add all dep lines.
-            if (idx == -1) {
-                throw new RuntimeException("Unable to find Dependencies marker in init script template.");
-            }
-            scriptLines.remove(idx);
-            scriptLines.add(idx, depLine);
-            sneaky(() -> Files.write(initScript, scriptLines));
-            LOGGER.info("InitScript built to: {}", initScript);
+        //Read all lines.
+        List<String> scriptLines;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(GradleManagerImpl.class.getResourceAsStream("/templates/gradle/init.gradle")))) {
+            scriptLines = reader.lines().collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read template.", e);
         }
+        int idx = -1;
+        //find our marker line.
+        for (int i = 0; i < scriptLines.size(); i++) {
+            String line = scriptLines.get(i);
+            if (line.contains("$ { DEPENDENCIES }")) {
+                idx = i;
+                break;
+            }
+        }
+        //remove marker and add all dep lines.
+        if (idx == -1) {
+            throw new RuntimeException("Unable to find Dependencies marker in init script template.");
+        }
+        scriptLines.remove(idx);
+        scriptLines.add(idx, depLine);
+        sneaky(() -> Files.write(initScript, scriptLines));
+        LOGGER.info("InitScript built to: {}", initScript);
         return initScript;
     }
 
@@ -159,17 +160,18 @@ public class GradleManagerImpl implements Closeable, GradleManager {
             if (installed.compareTo(minVersion) >= 0) {
                 LOGGER.info("Using project gradle version.");
                 return installed.getVersion();
-            } else {
-                LOGGER.info("Forcing gradle {}.", minVersion.getVersion());
-                return minVersion.getVersion();
             }
+            LOGGER.info("Forcing gradle {}.", minVersion.getVersion());
+            return minVersion.getVersion();
         }
     }
 
+    @Nullable
     private static Path getJarPathForClass(Object obj) {
         if (obj instanceof Class) {
             return Utils.getJarPathForClass((Class<?>) obj);
-        } else if (obj instanceof CharSequence) {
+        }
+        if (obj instanceof CharSequence) {
             return Utils.getJarPathForClass(obj.toString());
         }
         throw new RuntimeException("Unhandled type: " + obj.getClass());

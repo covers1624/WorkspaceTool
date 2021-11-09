@@ -27,8 +27,6 @@ public class SimpleBuildAction<T> implements BuildAction<T>, Serializable {
 
     @Override
     public T execute(BuildController controller) {
-        return controller.getModel(modelClazz, BuildProperties.class, e -> {
-            e.setDataBuilders(dataBuilders);
-        });
+        return controller.getModel(modelClazz, BuildProperties.class, e -> e.setDataBuilders(dataBuilders));
     }
 }

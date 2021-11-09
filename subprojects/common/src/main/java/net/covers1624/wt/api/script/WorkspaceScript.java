@@ -11,7 +11,6 @@ import net.covers1624.wt.util.ClosureBackedConsumer;
 import net.covers1624.wt.util.JavaVersion;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -30,12 +29,6 @@ public interface WorkspaceScript {
      * @return The Path.
      */
     Path path(String str);
-
-    //    default void scriptDeps(Closure<ScriptDepsSpec> closure) {
-    //        scriptDeps(new ClosureBackedConsumer<>(closure));
-    //    }
-    //
-    //    void scriptDeps(Consumer<ScriptDepsSpec> consume);
 
     /**
      * Defines the use of a specified Framework.
@@ -118,10 +111,6 @@ public interface WorkspaceScript {
      * Overload of {@link #workspace(Class, Closure)} with no configure block.
      */
     <T extends Workspace> void workspace(Class<T> clazz);
-
-    List<String> getRepos();
-
-    List<String> getClasspathDeps();
 
     Class<? extends ModdingFramework> getFrameworkClass();
 

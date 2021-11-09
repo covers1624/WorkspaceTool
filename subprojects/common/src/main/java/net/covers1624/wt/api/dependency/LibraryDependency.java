@@ -47,7 +47,7 @@ public interface LibraryDependency extends Dependency {
      * Sets the underlying MavenDependency.
      *
      * @param dependency The MavenDependency.
-     * @return The same LibraryDepenedency.
+     * @return The same LibraryDependency.
      */
     LibraryDependency setDependency(Dependency dependency);
 

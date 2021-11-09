@@ -54,8 +54,6 @@ public class Utils {
 
     private static final Logger LOGGER = LogManager.getLogger(Utils.class);
 
-    private static final char[] HEX_CHARS = "0123456789ABCDEF".toCharArray();
-
     public static final Gson gson = sneaky(() -> {
         GsonBuilder builder = new GsonBuilder()
                 .registerTypeAdapter(File.class, new FileAdapter())
@@ -140,30 +138,6 @@ public class Utils {
     }
 
     /**
-     * Walks all files from the given directory.
-     *
-     * @param directory    The base.
-     * @param fileConsumer The consumer to handle files.
-     */
-    public static void walkFiles(File directory, Consumer<File> fileConsumer) {
-        Deque<File> toSearch = new ArrayDeque<>();
-        toSearch.push(directory);
-        while (!toSearch.isEmpty()) {
-            File file = toSearch.pop();
-            if (file.isDirectory()) {
-                File[] list = file.listFiles();
-                if (list != null) {
-                    for (File f : list) {
-                        toSearch.push(f);
-                    }
-                }
-            } else if (file.isFile()) {
-                fileConsumer.accept(file);
-            }
-        }
-    }
-
-    /**
      * Deletes the given directory and all containing files.
      *
      * @param directory The directory to delete.
@@ -177,7 +151,7 @@ public class Utils {
                 File[] list = peek.listFiles();
                 if (list == null || list.length == 0) {
                     toDelete.pop().delete();
-                } else if (list != null) {
+                } else {
                     for (File f : list) {
                         toDelete.push(f);
                     }
@@ -202,27 +176,6 @@ public class Utils {
     }
 
     /**
-     * Ensures a file exists, creating parent directories if necessary.
-     *
-     * @param file The file.
-     * @return The same file.
-     */
-    public static File makeFile(File file) {
-        if (!file.exists()) {
-            File p = file.getAbsoluteFile().getParentFile();
-            if (!p.exists()) {
-                p.mkdirs();
-            }
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to create a new file.", e);
-            }
-        }
-        return file;
-    }
-
-    /**
      * Copies the content of the provided resource to the provided Hasher.
      *
      * @param hasher   The hasher.
@@ -233,22 +186,6 @@ public class Utils {
             HashUtils.addToHasher(hasher, is);
         } catch (IOException e) {
             throw new RuntimeException("Unable to read resource: " + resource, e);
-        }
-    }
-
-    /**
-     * Copies the content of the provided File to the provided Hasher.
-     *
-     * @param hasher The Hasher.
-     * @param file   The File.
-     */
-    public static void addToHasher(Hasher hasher, File file) {
-        if (file.exists()) {
-            try (FileInputStream fis = new FileInputStream(file)) {
-                HashUtils.addToHasher(hasher, fis);
-            } catch (IOException e) {
-                throw new RuntimeException("Unable to read file: " + file, e);
-            }
         }
     }
 
@@ -264,42 +201,6 @@ public class Utils {
 
     public static List<Path> toPaths(List<File> from) {
         return from.parallelStream().map(File::toPath).collect(Collectors.toList());
-    }
-
-    public static void maybeExtractResource(String resource, File file) {
-        if (!file.exists()) {
-            extractResource(resource, file);
-        }
-    }
-
-    public static void maybeExtractResource(String resource, Path path) {
-        if (Files.notExists(path)) {
-            extractResource(resource, path);
-        }
-    }
-
-    public static Path commonRootPath(List<Path> paths, Path preferred) {
-        Preconditions.checkArgument(!paths.isEmpty(), "Paths cannot be empty.");
-        FileSystem fs = preferred.getFileSystem();
-        if (paths.stream().anyMatch(e -> e.getFileSystem().provider() != fs.provider())) {
-            throw new RuntimeException("All provided paths are not on the same FileSystem.");
-        }
-        Path commonPath = fs.getPath("/");
-        String[][] folders = paths.parallelStream().map(e -> e.toString().split("[/\\\\]")).toArray(String[][]::new);
-        outer:
-        for (int i = 0; i < folders[0].length; i++) {
-            String s = folders[0][i];
-            for (int j = 0; j < paths.size(); j++) {
-                if (!s.equals(folders[j][i])) {
-                    break outer;
-                }
-            }
-            commonPath = commonPath.resolve(s);
-            if (commonPath.equals(preferred)) {
-                return preferred;
-            }
-        }
-        return commonPath;
     }
 
     public static Path getJarPathForClass(String aClass) {
@@ -434,26 +335,9 @@ public class Utils {
             int idxNext = path.indexOf(next1, slashOrSeparatorIdx + 1);
             idxNext = idxNext == -1 ? path.indexOf(next1 == '/' ? '\\' : '/', slashOrSeparatorIdx + 1) : idxNext;
             return idxNext == -1;
-        } else {
-            return false;
         }
+        return false;
 
-    }
-
-    /**
-     * Extracts a resource to the provided file.
-     *
-     * @param resource The resource.
-     * @param file     The file.
-     */
-    public static void extractResource(String resource, File file) {
-        try (InputStream is = Utils.class.getResourceAsStream(resource)) {
-            try (FileOutputStream fos = new FileOutputStream(makeFile(file))) {
-                IOUtils.copy(is, fos);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to extract resource '" + resource + "' to file '" + file + "'.", e);
-        }
     }
 
     /**
@@ -474,22 +358,6 @@ public class Utils {
         } catch (IOException e) {
             throw new RuntimeException("Failed to extract resource '" + resource + "' to file '" + to + "'.", e);
         }
-    }
-
-    /**
-     * Generates a Random Hex string with the provided length.
-     * Uses SecureRandom, because reasons, probably not secure.
-     *
-     * @param len The length.
-     * @return The random String.
-     */
-    public static String randomHex(int len) {
-        SecureRandom randy = new SecureRandom();
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < len; i++) {
-            builder.append(HEX_CHARS[randy.nextInt(HEX_CHARS.length - 1)]);
-        }
-        return builder.toString();
     }
 
     public static <R, C, V> V computeIfAbsent(Table<R, C, V> table, R r, C c, Supplier<V> vFunc) {

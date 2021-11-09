@@ -22,7 +22,6 @@ import net.covers1624.wt.util.JavaVersion;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -35,8 +34,6 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     public static final String WR_PROP = "workspaceRegistry";
     public static final String MI_PROP = "mixinInstantiator";
 
-    private boolean firstPass;
-    private final DefaultScriptDepsContainer scriptDeps = new DefaultScriptDepsContainer();
     private FrameworkRegistry frameworkRegistry;
     private WorkspaceRegistry workspaceRegistry;
     private MixinInstantiator mixinInstantiator;
@@ -59,26 +56,15 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     @Override
     public void setBinding(Binding binding) {
         super.setBinding(binding);
-        firstPass = getProp("firstPass");
-        if (!firstPass) {
-            frameworkRegistry = getProp(FR_PROP);
-            workspaceRegistry = getProp(WR_PROP);
-            mixinInstantiator = getProp(MI_PROP);
-        }
+        frameworkRegistry = getProp(FR_PROP);
+        workspaceRegistry = getProp(WR_PROP);
+        mixinInstantiator = getProp(MI_PROP);
     }
 
     @Override
     public Path path(String str) {
         return Paths.get(str);
     }
-
-    //    @Override
-    //    public void scriptDeps(Consumer<ScriptDepsSpec> consumer) {
-    //        consumer.accept(scriptDeps);
-    //        if (firstPass) {
-    //            throw new AbortScriptException();
-    //        }
-    //    }
 
     @Override
     @SuppressWarnings ("unchecked")
@@ -137,16 +123,6 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     }
 
     @Override
-    public List<String> getRepos() {
-        return scriptDeps.getRepos();
-    }
-
-    @Override
-    public List<String> getClasspathDeps() {
-        return scriptDeps.getClasspathDeps();
-    }
-
-    @Override
     public Class<? extends ModdingFramework> getFrameworkClass() {
         return frameworkClass;
     }
@@ -185,9 +161,4 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     private <T> T getProp(String name) {
         return (T) getProperty(name);
     }
-
-    public static class AbortScriptException extends RuntimeException {
-
-    }
-
 }

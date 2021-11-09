@@ -5,8 +5,6 @@
  */
 package net.covers1624.wt.util;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Optional;
 
 /**
@@ -21,9 +19,8 @@ public enum ScalaVersion implements Comparable<ScalaVersion> {
     Scala_2_14("2.14"),
     Scala_3_0("0.15", "3.0");
 
-    @NotNull
     private final String version;
-    @NotNull
+
     private final String name;
 
     ScalaVersion(String version) {
@@ -43,8 +40,7 @@ public enum ScalaVersion implements Comparable<ScalaVersion> {
         return name;
     }
 
-    @NotNull
-    public static Optional<ScalaVersion> findByVersion(@NotNull String version) {
+    public static Optional<ScalaVersion> findByVersion(String version) {
         for (ScalaVersion languageLevel : values()) {
             if (version.startsWith(languageLevel.version)) {
                 return Optional.of(languageLevel);

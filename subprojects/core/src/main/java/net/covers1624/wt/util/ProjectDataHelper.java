@@ -53,20 +53,20 @@ public class ProjectDataHelper {
     public static Configuration convertConfiguration(ConfigurationData config, Module module, Map<String, Module> modules) {
         Set<Dependency> dependencies = config.dependencies.stream()
                 .map(d -> {
-                    if (d instanceof ConfigurationData.MavenDependency) {
-                        return new MavenDependencyImpl((ConfigurationData.MavenDependency) d);
-                    } else if (d instanceof ConfigurationData.SourceSetDependency) {
+                    if (d instanceof ConfigurationData.MavenDependency dep) {
+                        return new MavenDependencyImpl(dep);
+                    }
+                    if (d instanceof ConfigurationData.SourceSetDependency dep) {
                         return new SourceSetDependencyImpl()
-                                .setSourceSet(((ConfigurationData.SourceSetDependency) d).name)
+                                .setSourceSet(dep.name)
                                 .setModule(module);
-                    } else if (d instanceof ConfigurationData.ProjectDependency) {
-                        ConfigurationData.ProjectDependency dep = (ConfigurationData.ProjectDependency) d;
+                    }
+                    if (d instanceof ConfigurationData.ProjectDependency dep) {
                         return new SourceSetDependencyImpl()
                                 .setSourceSet("main")
                                 .setModule(requireNonNull(modules.get(dep.project), "Module missing: " + dep.project));
-                    } else {
-                        throw new RuntimeException("Unknown Dependency type from gradle-land: " + d.getClass());
                     }
+                    throw new RuntimeException("Unknown Dependency type from gradle-land: " + d.getClass());
                 })
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         Configuration ret = new ConfigurationImpl(config.name);

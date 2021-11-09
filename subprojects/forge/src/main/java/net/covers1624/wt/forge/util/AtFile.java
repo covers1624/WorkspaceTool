@@ -15,6 +15,7 @@ import org.objectweb.asm.Type;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -23,7 +24,6 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static net.covers1624.quack.collection.ColUtils.iterable;
 import static net.covers1624.quack.util.SneakyUtils.sneaky;
-import static net.covers1624.wt.util.ParameterFormatter.format;
 
 /**
  * Created by covers1624 on 16/11/19.
@@ -293,15 +293,15 @@ public class AtFile {
                 first = false;
                 if (clazz.accessChange != null) {
                     String comment = clazz.comment == null ? "" : " #" + clazz.comment;
-                    writer.println(format("{}{} {}{}", clazz.accessChange.seg, clazz.finalChange.seg, clazz.name(useDot), comment));
+                    writer.println(MessageFormat.format("{0}{1} {2}{3}", clazz.accessChange.seg, clazz.finalChange.seg, clazz.name(useDot), comment));
                 }
                 for (AtField field : clazz.fields.values()) {
                     String comment = field.comment == null ? "" : " #" + field.comment;
-                    writer.println(format("{}{} {} {}{}", field.accessChange.seg, field.finalChange.seg, clazz.name(useDot), field.name, comment));
+                    writer.println(MessageFormat.format("{0}{1} {2} {3}{4}", field.accessChange.seg, field.finalChange.seg, clazz.name(useDot), field.name, comment));
                 }
                 for (AtMethod method : clazz.methods.values()) {
                     String comment = method.comment == null ? "" : " #" + method.comment;
-                    writer.println(format("{}{} {} {}{}{}", method.accessChange.seg, method.finalChange.seg, clazz.name(useDot), method.name, method.desc, comment));
+                    writer.println(MessageFormat.format("{0}{1} {2} {3}{4}{5}", method.accessChange.seg, method.finalChange.seg, clazz.name(useDot), method.name, method.desc, comment));
                 }
                 lastPackage = classPackage;
             }
@@ -467,7 +467,8 @@ public class AtFile {
         public static FinalChange fromBools(boolean strip, boolean mark) {
             if (strip) {
                 return STRIP;
-            } else if (mark) {
+            }
+            if (mark) {
                 return MARK;
             }
             return NONE;

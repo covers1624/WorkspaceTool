@@ -44,13 +44,9 @@ public class SrgReader {
                 String type = line.substring(0, 2);
                 String[] args = line.substring(4).split(" ");
                 switch (type) {
-                    case "PK":
-                        consumer.consume(LineType.PACKAGE, Arrays.copyOf(args, 2));
-                        break;
-                    case "CL":
-                        consumer.consume(LineType.CLASS, Arrays.copyOf(args, 2));
-                        break;
-                    case "FD": {
+                    case "PK" -> consumer.consume(LineType.PACKAGE, Arrays.copyOf(args, 2));
+                    case "CL" -> consumer.consume(LineType.CLASS, Arrays.copyOf(args, 2));
+                    case "FD" -> {
                         String[] newArgs = new String[4];
                         int lastSlash1 = args[0].lastIndexOf('/');
                         newArgs[0] = args[0].substring(0, lastSlash1);
@@ -60,9 +56,8 @@ public class SrgReader {
                         newArgs[2] = args[1].substring(0, lastSlash2);
                         newArgs[3] = args[1].substring(lastSlash2 + 1);
                         consumer.consume(LineType.FIELD, newArgs);
-                        break;
                     }
-                    case "MD": {
+                    case "MD" -> {
                         String[] newArgs = new String[6];
                         int lastSlash1 = args[0].lastIndexOf('/');
                         newArgs[0] = args[0].substring(0, lastSlash1);
@@ -74,7 +69,6 @@ public class SrgReader {
                         newArgs[4] = args[2].substring(lastSlash2 + 1);
                         newArgs[5] = args[3];
                         consumer.consume(LineType.METHOD, newArgs);
-                        break;
                     }
                 }
             });

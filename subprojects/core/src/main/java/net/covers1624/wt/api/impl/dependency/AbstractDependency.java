@@ -15,7 +15,6 @@ public abstract class AbstractDependency implements Dependency {
     private boolean export = true;
 
     public AbstractDependency() {
-
     }
 
     public AbstractDependency(Dependency other) {

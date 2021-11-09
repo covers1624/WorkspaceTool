@@ -59,7 +59,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,18 +72,12 @@ import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
 public class WorkspaceTool {
 
     public static final String VERSION = "dev";
-    private static final Logger logger = LogManager.getLogger("WorkspaceTool");
+    private static final Logger LOGGER = LogManager.getLogger("WorkspaceTool");
 
-    //    private WTClassLoader classLoader;
     private final List<Extension> extensions = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
-        //        ClassLoader classLoader = WorkspaceTool.class.getClassLoader();
-        //        if (!(classLoader instanceof WTClassLoader)) {
-        //            throw new RuntimeException("WorkspaceTool was loaded with the incorrect ClassLoader.");
-        //        }
         WorkspaceTool instance = new WorkspaceTool();
-        //instance.classLoader = (WTClassLoader) classLoader;
         instance.run(args);
     }
 
@@ -99,7 +92,7 @@ public class WorkspaceTool {
 
         Path workspaceScript = context.projectDir.resolve("workspace.groovy");
         if (Files.notExists(workspaceScript)) {
-            logger.error("'workspace.groovy' does not exist in the project directory. {}", context.projectDir);
+            LOGGER.error("'workspace.groovy' does not exist in the project directory. {}", context.projectDir);
             System.exit(1);
         }
 
@@ -107,33 +100,25 @@ public class WorkspaceTool {
         TailGroup mainGroup = context.console.newGroup();
         mainGroup.add(new OverallProgressTail());
 
-        logger.info("WorkspaceTool@{}", VERSION);
-        logger.info(" Project Dir:      {}", context.projectDir.toAbsolutePath());
-        logger.info(" Workspace Script: {}", workspaceScript.toAbsolutePath());
+        LOGGER.info("WorkspaceTool@{}", VERSION);
+        LOGGER.info(" Project Dir:      {}", context.projectDir.toAbsolutePath());
+        LOGGER.info(" Workspace Script: {}", workspaceScript.toAbsolutePath());
 
-        //        logger.info("Evaluating script for scriptDeps() block..");
-        //        try {
-        //            Binding preBinding = new Binding();
-        //            runScript(preBinding, workspaceScript, true);
-        //        } catch (AbstractWorkspaceScript.AbortScriptException e) {
-        //            logger.info("Found scriptDeps() block..");
-        //        }
-
-        logger.info("Loading Extensions..");
+        LOGGER.info("Loading Extensions..");
         SimpleServiceLoader<Extension> extensionLoader = new SimpleServiceLoader<>(Extension.class);
         extensionLoader.poll();
         for (Class<? extends Extension> clazz : extensionLoader.getNewServices()) {
             ExtensionDetails details = clazz.getAnnotation(ExtensionDetails.class);
             if (details == null) {
-                throw new RuntimeException(ParameterFormatter.format("Missing {} is missing @ExtensionDetails.", clazz.getName()));
+                throw new RuntimeException("Extension class '" + clazz.getName() + "' is missing @ExtensionDetails annotation.");
             }
-            logger.info(" Loading Extension: {}: {}", details.name(), details.desc());
-            Extension extension = clazz.newInstance();
+            LOGGER.info(" Loading Extension: {}: {}", details.name(), details.desc());
+            Extension extension = clazz.getConstructor().newInstance();
             extensions.add(extension);
             extension.load();
         }
 
-        logger.info("Initializing internal systems..");
+        LOGGER.info("Initializing internal systems..");
         context.frameworkRegistry = new FrameworkRegistryImpl();
         context.gradleManager = new GradleManagerImpl();
         context.modelCache = new GradleModelCacheImpl(context);
@@ -166,24 +151,24 @@ public class WorkspaceTool {
         context.frameworkRegistry.registerScriptImpl(NullFramework.class, NullFramework::new);
         context.frameworkRegistry.registerFrameworkHandler(NullFramework.class, FrameworkHandler.NullFrameworkHandler::new);
 
-        logger.info("Preparing script..");
+        LOGGER.info("Preparing script..");
         Binding binding = new Binding();
         binding.setProperty(AbstractWorkspaceScript.FR_PROP, context.frameworkRegistry);
         binding.setProperty(AbstractWorkspaceScript.WR_PROP, context.workspaceRegistry);
         binding.setProperty(AbstractWorkspaceScript.MI_PROP, context.mixinInstantiator);
-        context.workspaceScript = runScript(binding, workspaceScript, false);
+        context.workspaceScript = runScript(binding, workspaceScript);
 
         if (context.workspaceScript.getFramework() == null) {
-            logger.error("No framework specified in script.");
+            LOGGER.error("No framework specified in script.");
         }
         if (context.workspaceScript.getWorkspace() == null) {
-            logger.error("No workspace specified in script.");
+            LOGGER.error("No workspace specified in script.");
         }
 
         DependencyAggregator dependencyAggregator = new DependencyAggregator(context);
         context.dependencyLibrary = new DependencyLibraryImpl();
 
-        logger.info("Constructing module representation..");
+        LOGGER.info("Constructing module representation..");
         ModuleContainerSpec moduleContainer = context.workspaceScript.getModuleContainer();
         List<Path> includes = moduleContainer.getIncludes().stream()
                 .flatMap(e -> expandInclude(context.projectDir, e))
@@ -199,12 +184,12 @@ public class WorkspaceTool {
             context.modules.addAll(ModuleImpl.makeGradleModules(group, model.getProjectData(), context));
         }
 
-        logger.info("Constructing Framework modules..");
+        LOGGER.info("Constructing Framework modules..");
         FrameworkHandler<?> frameworkHandler = context.frameworkRegistry.getFrameworkHandler(context.workspaceScript.getFrameworkClass(), context);
         ModdingFramework framework = context.workspaceScript.getFramework();
         frameworkHandler.constructFrameworkModules(unsafeCast(framework));
 
-        logger.info("Processing modules..");
+        LOGGER.info("Processing modules..");
 
         Iterable<Module> allModules = context.getAllModules();
         //Attempt to build a ScalaSdkDependency from the modules 'main' SourceSet.
@@ -233,7 +218,7 @@ public class WorkspaceTool {
                         .orElseThrow(() -> new RuntimeException("Unknown scala version: " + sdkCandidate.getVersion()));
                 sdkCandidate.setScalaVersion(scalaVersion);
                 config.addDependency(sdkCandidate);
-                //Attempt to nuke. boom.exe
+                //Attempt to nuke.
                 config.streamAll().forEach(e -> sdkCandidate.getClasspath().forEach(e.getDependencies()::remove));
             }
         });
@@ -262,10 +247,11 @@ public class WorkspaceTool {
                             .forEach(config -> {
                                 config.setDependencies(config.getDependencies().stream()
                                         .map(e -> {
-                                            if (e instanceof MavenDependency) {
-                                                return dependencyAggregator.resolve(((MavenDependency) e).getNotation());
-                                            } else if (e instanceof ScalaSdkDependency) {
-                                                return dependencyAggregator.resolveScala(((ScalaSdkDependency) e).getScalaVersion());
+                                            if (e instanceof MavenDependency dep) {
+                                                return dependencyAggregator.resolve(dep.getNotation());
+                                            }
+                                            if (e instanceof ScalaSdkDependency dep) {
+                                                return dependencyAggregator.resolveScala(dep.getScalaVersion());
                                             }
                                             return e;
                                         })
@@ -310,18 +296,9 @@ public class WorkspaceTool {
 
         ProcessWorkspaceModulesEvent.REGISTRY.fireEvent(new ProcessWorkspaceModulesEvent(context));
 
-        logger.info("Writing workspace..");
+        LOGGER.info("Writing workspace..");
         WorkspaceWriter<?> workspaceWriter = context.workspaceRegistry.getWorkspaceWriter(context.workspaceScript.getWorkspaceType(), context);
         workspaceWriter.write(unsafeCast(context.workspaceScript.getWorkspace()));
-
-        //        logger.info("Constructed {} modules.", context.modules.size());
-        //        context.modules.sort(Comparator.comparing(Module::getGroup).thenComparing(Module::getName));
-        //        List<List<String>> rows = new ArrayList<>();
-        //        rows.add(Arrays.asList("Group:", "Name:", "Path:"));
-        //        for (Module module : context.modules) {
-        //            rows.add(Arrays.asList(module.getGroup(), module.getName(), module.getPath().toString()));
-        //        }
-        //        ColFormatter.format(rows).forEach(e -> logger.info(" " + e));
     }
 
     private static Stream<Path> expandInclude(Path base, String include) {
@@ -348,8 +325,7 @@ public class WorkspaceTool {
         return Stream.of(base.resolve(include));
     }
 
-    private AbstractWorkspaceScript runScript(Binding binding, Path scriptFile, boolean firstPass) throws IOException {
-        binding.setProperty("firstPass", firstPass);
+    private AbstractWorkspaceScript runScript(Binding binding, Path scriptFile) throws IOException {
         CompilerConfiguration configuration = new CompilerConfiguration();
         configuration.setScriptBaseClass(AbstractWorkspaceScript.class.getName());
         configuration.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, true);
@@ -365,9 +341,9 @@ public class WorkspaceTool {
         configuration.addCompilationCustomizers(importCustomizer);
         PrepareScriptEvent.REGISTRY.fireEvent(new PrepareScriptEvent(binding, scriptFile, configuration));
         GroovyShell shell = new GroovyShell(binding, configuration);
-        logger.info("Compiling script..");
+        LOGGER.info("Compiling script..");
         AbstractWorkspaceScript script = (AbstractWorkspaceScript) shell.parse(scriptFile.toFile());
-        logger.info("Executing script..");
+        LOGGER.info("Executing script..");
         script.run();
         return script;
     }
@@ -393,8 +369,7 @@ public class WorkspaceTool {
     private void onProcessDependency(ProcessDependencyEvent event) {
         Module module = event.getModule();
         Dependency dependency = event.getDependency();
-        if (dependency instanceof MavenDependency) {
-            MavenDependency mavenDep = (MavenDependency) dependency;
+        if (dependency instanceof MavenDependency mavenDep) {
             MavenNotation notation = mavenDep.getNotation();
             Optional<Module> matchingModule = event.getContext().modules.parallelStream()
                     .filter(e -> e instanceof GradleBackedModule)

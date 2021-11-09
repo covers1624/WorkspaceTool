@@ -23,7 +23,7 @@ import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
 public class FrameworkRegistryImpl implements FrameworkRegistry {
 
     private final Map<Class<? extends ModdingFramework>, Supplier<? extends ModdingFramework>> scriptImpls = new HashMap<>();
-    private final Map<Class<? extends ModdingFramework>, Function<WorkspaceToolContext, ? extends FrameworkHandler>> handlerImpls = new HashMap<>();
+    private final Map<Class<? extends ModdingFramework>, Function<WorkspaceToolContext, ? extends FrameworkHandler<?>>> handlerImpls = new HashMap<>();
 
     @Override
     public <T extends ModdingFramework> void registerScriptImpl(Class<T> apiClass, Supplier<T> factory) {
@@ -31,13 +31,12 @@ public class FrameworkRegistryImpl implements FrameworkRegistry {
     }
 
     @Override
-    @SuppressWarnings ("unchecked")
     public <T extends ModdingFramework> T constructScriptImpl(Class<T> clazz) {
-        Supplier<T> factory = (Supplier<T>) scriptImpls.get(clazz);
+        Supplier<?> factory = scriptImpls.get(clazz);
         if (factory == null) {
             throw new IllegalArgumentException("No factory registered for type: " + clazz);
         }
-        return factory.get();
+        return unsafeCast(factory.get());
     }
 
     @Override
@@ -47,7 +46,7 @@ public class FrameworkRegistryImpl implements FrameworkRegistry {
 
     @Override
     public <T extends ModdingFramework> FrameworkHandler<T> getFrameworkHandler(Class<T> apiClazz, WorkspaceToolContext context) {
-        Function<WorkspaceToolContext, ? extends FrameworkHandler> frameworkHandler = handlerImpls.get(apiClazz);
+        Function<WorkspaceToolContext, ? extends FrameworkHandler<?>> frameworkHandler = handlerImpls.get(apiClazz);
         if (frameworkHandler == null) {
             throw new IllegalArgumentException("No handler registered for type: " + apiClazz);
         }
