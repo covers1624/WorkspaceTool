@@ -61,6 +61,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.StreamSupport.stream;
@@ -182,31 +183,19 @@ public class WorkspaceTool {
         context.dependencyLibrary = new DependencyLibraryImpl();
 
         logger.info("Constructing module representation..");
-        List<Path> candidates = Files.walk(context.projectDir)
-                .parallel()
-                .filter(p -> {
-                    if (Files.isDirectory(p) && !p.toString().endsWith("buildSrc")) {
-                        Path buildGradle = p.resolve("build.gradle");
-                        return Files.isRegularFile(buildGradle) && Files.exists(buildGradle);
-                    }
-                    return false;
-                })
-                .collect(Collectors.toList());
-
         ModuleContainerSpec moduleContainer = context.workspaceScript.getModuleContainer();
-        if (!moduleContainer.getIncludes().isEmpty()) {
-            // TODO, we should instead only support individual folders, or /** to search the folder.
-            Predicate<Path> matcher = moduleContainer.createMatcher();
-            for (Path candidate : candidates) {
-                Path rel = context.projectDir.relativize(candidate);
-                if (matcher.test(rel)) {
-                    // TODO, split on last slash.
-                    String group = rel.toString().replace("\\", "/").replace(candidate.getFileName().toString(), "")
-                            .replaceAll("//", "");
-                    WorkspaceToolModel model = context.modelCache.getModel(candidate, emptySet(), emptySet());
-                    context.modules.addAll(ModuleImpl.makeGradleModules(group, model.getProjectData(), context));
-                }
-            }
+        List<Path> includes = moduleContainer.getIncludes().stream()
+                .flatMap(e -> expandInclude(context.projectDir, e))
+                .filter(e -> !e.getFileName().toString().equals("buildSrc"))
+                .filter(e -> Files.exists(e.resolve("build.gradle")))
+                .collect(Collectors.toList());
+        for (Path candidate : includes) {
+            Path rel = context.projectDir.relativize(candidate);
+            // TODO, split on last slash.
+            String group = rel.toString().replace("\\", "/").replace(candidate.getFileName().toString(), "")
+                    .replaceAll("//", "");
+            WorkspaceToolModel model = context.modelCache.getModel(candidate, emptySet(), emptySet());
+            context.modules.addAll(ModuleImpl.makeGradleModules(group, model.getProjectData(), context));
         }
 
         logger.info("Constructing Framework modules..");
@@ -332,6 +321,30 @@ public class WorkspaceTool {
         //            rows.add(Arrays.asList(module.getGroup(), module.getName(), module.getPath().toString()));
         //        }
         //        ColFormatter.format(rows).forEach(e -> logger.info(" " + e));
+    }
+
+    private static Stream<Path> expandInclude(Path base, String include) {
+        if (include.startsWith("/")) {
+            throw new IllegalArgumentException("Include must not start with a slash. ' " + include + "'");
+        }
+        if (include.endsWith("**")) {
+            include = include.substring(0, include.length() - 2);
+            int lastSlash = include.lastIndexOf("/");
+            String prefix;
+            Path expandFolder;
+            // We have a 'Some**' include
+            if (lastSlash == -1) {
+                prefix = include;
+                expandFolder = base;
+            } else {
+                String preSlash = include.substring(0, lastSlash);
+                prefix = include.substring(lastSlash + 1);
+                expandFolder = base.resolve(preSlash);
+            }
+            return SneakyUtils.sneaky(() -> Files.list(expandFolder))
+                    .filter(e -> prefix.isEmpty() || e.getFileName().toString().startsWith(prefix));
+        }
+        return Stream.of(base.resolve(include));
     }
 
     private AbstractWorkspaceScript runScript(Binding binding, Path scriptFile, boolean firstPass) throws IOException {

@@ -111,7 +111,7 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     @Override
     public void modules(Consumer<ModuleContainerSpec> consumer) {
         if (moduleContainer == null) {
-            moduleContainer = new ModuleContainerImpl(mixinInstantiator);
+            moduleContainer = new ModuleContainerImpl();
         }
         consumer.accept(moduleContainer);
     }

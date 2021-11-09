@@ -62,7 +62,6 @@ subprojects { subProject ->
             newLine false
 
             include 'net/covers1624/wt/**'
-            exclude 'net/covers1624/wt/util/pattern/**'
         }
 
         publications {
