@@ -30,7 +30,6 @@ import net.covers1624.wt.api.impl.mixin.DefaultMixinInstantiator;
 import net.covers1624.wt.api.impl.module.ModuleImpl;
 import net.covers1624.wt.api.impl.script.AbstractWorkspaceScript;
 import net.covers1624.wt.api.impl.script.FrameworkRegistryImpl;
-import net.covers1624.wt.api.impl.script.module.ModuleSpecImpl;
 import net.covers1624.wt.api.impl.script.runconfig.DefaultRunConfig;
 import net.covers1624.wt.api.impl.workspace.WorkspaceRegistryImpl;
 import net.covers1624.wt.api.module.Configuration;
@@ -40,7 +39,6 @@ import net.covers1624.wt.api.module.SourceSet;
 import net.covers1624.wt.api.script.ModdingFramework;
 import net.covers1624.wt.api.script.NullFramework;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
-import net.covers1624.wt.api.script.module.ModuleSpec;
 import net.covers1624.wt.api.script.runconfig.RunConfig;
 import net.covers1624.wt.api.workspace.WorkspaceHandler;
 import net.covers1624.wt.api.workspace.WorkspaceWriter;
@@ -145,7 +143,6 @@ public class WorkspaceTool {
 
         context.mixinInstantiator = new DefaultMixinInstantiator();
         context.mixinInstantiator.addMixinTarget(RunConfig.class, DefaultRunConfig.class);
-        context.mixinInstantiator.addMixinTarget(ModuleSpec.class, ModuleSpecImpl.class);
 
         // WT-Gradle module
         context.gradleManager.includeClassMarker("net.covers1624.wt.gradle.WorkspaceToolGradlePlugin");

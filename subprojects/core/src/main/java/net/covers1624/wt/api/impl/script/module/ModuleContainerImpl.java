@@ -7,12 +7,13 @@ package net.covers1624.wt.api.impl.script.module;
 
 import net.covers1624.wt.api.mixin.MixinInstantiator;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
-import net.covers1624.wt.api.script.module.ModuleSpec;
 import net.covers1624.wt.util.pattern.PatternMatcherFactory;
 
 import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,6 @@ public class ModuleContainerImpl implements ModuleContainerSpec {
 
     private final Set<String> includes = new HashSet<>();
     private final Set<String> excludes = new HashSet<>();
-    private final Map<String, ModuleSpec> customModules = new HashMap<>();
     private boolean caseSensitive;
 
     private final MixinInstantiator mixinInstantiator;
@@ -40,17 +40,6 @@ public class ModuleContainerImpl implements ModuleContainerSpec {
     @Override
     public void include(String... includes) {
         Collections.addAll(this.includes, includes);
-    }
-
-    @Override
-    public void include(String include, Consumer<ModuleSpec> consumer) {
-        include(include);
-        ModuleSpec spec = customModules.get(include);
-        if (spec == null) {
-            spec = mixinInstantiator.instantiate(ModuleSpec.class);
-            customModules.put(include, spec);
-        }
-        consumer.accept(spec);
     }
 
     @Override
@@ -71,11 +60,6 @@ public class ModuleContainerImpl implements ModuleContainerSpec {
     @Override
     public Set<String> getExcludes() {
         return Collections.unmodifiableSet(excludes);
-    }
-
-    @Override
-    public Map<String, ModuleSpec> getCustomModules() {
-        return customModules;
     }
 
     @Override

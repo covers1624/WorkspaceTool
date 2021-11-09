@@ -21,7 +21,6 @@ import net.covers1624.wt.api.module.Configuration;
 import net.covers1624.wt.api.module.GradleBackedModule;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.module.SourceSet;
-import net.covers1624.wt.api.script.module.ModuleSpec;
 import net.covers1624.wt.api.script.runconfig.RunConfig;
 import net.covers1624.wt.event.*;
 import net.covers1624.wt.forge.api.impl.*;
@@ -111,7 +110,6 @@ public class ForgeExtension implements Extension {
         if (event.getScript().getFrameworkClass() == Forge114.class || event.getScript().getFrameworkClass() == Forge117.class) {
             MixinInstantiator mixinInstantiator = event.getMixinInstantiator();
             mixinInstantiator.addMixinClass(RunConfig.class, Forge114RunConfig.class, Forge114RunConfigTemplate.class);
-            mixinInstantiator.addMixinClass(ModuleSpec.class, Forge114ModuleSpec.class, Forge114ModuleSpecTemplate.class);
         }
     }
 
