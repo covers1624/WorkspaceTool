@@ -3,7 +3,7 @@
 -allowaccessmodification
 -overloadaggressively
 
--keepattributes Signature, SourceFile, LineNumberTable
+-keepattributes Signature, SourceFile, LineNumberTable, *Annotation*
 
 # Ignore warnings about these missing files.
 -dontwarn javax.annotation.**
@@ -31,9 +31,8 @@
 }
 
 # Keep enum special members.
--keepclassmembers enum  * {
-    public static **[] values();
-    public static ** valueOf(java.lang.String);
+-keepclassmembers enum * {
+		*;
 }
 
 -keepnames class com.google.gson.annotations.SerializedName {
