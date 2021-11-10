@@ -11,14 +11,14 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -53,6 +53,7 @@ public class JavaUtils {
                     .directory(tempDir.toFile())
                     .command(
                             executable.normalize().toAbsolutePath().toString(),
+                            "-Dfile.encoding=UTF8",
                             "-cp",
                             ".",
                             "PropExtract"
@@ -67,17 +68,25 @@ public class JavaUtils {
                 throw new RuntimeException("Interrupted.", e);
             }
 
-            Properties properties = new Properties();
-            properties.load(new ByteArrayInputStream(os.toByteArray()));
+            Map<String, String> properties = new HashMap<>();
+            ByteArrayInputStream is = new ByteArrayInputStream(os.toByteArray());
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] split = line.split("=", 1);
+                    if (split.length != 2) continue;
+                    properties.put(split[0], split[1]);
+                }
+            }
 
             return new JavaInstall(
-                    Paths.get(requireNonNull(properties.getProperty("java.home"), "Missing 'java.home' property for vm: " + executable)),
-                    requireNonNull(properties.getProperty("java.vendor"), "Missing 'java.vendor' property for vm: " + executable),
-                    requireNonNull(properties.getProperty("java.vm.name"), "Missing 'java.name' property for vm: " + executable),
-                    requireNonNull(properties.getProperty("java.version"), "Missing 'java.version' property for vm: " + executable),
-                    requireNonNull(properties.getProperty("java.runtime.name"), "Missing 'java.runtime.name' property for vm: " + executable),
-                    requireNonNull(properties.getProperty("java.runtime.version"), "Missing 'java.runtime.version' property for vm: " + executable),
-                    requireNonNull(properties.getProperty("os.arch"), "Missing 'os.arch' property for vm: " + executable).contains("64")
+                    Paths.get(requireNonNull(properties.get("java.home"), "Missing 'java.home' property for vm: " + executable)),
+                    requireNonNull(properties.get("java.vendor"), "Missing 'java.vendor' property for vm: " + executable),
+                    requireNonNull(properties.get("java.vm.name"), "Missing 'java.name' property for vm: " + executable),
+                    requireNonNull(properties.get("java.version"), "Missing 'java.version' property for vm: " + executable),
+                    requireNonNull(properties.get("java.runtime.name"), "Missing 'java.runtime.name' property for vm: " + executable),
+                    requireNonNull(properties.get("java.runtime.version"), "Missing 'java.runtime.version' property for vm: " + executable),
+                    requireNonNull(properties.get("os.arch"), "Missing 'os.arch' property for vm: " + executable).contains("64")
             );
         } catch (IOException e) {
             if (JavaLocator.DEBUG) {
