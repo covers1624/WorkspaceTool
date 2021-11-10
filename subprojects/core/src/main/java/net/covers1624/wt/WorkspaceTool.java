@@ -45,7 +45,10 @@ import net.covers1624.wt.api.workspace.WorkspaceWriter;
 import net.covers1624.wt.event.*;
 import net.covers1624.wt.gradle.GradleManagerImpl;
 import net.covers1624.wt.gradle.GradleModelCacheImpl;
-import net.covers1624.wt.util.*;
+import net.covers1624.wt.util.DependencyAggregator;
+import net.covers1624.wt.util.OverallProgressTail;
+import net.covers1624.wt.util.ScalaVersion;
+import net.covers1624.wt.util.SimpleServiceLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
@@ -318,6 +321,9 @@ public class WorkspaceTool {
                 String preSlash = include.substring(0, lastSlash);
                 prefix = include.substring(lastSlash + 1);
                 expandFolder = base.resolve(preSlash);
+            }
+            if (Files.notExists(expandFolder)) {
+                return Stream.empty();
             }
             return SneakyUtils.sneaky(() -> Files.list(expandFolder))
                     .filter(e -> prefix.isEmpty() || e.getFileName().toString().startsWith(prefix));
