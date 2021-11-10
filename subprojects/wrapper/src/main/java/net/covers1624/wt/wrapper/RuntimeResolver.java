@@ -15,8 +15,6 @@ import net.covers1624.wt.java.StatusDownloadListener;
 import net.covers1624.wt.util.JsonUtils;
 import net.covers1624.wt.wrapper.json.RuntimeManifest;
 import net.covers1624.wt.wrapper.json.WrapperProperties;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.maven.artifact.repository.metadata.Metadata;
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader;
 import org.apache.maven.artifact.versioning.ComparableVersion;
@@ -48,11 +46,8 @@ import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 @SuppressWarnings ("UnstableApiUsage")
 public class RuntimeResolver {
 
-    //"file://${user.home}/.m2/repository/"
     private static final Logger LOGGER = LoggerFactory.getLogger(RuntimeResolver.class);
     private static final MetadataXpp3Reader METADATA_READER = new MetadataXpp3Reader();
-
-    private static final CloseableHttpClient client = HttpClientBuilder.create().build();
 
     private final Path cacheDir;
     private final String mirror;
