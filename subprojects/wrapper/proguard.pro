@@ -7,9 +7,7 @@
 
 # Ignore warnings about these missing files.
 -dontwarn javax.annotation.**
--dontwarn javax.inject.**
 -dontwarn com.google.**
--dontwarn org.eclipse.**
 -dontwarn org.apache.**
 -dontwarn net.covers1624.tconsole.**
 -dontwarn net.covers1624.quack.**

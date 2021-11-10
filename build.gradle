@@ -1,4 +1,7 @@
+import groovy.json.JsonOutput
 import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner
+
+import java.nio.file.Files
 
 buildscript {
     repositories() {
@@ -23,6 +26,15 @@ version '0.4.0'
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of WorkspaceTool, Version: ${version}"
 
+def repos = {
+    mavenLocal()
+    jcenter()
+    mavenCentral()
+    maven { url 'https://maven.covers1624.net/' }
+    maven { url 'https://files.minecraftforge.net/maven/' }
+    maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
+}
+
 subprojects { subProject ->
     apply plugin: 'java'
     apply plugin: 'java-library'
@@ -33,12 +45,7 @@ subprojects { subProject ->
     version rootProject.version
 
     repositories {
-        mavenLocal()
-        jcenter()
-        mavenCentral()
-        maven { url 'https://maven.covers1624.net/' }
-        maven { url 'https://files.minecraftforge.net/maven/' }
-        maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
+        with repos
     }
 
     publishing {
@@ -97,6 +104,58 @@ subprojects { subProject ->
                 }
             }
         }
+    }
+}
+
+repositories {
+    with repos
+}
+
+configurations {
+    packing
+}
+
+dependencies {
+    packing project(':core')
+}
+
+tasks.register('genVersionManifest') {
+    ext {
+        output = file("build/libs/manifest-${version}.json")
+    }
+    inputs.property('packing', configurations.packing)
+    outputs.file output
+
+    doLast {
+        def dependencies = [:]
+        def manifest = [
+                'main_class'  : 'net.covers1624.wt.WorkspaceTool',
+                'java_version': 'JAVA_16',
+                'dependencies': dependencies
+        ]
+        long totalSize
+        configurations.packing.resolvedConfiguration.resolvedArtifacts.each {
+            def id = it.moduleVersion.id
+            def classifier = it.classifier ? ":" + it.classifier : ""
+            def coords = "${id.group}:${it.name}:${id.version}${classifier}"
+
+            def sha256 = Files.readAllBytes(it.file.toPath()).sha256()
+            def len = it.file.length()
+            totalSize += len
+            dependencies[coords] = [
+                    "sha256": sha256,
+                    "size"  : len
+            ]
+        }
+        def json = JsonOutput.prettyPrint(JsonOutput.toJson(manifest))
+        Files.write(output.toPath(), json.getBytes("UTF-8"))
+//        logger.lifecycle("Total Size: ${(int) (totalSize / 1024)}kb")
+    }
+}
+
+task clean {
+    doLast {
+        delete(tasks.genVersionManifest.output)
     }
 }
 

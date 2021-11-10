@@ -7,7 +7,9 @@ package net.covers1624.wt.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.covers1624.quack.gson.MavenNotationAdapter;
 import net.covers1624.quack.gson.PathTypeAdapter;
+import net.covers1624.quack.maven.MavenNotation;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -21,7 +23,7 @@ import java.nio.file.Path;
 public class JsonUtils {
 
     public static Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(Path.class, new PathTypeAdapter())
+            .registerTypeAdapter(MavenNotation.class, new MavenNotationAdapter())
             .setPrettyPrinting()
             .create();
 

@@ -13,16 +13,11 @@ dependencies {
     implementation 'org.apache.commons:commons-compress:1.21'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
     implementation 'net.covers1624:Quack:0.4.0.31'
+    implementation 'com.google.guava:guava:31.0.1-jre'
 
-    implementation 'org.apache.maven.resolver:maven-resolver-api:1.7.2'
-    implementation 'org.apache.maven.resolver:maven-resolver-spi:1.7.2'
-    implementation 'org.apache.maven.resolver:maven-resolver-impl:1.7.2'
-    implementation 'org.apache.maven.resolver:maven-resolver-util:1.7.2'
-    implementation 'org.apache.maven.resolver:maven-resolver-connector-basic:1.7.2'
-    implementation 'org.apache.maven.resolver:maven-resolver-transport-http:1.7.2'
-    implementation 'org.apache.maven.resolver:maven-resolver-transport-file:1.7.2'
-    implementation 'org.apache.maven:maven-model-builder:3.8.1'
-    implementation 'org.apache.maven:maven-resolver-provider:3.8.1'
+    implementation 'org.apache.maven:maven-artifact:3.8.1'
+    implementation 'org.apache.maven:maven-repository-metadata:3.8.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 
     implementation project(':jdk-utils')
 
@@ -65,14 +60,12 @@ task shrink(type: proguard.gradle.ProGuardTask, dependsOn: shadowJar) {
         libraryjars "${javaHome}/lib/rt.jar"
     } else {
         libraryjars "${javaHome}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-        libraryjars "${javaHome}/jmods/java.desktop.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-        libraryjars "${javaHome}/jmods/java.logging.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
-        libraryjars "${javaHome}/jmods/jdk.unsupported.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+        libraryjars "${javaHome}/jmods/java.sql.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
     }
 
     configuration config
     doLast {
-        logger.lifecycle("PG Shrunk to: ${outputJar.length() / 1024}kb from: ${inputJar.length() / 1024}kb")
+        logger.lifecycle("PG Shrunk to: ${(int) (outputJar.length() / 1024)}kb from: ${(int) (inputJar.length() / 1024)}kb")
     }
 }
 

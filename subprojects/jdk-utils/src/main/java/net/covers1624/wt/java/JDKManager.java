@@ -8,14 +8,12 @@ package net.covers1624.wt.java;
 import com.google.gson.reflect.TypeToken;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.quack.net.download.DownloadAction;
-import net.covers1624.quack.net.download.DownloadListener;
 import net.covers1624.wt.util.JsonUtils;
 import net.rubygrapefruit.platform.internal.Platform;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -203,42 +201,4 @@ public class JDKManager {
         }
     }
 
-    private static class StatusDownloadListener implements DownloadListener {
-
-        int lastLen = 0;
-        private long expected;
-
-        @Override
-        public void connecting() {
-            System.out.print("Connecting..");
-        }
-
-        @Override
-        public void start(long expectedLen) {
-            expected = expectedLen;
-        }
-
-        @Override
-        public void update(long processedBytes) {
-            String line = "Downloading... (" + getStatus(processedBytes, expected) + ")";
-            lastLen = line.length();
-            System.out.print("\r" + line);
-        }
-
-        @Override
-        public void finish(long totalProcessed) {
-            System.out.print("\r" + StringUtils.repeat(' ', lastLen) + "\r");
-        }
-
-        private String getStatus(long complete, long total) {
-            if (total >= 1024) return toKB(complete) + "/" + toKB(total) + " KB";
-            if (total >= 0) return complete + "/" + total + " B";
-            if (complete >= 1024) return toKB(complete) + " KB";
-            return complete + " B";
-        }
-
-        protected long toKB(long bytes) {
-            return (bytes + 1023) / 1024;
-        }
-    }
 }

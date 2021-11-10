@@ -5,14 +5,13 @@
  */
 package net.covers1624.wt.wrapper;
 
-import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.java.JDKManager;
 import net.covers1624.wt.java.JavaInstall;
 import net.covers1624.wt.java.JavaUtils;
+import net.covers1624.wt.java.JavaVersion;
 import net.covers1624.wt.util.JsonUtils;
 import net.covers1624.wt.wrapper.json.JDKProperties;
 import net.covers1624.wt.wrapper.json.WrapperProperties;
-import net.covers1624.wt.wrapper.maven.MavenResolver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
@@ -44,7 +43,9 @@ public class Main {
         Files.createDirectories(Paths.get("./.workspace_tool"));
         LOGGER.info("Preparing WorkspaceTool..");
         Path workspacePropsFile = Paths.get(".workspace_tool/properties.json");
-        WrapperProperties workspaceProps = WrapperProperties.compute(workspacePropsFile);
+        WrapperProperties workspaceProps = WrapperProperties.load(workspacePropsFile);
+        RuntimeResolver resolver = new RuntimeResolver(SYSTEM_WT_FOLDER.resolve("libraries"), workspaceProps);
+        RuntimeResolver.RuntimeEnvironment environment = resolver.resolve();
 
         Path jdkPropsFile = Paths.get(".workspace_tool/jdk.json");
         JDKProperties jdkProps;
@@ -53,40 +54,39 @@ public class Main {
         } else {
             jdkProps = new JDKProperties();
         }
-        if (jdkProps.selected == null || Files.notExists(jdkProps.selected)) {
-            jdkProps.selected = computeJDK(workspaceProps);
+        Path selected = jdkProps.selected != null ? Paths.get(jdkProps.selected) : null;
+        if (selected == null || Files.notExists(selected)) {
+            selected = computeJDK(environment.javaVersion);
+            jdkProps.selected = selected.toString();
             JsonUtils.write(jdkPropsFile, jdkProps);
         }
-
-        MavenResolver resolver = new MavenResolver(SYSTEM_WT_FOLDER.resolve("local_repo"), workspaceProps.repos);
-        List<Path> deps = resolver.resolve(MavenNotation.parse(workspaceProps.artifact));
 
         System.out.println();
         System.out.println();
         ProcessBuilder builder = new ProcessBuilder()
                 .inheritIO()
                 .command(
-                        JavaUtils.getJavaExecutable(jdkProps.selected).toAbsolutePath().toString(),
+                        JavaUtils.getJavaExecutable(selected).toAbsolutePath().toString(),
                         "-cp",
-                        deps.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)),
-                        workspaceProps.mainClass
+                        environment.dependencies.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)),
+                        environment.mainClass
                 );
 
         Process process = builder.start();
         process.waitFor();
     }
 
-    private static Path computeJDK(WrapperProperties props) throws IOException {
+    private static Path computeJDK(JavaVersion requiredJava) throws IOException {
         LOGGER.info("WorkspaceTool has no configured JDK. Searching known java paths for JDK's...");
-        List<JavaInstall> javaInstalls = JavaUtils.locateExistingInstalls(props.requiredJava);
+        List<JavaInstall> javaInstalls = JavaUtils.locateExistingInstalls(requiredJava);
         if (javaInstalls.isEmpty()) {
             JDKManager jdkManager = new JDKManager(WT_JDKS);
-            Path jdkFind = jdkManager.findJDK(props.requiredJava);
+            Path jdkFind = jdkManager.findJDK(requiredJava);
             if (jdkFind != null) {
                 LOGGER.info("Selected JDK: {}", jdkFind);
                 return jdkFind;
             }
-            LOGGER.info("WorkspaceTool could not find any compatible {} JDKs installed.", props.requiredJava);
+            LOGGER.info("WorkspaceTool could not find any compatible {} JDKs installed.", requiredJava);
             LOGGER.info(" WorkspaceTool can download a compatible Java JDK from https://adoptium.net");
             LOGGER.info(" Alternatively, you can install a compatible java JDK for your system, and re-run the tool.");
             System.out.print("Would you like to continue with downloading a compatible JDK (y/N)? ");
@@ -103,7 +103,7 @@ public class Main {
                 return null;
             }
             LOGGER.info("Finding compatible JDK on https://adoptium.net");
-            Path javaHome = jdkManager.installJdk(props.requiredJava);
+            Path javaHome = jdkManager.installJdk(requiredJava);
             LOGGER.info("Selected JDK: {}", javaHome);
             return javaHome;
         }
