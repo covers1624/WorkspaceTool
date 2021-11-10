@@ -19,14 +19,14 @@
 -keepnames class net.rubygrapefruit.**
 -keepnames class org.apache.maven.model.**
 -keepnames class org.apache.logging.**
+-keepnames class org.apache.commons.logging.**
 
 # Keep all wrapper classes.
 -keep class net.covers1624.wt.** {
 	public protected *;
 }
 
-# Breaks maven resolution if these classes are stripped.
--keep class org.apache.maven.model.** {
+-keep class org.apache.commons.logging.** {
 	public protected private *;
 }
 
