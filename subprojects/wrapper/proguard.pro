@@ -36,6 +36,11 @@
     public static ** valueOf(java.lang.String);
 }
 
+-keepnames class com.google.gson.annotations.SerializedName {
+	<fields>;
+	<methods>;
+}
+
 # Keep Natives.
 -keepclasseswithmembers,allowshrinking class * {
     native <methods>;
