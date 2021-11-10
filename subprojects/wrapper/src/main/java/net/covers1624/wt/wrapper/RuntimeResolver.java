@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -177,7 +178,7 @@ public class RuntimeResolver {
 
     private static void downloadFile(String url, Path file) throws IOException {
         if (url.startsWith("file://")) {
-            Path urlFile = Paths.get(url.substring(7));
+            Path urlFile = Paths.get(URI.create(url));
             if (Files.notExists(urlFile)) {
                 throw new FileNotFoundException(url);
             }
