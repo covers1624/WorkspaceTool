@@ -73,7 +73,7 @@ public class JavaUtils {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    String[] split = line.split("=", 1);
+                    String[] split = line.split("=", 2);
                     if (split.length != 2) continue;
                     properties.put(split[0], split[1]);
                 }
