@@ -89,8 +89,8 @@ dependencies {
     common 'it.unimi.dsi:fastutil:7.1.0'
     common 'org.eclipse.jgit:org.eclipse.jgit:5.2.1.201812262042-r'
     common 'net.rubygrapefruit:native-platform:0.18'
-    common 'org.fusesource.jansi:jansi:1.18'
-    common 'org.jline:jline-terminal-jna:3.12.1'
+    common 'org.fusesource.jansi:jansi:2.4.0'
+    common 'org.jline:jline-terminal-jna:3.20.0'
     common 'org.apache.httpcomponents:httpclient:4.5.7'
     common 'commons-io:commons-io:2.6'
     common 'com.electronwill.night-config:core:3.6.0'
@@ -100,8 +100,8 @@ dependencies {
     common "org.apache.commons:commons-compress:1.8.1"
     common 'org.apache.commons:commons-collections4:4.3'
     common 'codechicken:ChickenASM:2.0.0.+'
-    common 'net.covers1624:TailConsole:1.1.0.4'
-    common 'net.covers1624:Quack:0.2.0.9'
+    common 'net.covers1624:TailConsole:1.2.0.6'
+    common 'net.covers1624:Quack:0.4.0.31'
     commonCompileOnly 'org.jetbrains:annotations:16.0.2'
 
     //mavenResolver
