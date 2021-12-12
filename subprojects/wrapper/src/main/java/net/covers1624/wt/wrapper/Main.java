@@ -5,11 +5,10 @@
  */
 package net.covers1624.wt.wrapper;
 
-import net.covers1624.wt.java.JDKManager;
-import net.covers1624.wt.java.JavaInstall;
-import net.covers1624.wt.java.JavaUtils;
-import net.covers1624.wt.java.JavaVersion;
-import net.covers1624.wt.util.JsonUtils;
+import com.google.gson.Gson;
+import net.covers1624.jdkutils.*;
+import net.covers1624.quack.gson.JsonUtils;
+import net.covers1624.quack.net.apache.ApacheHttpClientDownloadAction;
 import net.covers1624.wt.wrapper.json.JDKProperties;
 import net.covers1624.wt.wrapper.json.WrapperProperties;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +30,7 @@ import java.util.stream.Collectors;
 public class Main {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Wrapper");
+    private static final Gson GSON = new Gson();
 
     public static final Path SYSTEM_WT_FOLDER = Paths.get(System.getProperty("user.home"), ".workspace_tool")
             .normalize().toAbsolutePath();
@@ -50,7 +50,7 @@ public class Main {
         Path jdkPropsFile = Paths.get(".workspace_tool/jdk.json");
         JDKProperties jdkProps;
         if (Files.exists(jdkPropsFile)) {
-            jdkProps = JsonUtils.parse(jdkPropsFile, JDKProperties.class);
+            jdkProps = JsonUtils.parse(GSON, jdkPropsFile, JDKProperties.class);
         } else {
             jdkProps = new JDKProperties();
         }
@@ -58,7 +58,7 @@ public class Main {
         if (selected == null || Files.notExists(selected)) {
             selected = computeJDK(environment.javaVersion);
             jdkProps.selected = selected.toString();
-            JsonUtils.write(jdkPropsFile, jdkProps);
+            JsonUtils.write(GSON, jdkPropsFile, jdkProps);
         }
 
         System.out.println();
@@ -66,7 +66,7 @@ public class Main {
         ProcessBuilder builder = new ProcessBuilder()
                 .inheritIO()
                 .command(
-                        JavaUtils.getJavaExecutable(selected).toAbsolutePath().toString(),
+                        JavaInstall.getJavaExecutable(selected, false).toAbsolutePath().toString(),
                         "-cp",
                         environment.dependencies.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)),
                         environment.mainClass
@@ -78,14 +78,22 @@ public class Main {
 
     private static Path computeJDK(JavaVersion requiredJava) throws IOException {
         LOGGER.info("WorkspaceTool has no configured JDK. Searching known java paths for JDK's...");
-        List<JavaInstall> javaInstalls = JavaUtils.locateExistingInstalls(requiredJava);
+        JdkInstallationManager jdkManager = new JdkInstallationManager(WT_JDKS, new AdoptiumProvisioner(ApacheHttpClientDownloadAction::new), false);
+        Path jdkFind = jdkManager.findJdk(requiredJava);
+        if (jdkFind != null) {
+            LOGGER.info("Selected existing JDK: {}", jdkFind);
+            return jdkFind;
+        }
+
+        JavaLocator locator = JavaLocator.builder()
+                .filter(requiredJava)
+                .findGradleJdks()
+                .findIntellijJdks()
+                .ignoreOpenJ9()
+                .build();
+
+        List<JavaInstall> javaInstalls = locator.findJavaVersions();
         if (javaInstalls.isEmpty()) {
-            JDKManager jdkManager = new JDKManager(WT_JDKS);
-            Path jdkFind = jdkManager.findJDK(requiredJava);
-            if (jdkFind != null) {
-                LOGGER.info("Selected JDK: {}", jdkFind);
-                return jdkFind;
-            }
             LOGGER.info("WorkspaceTool could not find any compatible {} JDKs installed.", requiredJava);
             LOGGER.info(" WorkspaceTool can download a compatible Java JDK from https://adoptium.net");
             LOGGER.info(" Alternatively, you can install a compatible java JDK for your system, and re-run the tool.");
@@ -103,7 +111,7 @@ public class Main {
                 return null;
             }
             LOGGER.info("Finding compatible JDK on https://adoptium.net");
-            Path javaHome = jdkManager.installJdk(requiredJava);
+            Path javaHome = jdkManager.provisionJdk(requiredJava);
             LOGGER.info("Selected JDK: {}", javaHome);
             return javaHome;
         }
@@ -124,9 +132,15 @@ public class Main {
                             + " " + javaInstall.implVersion
             );
         }
-        System.out.print("Please select. [0-" + (javaInstalls.size() - 1) + "]: ");
+        System.out.println("d) To reject all these JDK's and download one from https://adoptium.net");
+        System.out.print("Please select. [0-" + (javaInstalls.size() - 1) + "/d]: ");
         Scanner scanner = new Scanner(System.in);
         String next = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
+        if (next.equals("d")) {
+            Path javaHome = jdkManager.provisionJdk(requiredJava);
+            LOGGER.info("Selected JDK: {}", javaHome);
+            return javaHome;
+        }
         if (!NumberUtils.isDigits(next)) {
             LOGGER.error("'{}' is not a number. Aborting..", next);
             System.exit(1);

@@ -7,12 +7,12 @@ package net.covers1624.wt.wrapper;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import com.google.gson.Gson;
+import net.covers1624.jdkutils.JavaVersion;
+import net.covers1624.quack.gson.JsonUtils;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.quack.net.download.DownloadAction;
 import net.covers1624.quack.util.HashUtils;
-import net.covers1624.wt.java.JavaVersion;
-import net.covers1624.wt.java.StatusDownloadListener;
-import net.covers1624.wt.util.JsonUtils;
 import net.covers1624.wt.wrapper.json.RuntimeManifest;
 import net.covers1624.wt.wrapper.json.WrapperProperties;
 import org.apache.maven.artifact.repository.metadata.Metadata;
@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 
 /**
@@ -47,6 +48,7 @@ import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 public class RuntimeResolver {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RuntimeResolver.class);
+    private static final Gson GSON = new Gson();
     private static final MetadataXpp3Reader METADATA_READER = new MetadataXpp3Reader();
 
     private final Path cacheDir;
@@ -56,11 +58,11 @@ public class RuntimeResolver {
 
     public RuntimeResolver(Path cacheDir, WrapperProperties properties) {
         this.cacheDir = cacheDir;
-        mirror = properties.mirror;
-        artifact = properties.artifact;
+        mirror = requireNonNull(properties.mirror);
+        artifact = requireNonNull(properties.artifact);
     }
 
-    public RuntimeEnvironment resolve() {
+    public RuntimeEnvironment resolve() throws IOException {
         ComparableVersion resolved = getVersion(artifact);
         if (resolved == null) {
             LOGGER.error("Unable to find version {}.", artifact);
@@ -71,9 +73,9 @@ public class RuntimeResolver {
         MavenNotation notation = artifact.withVersion(resolved.toString())
                 .withExtension("json");
         Path manifestPath = downloadFile(repos, cacheDir, notation, null, -1, true);
-        RuntimeManifest manifest = JsonUtils.parse(manifestPath, RuntimeManifest.class);
-        List<Path> dependencies = manifest.dependencies.entrySet().stream()
-                .map(e -> downloadFile(repos, cacheDir, e.getKey(), HashCode.fromString(e.getValue().sha256), e.getValue().size, true))
+        RuntimeManifest manifest = JsonUtils.parse(GSON, manifestPath, RuntimeManifest.class);
+        List<Path> dependencies = manifest.dependencies.stream()
+                .map(e -> downloadFile(repos, cacheDir, e.artifact, HashCode.fromString(e.sha256), e.size, true))
                 .collect(Collectors.toList());
 
         return new RuntimeEnvironment(manifest.mainClass, manifest.javaVersion, dependencies);

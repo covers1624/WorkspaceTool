@@ -13,6 +13,7 @@
 -dontwarn net.covers1624.quack.**
 -dontwarn org.fusesource.jansi.**
 -dontwarn org.gradle.**
+-dontwarn org.objectweb.**
 
 # Don't obfuscate the following packages.
 -keepnames class net.covers1624.wt.**
@@ -35,7 +36,7 @@
 		*;
 }
 
--keepnames class com.google.gson.annotations.SerializedName {
+-keepnames class com.google.gson.annotations.** {
 	<fields>;
 	<methods>;
 }

@@ -7,7 +7,6 @@ include 'forge'
 include 'forge-gradle'
 include 'gradle'
 include 'intellij'
-include 'jdk-utils'
 include 'minecraft'
 include 'wrapper'
 

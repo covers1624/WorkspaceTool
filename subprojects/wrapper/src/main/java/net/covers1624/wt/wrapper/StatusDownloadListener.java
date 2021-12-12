@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2018-2021 covers1624 <https://github.com/covers1624>
  */
-package net.covers1624.wt.java;
+package net.covers1624.wt.wrapper;
 
 import net.covers1624.quack.net.download.DownloadListener;
 import org.apache.commons.lang3.StringUtils;

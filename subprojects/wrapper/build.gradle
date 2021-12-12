@@ -5,21 +5,20 @@ plugins {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
-archivesBaseName = 'wrapper'
+archivesBaseName = 'wt-wrapper'
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.apache.commons:commons-compress:1.21'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
-    implementation 'net.covers1624:Quack:0.4.0.31'
+    implementation 'net.covers1624:Quack:0.4.0.42'
+    implementation 'net.covers1624:JdkUtils:0.1.2'
     implementation 'com.google.guava:guava:31.0.1-jre'
 
     implementation 'org.apache.maven:maven-artifact:3.8.1'
     implementation 'org.apache.maven:maven-repository-metadata:3.8.1'
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
-
-    implementation project(':jdk-utils')
 
     implementation 'org.jetbrains:annotations:22.0.0'
     implementation 'com.google.code.findbugs:jsr305:3.0.2'

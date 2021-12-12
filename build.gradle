@@ -127,7 +127,7 @@ tasks.register('genVersionManifest') {
     outputs.file output
 
     doLast {
-        def dependencies = [:]
+        def dependencies = []
         def manifest = [
                 'main_class'  : 'net.covers1624.wt.WorkspaceTool',
                 'java_version': 'JAVA_16',
@@ -142,10 +142,11 @@ tasks.register('genVersionManifest') {
             def sha256 = Files.readAllBytes(it.file.toPath()).sha256()
             def len = it.file.length()
             totalSize += len
-            dependencies[coords] = [
-                    "sha256": sha256,
-                    "size"  : len
-            ]
+            dependencies.add([
+                    "artifact": coords,
+                    "sha256"  : sha256,
+                    "size"    : len
+            ])
         }
         def json = JsonOutput.prettyPrint(JsonOutput.toJson(manifest))
         Files.write(output.toPath(), json.getBytes("UTF-8"))

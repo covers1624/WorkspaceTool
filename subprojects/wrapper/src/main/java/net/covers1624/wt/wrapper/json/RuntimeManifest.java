@@ -5,12 +5,14 @@
  */
 package net.covers1624.wt.wrapper.json;
 
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import net.covers1624.jdkutils.JavaVersion;
+import net.covers1624.quack.gson.MavenNotationAdapter;
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.wt.java.JavaVersion;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by covers1624 on 9/11/21.
@@ -23,10 +25,12 @@ public class RuntimeManifest {
     @SerializedName ("java_version")
     public JavaVersion javaVersion;
 
-    public Map<MavenNotation, Dependency> dependencies = new HashMap<>();
+    public List<Dependency> dependencies = new LinkedList<>();
 
     public static class Dependency {
 
+        @JsonAdapter (MavenNotationAdapter.class)
+        public MavenNotation artifact;
         public String sha256;
         public int size;
     }
