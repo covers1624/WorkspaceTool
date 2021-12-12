@@ -1,6 +1,6 @@
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
-archivesBaseName = 'wt-forge-gradle'
+archivesBaseName = 'forge-gradle'
 
 dependencies {
     api project(":api")

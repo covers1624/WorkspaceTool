@@ -1,6 +1,6 @@
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
-archivesBaseName = 'wt-api'
+archivesBaseName = 'api'
 
 dependencies {
     api 'net.covers1624:GradleStuff:3.0.1.10'

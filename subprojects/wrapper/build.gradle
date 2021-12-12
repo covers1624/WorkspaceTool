@@ -5,7 +5,7 @@ plugins {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
-archivesBaseName = 'wt-wrapper'
+archivesBaseName = 'wrapper'
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'

@@ -4,7 +4,7 @@ plugins {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
-archivesBaseName = 'wt-intellij'
+archivesBaseName = 'intellij'
 
 dependencies {
     api project(":common")

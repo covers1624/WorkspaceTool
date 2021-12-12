@@ -1,6 +1,6 @@
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
-archivesBaseName = 'wt-gradle'
+archivesBaseName = 'gradle'
 
 dependencies {
     api project(":api")

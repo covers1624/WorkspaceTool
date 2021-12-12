@@ -1,7 +1,7 @@
 import org.gradle.api.publish.maven.internal.artifact.SingleOutputTaskMavenArtifact
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
-archivesBaseName = 'wt-core'
+archivesBaseName = 'core'
 
 dependencies {
     api project(":common")
