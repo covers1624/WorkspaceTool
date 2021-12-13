@@ -5,25 +5,21 @@
  */
 package net.covers1624.wt.gradle;
 
+import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.quack.io.CopyingFileVisitor;
 import net.covers1624.wt.api.gradle.GradleManager;
 import net.covers1624.wt.util.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.model.build.BuildEnvironment;
 import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.BufferedReader;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -149,21 +145,54 @@ public class GradleManagerImpl implements Closeable, GradleManager {
 
     @Override
     public String getGradleVersionForProject(Path projectDir) {
-        try (ProjectConnection connection = GradleConnector.newConnector()
-                .forProjectDirectory(projectDir.toFile())
-                .connect()) {
-            BuildEnvironment environment = connection.getModel(BuildEnvironment.class);
-            GradleVersion installed = GradleVersion.version(environment.getGradle().getGradleVersion());
-            GradleVersion minVersion = GradleVersion.version(MIN_GRADLE_VERSION);
-
-            LOGGER.info("Detected Gradle version: {}", installed);
-            if (installed.compareTo(minVersion) >= 0) {
-                LOGGER.info("Using project gradle version.");
-                return installed.getVersion();
-            }
-            LOGGER.info("Forcing gradle {}.", minVersion.getVersion());
-            return minVersion.getVersion();
+        LOGGER.info("Attempting to extract Gradle wrapper version for project {}.", projectDir);
+        Path wrapperProperties = projectDir.resolve("gradle/wrapper/gradle-wrapper.properties");
+        if (Files.notExists(wrapperProperties)) {
+            LOGGER.info("Unable to find wrapper, Using {}.", MIN_GRADLE_VERSION);
+            return MIN_GRADLE_VERSION;
         }
+
+        Properties properties = new Properties();
+        try (InputStream is = Files.newInputStream(wrapperProperties)) {
+            properties.load(is);
+        } catch (IOException e) {
+            LOGGER.error("Failed to load wrapper properties..", e);
+            LOGGER.info("Using {}", MIN_GRADLE_VERSION);
+            return MIN_GRADLE_VERSION;
+        }
+
+        String distributionUrl = properties.getProperty("distributionUrl");
+        if (distributionUrl == null) {
+            LOGGER.info("Wrapper properties did not contain 'distributionUrl'. Using {}", MIN_GRADLE_VERSION);
+            return MIN_GRADLE_VERSION;
+        }
+
+        Matcher matcher = WRAPPER_URL_REGEX.matcher(distributionUrl);
+        if (!matcher.find()) {
+            LOGGER.info("Unable to regex the wrapper 'distributionUrl'. Using {}", MIN_GRADLE_VERSION);
+            return MIN_GRADLE_VERSION;
+        }
+
+        GradleVersion installed = GradleVersion.version(matcher.group(1));
+        GradleVersion minVersion = GradleVersion.version(MIN_GRADLE_VERSION);
+
+        LOGGER.info("Detected Gradle version: {}", installed);
+        if (installed.compareTo(minVersion) >= 0) {
+            LOGGER.info("Using project gradle version.");
+            return installed.getVersion();
+        }
+        LOGGER.info("Forcing gradle {}.", minVersion.getVersion());
+        return minVersion.getVersion();
+    }
+
+    @Override
+    public JavaVersion getJavaVersionForGradle(String gradleVersion) {
+        GradleVersion installed = GradleVersion.version(gradleVersion);
+        GradleVersion minVersion = GradleVersion.version(MIN_GRADLE_USE_J16);
+        if (installed.compareTo(minVersion) >= 0) {
+            return JavaVersion.JAVA_16;
+        }
+        return JavaVersion.JAVA_1_8;
     }
 
     @Nullable

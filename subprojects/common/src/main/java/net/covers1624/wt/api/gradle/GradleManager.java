@@ -5,10 +5,12 @@
  */
 package net.covers1624.wt.api.gradle;
 
+import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.wt.api.gradle.data.ExtraData;
 
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Core manager for Gradle integration. Allows adding things to Gradle's Classpath,
@@ -18,6 +20,9 @@ import java.util.Set;
  * Created by covers1624 on 17/6/19.
  */
 public interface GradleManager {
+
+    Pattern WRAPPER_URL_REGEX = Pattern.compile("gradle-(.*)(?>-bin|-all).zip$");
+    String MIN_GRADLE_USE_J16 = "7.0";
 
     String MIN_GRADLE_VERSION = "4.10.3";
 
@@ -89,4 +94,13 @@ public interface GradleManager {
      * @return The Gradle Version.
      */
     String getGradleVersionForProject(Path projectDir);
+
+    /**
+     * Returns the {@link JavaVersion} the specified Gradle version
+     * should run with.
+     *
+     * @param gradleVersion The Gradle version.`
+     * @return The Java version.
+     */
+    JavaVersion getJavaVersionForGradle(String gradleVersion);
 }

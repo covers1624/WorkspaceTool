@@ -8,8 +8,12 @@ package net.covers1624.wt;
 import com.google.common.collect.ImmutableMap;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import net.covers1624.jdkutils.AdoptiumProvisioner;
+import net.covers1624.jdkutils.JavaLocator;
+import net.covers1624.jdkutils.JdkInstallationManager;
 import net.covers1624.quack.logging.log4j2.Log4jUtils;
 import net.covers1624.quack.maven.MavenNotation;
+import net.covers1624.quack.net.apache.ApacheHttpClientDownloadAction;
 import net.covers1624.quack.util.SneakyUtils;
 import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.tconsole.log4j.TailConsoleAppender;
@@ -77,6 +81,10 @@ public class WorkspaceTool {
     public static final String VERSION = "dev";
     private static final Logger LOGGER = LogManager.getLogger("WorkspaceTool");
 
+    public static final Path SYSTEM_WT_FOLDER = Paths.get(System.getProperty("user.home"), ".workspace_tool")
+            .normalize().toAbsolutePath();
+    public static final Path WT_JDKS = SYSTEM_WT_FOLDER.resolve("jdks");
+
     private final List<Extension> extensions = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
@@ -122,6 +130,13 @@ public class WorkspaceTool {
         }
 
         LOGGER.info("Initializing internal systems..");
+        JavaLocator javaLocator = JavaLocator.builder()
+                .ignoreOpenJ9()
+                .findIntellijJdks()
+                .findGradleJdks()
+                .build();
+        context.javaInstalls = javaLocator.findJavaVersions();
+        context.jdkManager = new JdkInstallationManager(WT_JDKS, new AdoptiumProvisioner(ApacheHttpClientDownloadAction::new), false);
         context.frameworkRegistry = new FrameworkRegistryImpl();
         context.gradleManager = new GradleManagerImpl();
         context.modelCache = new GradleModelCacheImpl(context);

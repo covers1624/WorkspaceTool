@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -87,13 +88,22 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
     }
 
     protected void runForgeSetup(Map<String, String> env, String... tasks) {
+        String gradleVersion = context.gradleManager.getGradleVersionForProject(forgeDir);
         GradleConnector connector = GradleConnector.newConnector()
-                .useGradleVersion(context.gradleManager.getGradleVersionForProject(forgeDir))
+                .useGradleVersion(gradleVersion)
                 .forProjectDirectory(forgeDir.toFile());
+        Path javaHome;
+        try {
+            javaHome = context.getJavaInstall(context.gradleManager.getJavaVersionForGradle(gradleVersion)).javaHome;
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to get Java install.", e);
+        }
+        LOGGER.info("Using JDK {}.", javaHome);
         try (ProjectConnection connection = connector.connect()) {
             TailGroup tailGroup = context.console.newGroupFirst();
             connection.newBuild()
                     .setEnvironmentVariables(env)
+                    .setJavaHome(javaHome.toAbsolutePath().toFile())
                     .forTasks(tasks)
                     .withArguments("-si")
                     .setJvmArguments("-Xmx3G")

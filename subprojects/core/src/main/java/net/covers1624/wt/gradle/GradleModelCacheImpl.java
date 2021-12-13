@@ -18,7 +18,6 @@ import net.covers1624.wt.api.gradle.GradleModelCache;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.event.ModuleHashCheckEvent;
 import net.covers1624.wt.util.HashContainer;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gradle.tooling.GradleConnector;
@@ -47,10 +46,7 @@ import static net.covers1624.wt.util.Utils.*;
 @SuppressWarnings ("UnstableApiUsage")
 public class GradleModelCacheImpl implements GradleModelCache {
 
-    //Gradle version used to run tooling operations on modules.
-    private static final String GRADLE_VERSION = "4.10.3";
-
-    private static final Logger logger = LogManager.getLogger("GradleModelCache");
+    private static final Logger LOGGER = LogManager.getLogger("GradleModelCache");
     private static final HashFunction sha256 = Hashing.sha256();
     private static final String HASH_MODULE_DATA = "wt:module-data";
 
@@ -80,7 +76,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
     @Override
     public WorkspaceToolModel getModel(Path modulePath, Set<String> extraHash, Set<String> extraTasks) {
         String relPath = context.projectDir.relativize(modulePath).toString();
-        logger.info("Processing module: {}", relPath);
+        LOGGER.info("Processing module: {}", relPath);
         HashContainer hashContainer = new HashContainer(dataDir.resolve(relPath.replace("/", "_") + "_cache.json"));
 
         //TODO, Event here to allow Forge module to add various other files.
@@ -92,7 +88,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
         if (toHash.isEmpty()) {
             throw new RuntimeException("Module without cacheable files? " + modulePath);
         }
-        logger.debug("Hashed files: {}", toHash.stream().map(Path::toString).collect(Collectors.joining(", ")));
+        LOGGER.debug("Hashed files: {}", toHash.stream().map(Path::toString).collect(Collectors.joining(", ")));
         Path dataFile = dataDir.resolve(relPath.replace("/", "_") + "_data.dat");
 
         Hasher moduleHasher = sha256.newHasher();
@@ -106,11 +102,11 @@ public class GradleModelCacheImpl implements GradleModelCache {
         boolean isOutOfDate = !outOfDate.isEmpty();
         boolean isMissingCache = Files.notExists(dataFile);
         if (isOutOfDate) {
-            logger.debug("Out Of Date Hashes: " + String.join(", ", hashes.keySet()));
+            LOGGER.debug("Out Of Date Hashes: " + String.join(", ", hashes.keySet()));
         }
 
         if (isOutOfDate || isMissingCache) {
-            logger.info("Update triggered, {}.", isMissingCache ? "missing cache" : "out-of-date");
+            LOGGER.info("Update triggered, {}.", isMissingCache ? "missing cache" : "out-of-date");
             WorkspaceToolModel proxyModel = getModelFromGradle(modulePath, extraTasks);
             try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(dataFile, StandardOpenOption.CREATE))) {
                 oos.writeObject(getNonProxyModel(proxyModel));
@@ -119,7 +115,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
             }
             outOfDate.forEach(hashContainer::set);
         } else {
-            logger.info("Up-to-date.");
+            LOGGER.info("Up-to-date.");
         }
 
         //NOTE: Do Not hot wire this to return the result of GradleExecutor.getWorkspaceToolModel.
@@ -138,18 +134,29 @@ public class GradleModelCacheImpl implements GradleModelCache {
     }
 
     private WorkspaceToolModel getModelFromGradle(Path modulePath, Set<String> extraTasks) {
+        String gradleVersion = context.gradleManager.getGradleVersionForProject(modulePath);
         GradleConnector connector = GradleConnector.newConnector()
-                .useGradleVersion(context.gradleManager.getGradleVersionForProject(modulePath))
+                .useGradleVersion(gradleVersion)
                 .forProjectDirectory(modulePath.toFile());
+        Path javaHome;
+        try {
+            javaHome = context.getJavaInstall(context.gradleManager.getJavaVersionForGradle(gradleVersion)).javaHome;
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to get Java install.", e);
+        }
+        LOGGER.info("Using JDK {}.", javaHome);
         try (ProjectConnection connection = connector.connect()) {
-            GradleProject project = connection.getModel(GradleProject.class);
+            LOGGER.info("Extracting project information..");
+            GradleProject project = connection.model(GradleProject.class)
+                    .setJavaHome(javaHome.toAbsolutePath().toFile())
+                    .get();
             Set<String> executeBefore = new HashSet<>();
             executeBefore.addAll(context.gradleManager.getExecuteBefore());
             executeBefore.addAll(extraTasks);
             Set<String> availableTasks = project.getTasks().stream()
                     .map(Task::getName)
                     .collect(Collectors.toSet());
-            logger.debug("Available Tasks: {}", String.join(", ", availableTasks));
+            LOGGER.debug("Available Tasks: {}", String.join(", ", availableTasks));
             Set<String> toExecute = executeBefore.stream()
                     .filter(availableTasks::contains)
                     .collect(Collectors.toSet());
@@ -157,15 +164,16 @@ public class GradleModelCacheImpl implements GradleModelCache {
                     .filter(e -> !toExecute.contains(e))
                     .collect(Collectors.toSet());
             if (!notExecuting.isEmpty()) {
-                logger.info("The following tasks will not be executed: {}", String.join(", ", notExecuting));
+                LOGGER.info("The following tasks will not be executed: {}", String.join(", ", notExecuting));
             }
+            LOGGER.info("Extracting WorkspaceTool information.");
             TailGroup tailGroup = context.console.newGroupFirst();
             WorkspaceToolModel run = connection
                     .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))
                     .setJvmArguments("-Xmx3G")
                     .setJvmArguments("-Dorg.gradle.daemon=false")
-                    .setStandardOutput(new ConsumingOutputStream(logger::info))
-                    .setStandardError(new ConsumingOutputStream(logger::error))
+                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
+                    .setStandardError(new ConsumingOutputStream(LOGGER::error))
                     .addProgressListener(new GradleProgressListener(context, tailGroup))
                     .withArguments("-si", "-I", context.gradleManager.getInitScript().toAbsolutePath().toString())
                     .forTasks(toExecute).run();
