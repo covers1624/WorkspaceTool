@@ -13,6 +13,7 @@ import net.covers1624.wt.wrapper.json.JDKProperties;
 import net.covers1624.wt.wrapper.json.WrapperProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +56,7 @@ public class Main {
             jdkProps = new JDKProperties();
         }
         Path selected = jdkProps.selected != null ? Paths.get(jdkProps.selected) : null;
-        if (selected == null || Files.notExists(selected)) {
+        if (!isValidJDK(selected, environment.javaVersion)) {
             selected = computeJDK(environment.javaVersion);
             jdkProps.selected = selected.toString();
             JsonUtils.write(GSON, jdkPropsFile, jdkProps);
@@ -77,13 +78,21 @@ public class Main {
     }
 
     private static Path computeJDK(JavaVersion requiredJava) throws IOException {
-        LOGGER.info("WorkspaceTool has no configured JDK. Searching known java paths for JDK's...");
-        JdkInstallationManager jdkManager = new JdkInstallationManager(WT_JDKS, new AdoptiumProvisioner(ApacheHttpClientDownloadAction::new), false);
+        LOGGER.info("WorkspaceTool has no valid {} JDK configured. Searching for already provisioned jdk..", requiredJava);
+        JdkInstallationManager jdkManager = new JdkInstallationManager(
+                WT_JDKS,
+                new AdoptiumProvisioner(() ->
+                        new ApacheHttpClientDownloadAction()
+                                .setDownloadListener(new StatusDownloadListener())
+                ),
+                false
+        );
         Path jdkFind = jdkManager.findJdk(requiredJava);
         if (jdkFind != null) {
             LOGGER.info("Selected existing JDK: {}", jdkFind);
             return jdkFind;
         }
+        LOGGER.info("Not found.. Searching common paths..");
 
         JavaLocator locator = JavaLocator.builder()
                 .filter(requiredJava)
@@ -155,5 +164,14 @@ public class Main {
         JavaInstall selectedInstall = javaInstalls.get(selection);
         LOGGER.info("Selected JDK: {}", selectedInstall.javaHome);
         return selectedInstall.javaHome;
+    }
+
+    private static boolean isValidJDK(@Nullable Path home, JavaVersion target) {
+        if (home == null || Files.notExists(home)) return false;
+
+        JavaInstall install = JavaLocator.parseInstall(JavaInstall.getJavaExecutable(home, false));
+        if (install == null) return false;
+
+        return install.langVersion == target;
     }
 }
