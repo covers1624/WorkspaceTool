@@ -326,10 +326,12 @@ public class AtFile {
         }
 
         public void mergeAccess(AccessChange other) {
+            if (other == null) return;
             accessChange = accessChange.merge(other);
         }
 
         public void mergeFinal(FinalChange other) {
+            if (other == null) return;
             finalChange = finalChange.merge(other);
         }
 
