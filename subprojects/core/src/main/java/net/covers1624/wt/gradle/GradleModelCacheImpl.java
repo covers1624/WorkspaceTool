@@ -171,6 +171,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
             TailGroup tailGroup = context.console.newGroupFirst();
             WorkspaceToolModel run = connection
                     .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))
+                    .setJavaHome(javaHome.toAbsolutePath().toFile())
                     .setJvmArguments("-Xmx3G")
                     .setJvmArguments("-Dorg.gradle.daemon=false")
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
