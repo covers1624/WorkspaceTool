@@ -22,6 +22,10 @@
 -keepnames class org.apache.logging.**
 -keepnames class org.apache.commons.logging.**
 
+-keepnames class net.covers1624.jdkutils.AdoptiumProvisioner** {
+	<fields>;
+}
+
 # Keep all wrapper classes.
 -keep class net.covers1624.wt.** {
 	public protected *;

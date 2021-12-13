@@ -13,7 +13,7 @@ dependencies {
     implementation 'org.apache.commons:commons-compress:1.21'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
     implementation 'net.covers1624:Quack:0.4.0.42'
-    implementation 'net.covers1624:JdkUtils:0.1.2'
+    implementation 'net.covers1624:JdkUtils:0.1.4'
     implementation 'com.google.guava:guava:31.0.1-jre'
 
     implementation 'org.apache.maven:maven-artifact:3.8.1'
