@@ -17,6 +17,7 @@ import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.gradle.GradleModelCache;
 import net.covers1624.wt.api.gradle.model.WorkspaceToolModel;
 import net.covers1624.wt.event.ModuleHashCheckEvent;
+import net.covers1624.wt.gradle.builder.SimpleBuildAction;
 import net.covers1624.wt.util.HashContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
