@@ -81,10 +81,7 @@ public class Main {
         LOGGER.info("WorkspaceTool has no valid {} JDK configured. Searching for already provisioned jdk..", requiredJava);
         JdkInstallationManager jdkManager = new JdkInstallationManager(
                 WT_JDKS,
-                new AdoptiumProvisioner(() ->
-                        new ApacheHttpClientDownloadAction()
-                                .setDownloadListener(new StatusDownloadListener())
-                ),
+                new AdoptiumProvisioner(ApacheHttpClientDownloadAction::new),
                 false
         );
         Path jdkFind = jdkManager.findJdk(requiredJava);
@@ -120,7 +117,7 @@ public class Main {
                 return null;
             }
             LOGGER.info("Finding compatible JDK on https://adoptium.net");
-            Path javaHome = jdkManager.provisionJdk(requiredJava);
+            Path javaHome = jdkManager.provisionJdk(requiredJava, new StatusDownloadListener());
             LOGGER.info("Selected JDK: {}", javaHome);
             return javaHome;
         }
@@ -146,7 +143,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         String next = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
         if (next.equals("d")) {
-            Path javaHome = jdkManager.provisionJdk(requiredJava);
+            Path javaHome = jdkManager.provisionJdk(requiredJava, new StatusDownloadListener());
             LOGGER.info("Selected JDK: {}", javaHome);
             return javaHome;
         }

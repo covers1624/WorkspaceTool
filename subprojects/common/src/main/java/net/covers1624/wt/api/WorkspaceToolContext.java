@@ -11,7 +11,10 @@ import net.covers1624.jdkutils.JavaLocator;
 import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.jdkutils.JdkInstallationManager;
 import net.covers1624.quack.collection.TypedMap;
+import net.covers1624.quack.net.download.DownloadProgressTail;
 import net.covers1624.tconsole.api.TailConsole;
+import net.covers1624.tconsole.api.TailGroup;
+import net.covers1624.tconsole.tails.TextTail;
 import net.covers1624.wt.api.dependency.DependencyLibrary;
 import net.covers1624.wt.api.framework.FrameworkRegistry;
 import net.covers1624.wt.api.gradle.GradleManager;
@@ -89,7 +92,19 @@ public class WorkspaceToolContext {
         for (JavaInstall javaInstall : javaInstalls) {
             if (javaInstall.langVersion == version) return javaInstall;
         }
-        LOGGER.info("Unable to find compatible {} JDK. Provisioning..", version);
-        return JavaLocator.parseInstall(JavaInstall.getJavaExecutable(jdkManager.provisionJdk(version), false));
+        Path javaHome = jdkManager.findJdk(version);
+        if (javaHome == null) {
+
+            LOGGER.info("Unable to find compatible {} JDK. Provisioning..", version);
+
+            TailGroup tailGroup = console.newGroupFirst();
+            tailGroup.add(new TextTail(1))
+                    .setLine(0, "===============================");
+            DownloadProgressTail progress = new DownloadProgressTail();
+            tailGroup.add(progress);
+            javaHome = jdkManager.provisionJdk(version, progress);
+            console.removeGroup(tailGroup);
+        }
+        return JavaLocator.parseInstall(JavaInstall.getJavaExecutable(javaHome, false));
     }
 }
