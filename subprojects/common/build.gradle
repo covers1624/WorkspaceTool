@@ -32,8 +32,8 @@ dependencies {
     api 'org.apache.commons:commons-collections4:4.4'
     api 'codechicken:ChickenASM:2.0.1.14'
     api 'net.covers1624:TailConsole:1.2.0.6'
-    api 'net.covers1624:Quack:0.4.0.42'
-    api 'net.covers1624:JdkUtils:0.2.0.5'
+    api 'net.covers1624:Quack:0.4.0.44'
+    api 'net.covers1624:JdkUtils:0.3.0.7'
     api 'org.jetbrains:annotations:22.0.0'
     api 'com.google.code.findbugs:jsr305:3.0.2'
 }

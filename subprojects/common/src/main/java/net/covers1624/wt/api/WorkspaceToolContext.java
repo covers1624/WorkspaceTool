@@ -92,7 +92,7 @@ public class WorkspaceToolContext {
         for (JavaInstall javaInstall : javaInstalls) {
             if (javaInstall.langVersion == version) return javaInstall;
         }
-        Path javaHome = jdkManager.findJdk(version);
+        Path javaHome = jdkManager.findJdk(version, false);
         if (javaHome == null) {
 
             LOGGER.info("Unable to find compatible {} JDK. Provisioning..", version);
@@ -102,7 +102,7 @@ public class WorkspaceToolContext {
                     .setLine(0, "===============================");
             DownloadProgressTail progress = new DownloadProgressTail();
             tailGroup.add(progress);
-            javaHome = jdkManager.provisionJdk(version, progress);
+            javaHome = jdkManager.provisionJdk(version, false, progress);
             console.removeGroup(tailGroup);
         }
         return JavaLocator.parseInstall(JavaInstall.getJavaExecutable(javaHome, false));

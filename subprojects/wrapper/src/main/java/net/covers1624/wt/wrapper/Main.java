@@ -99,7 +99,7 @@ public class Main {
                 new AdoptiumProvisioner(ApacheHttpClientDownloadAction::new),
                 false
         );
-        Path jdkFind = jdkManager.findJdk(requiredJava);
+        Path jdkFind = jdkManager.findJdk(requiredJava, true);
         if (jdkFind != null) {
             LOGGER.info("Selected existing JDK: {}", jdkFind);
             return jdkFind;
@@ -132,7 +132,7 @@ public class Main {
                 return null;
             }
             LOGGER.info("Finding compatible JDK on https://adoptium.net");
-            Path javaHome = jdkManager.provisionJdk(requiredJava, new StatusDownloadListener());
+            Path javaHome = jdkManager.provisionJdk(requiredJava, true, new StatusDownloadListener());
             LOGGER.info("Selected JDK: {}", javaHome);
             return javaHome;
         }
@@ -158,7 +158,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         String next = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
         if (next.equals("d")) {
-            Path javaHome = jdkManager.provisionJdk(requiredJava, new StatusDownloadListener());
+            Path javaHome = jdkManager.provisionJdk(requiredJava, true, new StatusDownloadListener());
             LOGGER.info("Selected JDK: {}", javaHome);
             return javaHome;
         }

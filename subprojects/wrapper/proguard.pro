@@ -26,6 +26,10 @@
 	<fields>;
 }
 
+-keepnames class net.covers1624.jdkutils.** {
+	<fields>;
+}
+
 # Keep all wrapper classes.
 -keep class net.covers1624.wt.** {
 	public protected *;
