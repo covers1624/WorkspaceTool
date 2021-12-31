@@ -40,13 +40,24 @@ public class Main {
     private static final List<String> NO = Arrays.asList("n", "no");
 
     public static void main(String[] args) throws Throwable {
+        boolean attach = false;
+        boolean localOnly = false;
+        for (String arg : args) {
+            if (arg.equals("--local-only")) {
+                localOnly = true;
+            }
+            if (arg.equals("--attach")) {
+                attach = true;
+            }
+        }
+
         Files.createDirectories(SYSTEM_WT_FOLDER);
         Files.createDirectories(Paths.get("./.workspace_tool"));
         LOGGER.info("Preparing WorkspaceTool..");
         Path workspacePropsFile = Paths.get(".workspace_tool/properties.json");
         WrapperProperties workspaceProps = WrapperProperties.load(workspacePropsFile);
         RuntimeResolver resolver = new RuntimeResolver(SYSTEM_WT_FOLDER.resolve("libraries"), workspaceProps);
-        RuntimeResolver.RuntimeEnvironment environment = resolver.resolve();
+        RuntimeResolver.RuntimeEnvironment environment = resolver.resolve(localOnly);
 
         Path jdkPropsFile = Paths.get(".workspace_tool/jdk.json");
         JDKProperties jdkProps;
@@ -64,14 +75,18 @@ public class Main {
 
         System.out.println();
         System.out.println();
+
+        List<String> command = new LinkedList<>();
+        command.add(JavaInstall.getJavaExecutable(selected, false).toAbsolutePath().toString());
+        if (attach) {
+            command.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005");
+        }
+        command.add("-cp");
+        command.add(environment.dependencies.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)));
+        command.add(environment.mainClass);
         ProcessBuilder builder = new ProcessBuilder()
                 .inheritIO()
-                .command(
-                        JavaInstall.getJavaExecutable(selected, false).toAbsolutePath().toString(),
-                        "-cp",
-                        environment.dependencies.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)),
-                        environment.mainClass
-                );
+                .command(command);
 
         Process process = builder.start();
         process.waitFor();

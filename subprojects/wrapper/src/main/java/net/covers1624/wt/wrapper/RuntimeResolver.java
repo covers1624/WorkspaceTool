@@ -62,8 +62,8 @@ public class RuntimeResolver {
         artifact = requireNonNull(properties.artifact);
     }
 
-    public RuntimeEnvironment resolve() throws IOException {
-        ComparableVersion resolved = getVersion(artifact);
+    public RuntimeEnvironment resolve(boolean localOnly) throws IOException {
+        ComparableVersion resolved = getVersion(artifact, localOnly);
         if (resolved == null) {
             LOGGER.error("Unable to find version {}.", artifact);
             System.exit(-1);
@@ -82,14 +82,18 @@ public class RuntimeResolver {
     }
 
     @Nullable
-    private ComparableVersion getVersion(MavenNotation notation) {
+    private ComparableVersion getVersion(MavenNotation notation, boolean localOnly) {
+        assert notation.version != null;
+
         Metadata localMetadata = parse(mavenLocal.resolve(notation.toModulePath() + "maven-metadata-local.xml"));
+
+        ComparableVersion localVersion = getMaxVersion(localMetadata, notation.version);
+        if (localOnly && localVersion != null) return localVersion;
+
         String metaPath = notation.toModulePath() + "maven-metadata.xml";
         Path metaFile = downloadFile(singletonList(mirror), cacheDir, metaPath, metaPath, null, -1, false);
         Metadata metadata = parse(metaFile);
 
-        assert notation.version != null;
-        ComparableVersion localVersion = getMaxVersion(localMetadata, notation.version);
         ComparableVersion remoteVersion = getMaxVersion(metadata, notation.version);
         if (remoteVersion == null) return localVersion;
         if (localVersion == null) return remoteVersion;
