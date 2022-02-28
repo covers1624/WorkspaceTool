@@ -94,24 +94,11 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 "--fml.forgeGroup", forgeSubProject.group,
                 "--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION"),
                 "--assetsDir", context.blackboard.get(ASSETS_PATH).toAbsolutePath().toString(),
-                "--assetIndex", versionInfo.assetIndex.id,
-                // TODO TEMP SECTION
-                "--username", "Dev",
-                "--version", "forge",
-                "--uuid", "0",
-                "--accessToken", "0",
-                "--userType", "mojang",
-                "--versionType", "release"
+                "--assetIndex", versionInfo.assetIndex.id
         );
 
         Map<String, String> envVars = new HashMap<>();
-//        envVars.put("assetIndex", versionInfo.assetIndex.id);
-//        envVars.put("assetDirectory", context.blackboard.get(ASSETS_PATH).toAbsolutePath().toString());
-//        envVars.put("MC_VERSION", mcVersion);
-//        envVars.put("MCP_VERSION", rootProject.extraProperties.get("MCP_VERSION"));
-//        envVars.put("FORGE_GROUP", );
         envVars.put("FORGE_SPEC", forgeSubProject.extraProperties.get("SPEC_VERSION"));
-//        envVars.put("FORGE_VERSION", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""));
         envVars.put("LAUNCHER_VERSION", forgeSubProject.extraProperties.get("SPEC_VERSION"));
 
         Map<String, String> sysProps = new HashMap<>();
@@ -125,7 +112,8 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 "--add-modules", "ALL-MODULE-PATH",
                 "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
                 "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
-                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
+                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming",
+                "--add-exports", "cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED"
         );
 
         List<String> modClasses = buildModClasses(context, new ForgeExportedData());
@@ -143,15 +131,15 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
     }
 
     private static Path evalDependency(Dependency dep) {
-        if (dep instanceof MavenDependency) {
-            MavenDependency mvnDep = (MavenDependency) dep;
+        if (dep instanceof MavenDependency mvnDep) {
             return mvnDep.getClasses().toAbsolutePath();
-        } else if (dep instanceof LibraryDependency) {
-            return evalDependency(((LibraryDependency) dep).getDependency());
-        } else if (dep instanceof WorkspaceModuleDependency) {
-            return ((WorkspaceModuleDependency) dep).getModule().getOutput().toAbsolutePath();
-        } else {
-            throw new RuntimeException("Unhandled dependency: " + dep.getClass());
         }
+        if (dep instanceof LibraryDependency) {
+            return evalDependency(((LibraryDependency) dep).getDependency());
+        }
+        if (dep instanceof WorkspaceModuleDependency) {
+            return ((WorkspaceModuleDependency) dep).getModule().getOutput().toAbsolutePath();
+        }
+        throw new RuntimeException("Unhandled dependency: " + dep.getClass());
     }
 }

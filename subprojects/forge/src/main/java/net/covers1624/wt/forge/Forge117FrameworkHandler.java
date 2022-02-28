@@ -5,6 +5,8 @@
  */
 package net.covers1624.wt.forge;
 
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.gradle.data.ConfigurationData;
@@ -36,6 +38,7 @@ import static net.covers1624.quack.collection.ColUtils.iterable;
 /**
  * Created by covers1624 on 25/10/21.
  */
+@SuppressWarnings ("UnstableApiUsage")
 public class Forge117FrameworkHandler extends AbstractForge113PlusFrameworkHandler<Forge117> {
 
     private static final Attributes.Name fmlModType = new Attributes.Name("FMLModType");
@@ -50,6 +53,8 @@ public class Forge117FrameworkHandler extends AbstractForge113PlusFrameworkHandl
 
         // Handle any Access Transformers.
         handleAts();
+
+        extractLaunchResources();
 
         WorkspaceToolModel model = context.modelCache.getModel(forgeDir, emptySet(), Collections.singleton("prepareRuns"));
         ProjectData projectData = model.getProjectData();
@@ -112,6 +117,23 @@ public class Forge117FrameworkHandler extends AbstractForge113PlusFrameworkHandl
             os.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void extractLaunchResources() {
+        Path offlineLaunch = forgeDir.resolve("fmlloader/src/main/java/net/covers1624/wt/OfflineLaunch.java");
+
+        Hasher loginResourcesHasher = SHA_256.newHasher();
+        Utils.addToHasher(loginResourcesHasher, "/wt_login/117/net/covers1624/wt/OfflineLaunch.java");
+        HashCode hash1 = loginResourcesHasher.hash();
+
+        Hasher loginFilesHasher = SHA_256.newHasher();
+        Utils.addToHasher(loginFilesHasher, offlineLaunch);
+        HashCode hash2 = loginFilesHasher.hash();
+
+        if (hashContainer.check(HASH_GSTART_LOGIN, hash1) || !hash2.equals(hash1)) {
+            Utils.extractResource("/wt_login/117/net/covers1624/wt/OfflineLaunch.java", offlineLaunch);
+            hashContainer.set(HASH_GSTART_LOGIN, hash1);
         }
     }
 }
