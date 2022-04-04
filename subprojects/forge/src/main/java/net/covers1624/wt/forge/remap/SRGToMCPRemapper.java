@@ -17,8 +17,8 @@ public class SRGToMCPRemapper extends SimpleRemapper {
     public SRGToMCPRemapper(FG2McpMappingData data) {
         SrgReader.readSrg(data.srgToMcp, (type, args) -> {
             switch (type) {
-                case FIELD -> fieldMap.put(args[1], args[3]);
-                case METHOD -> methodMap.put(args[1], args[4]);
+                case FIELD -> addMapping(args[1], args[3]);
+                case METHOD -> addMapping(args[1], args[4]);
             }
         });
     }

@@ -26,8 +26,8 @@ public class CSVRemapper extends SimpleRemapper {
             Path fieldsCSV = jarFS.getPath("/fields.csv");
             Path methodsCSV = jarFS.getPath("/methods.csv");
 
-            parseCSV(fieldsCSV, line -> fieldMap.put(line[0], line[1]));
-            parseCSV(methodsCSV, line -> methodMap.put(line[0], line[1]));
+            parseCSV(fieldsCSV, line -> addMapping(line[0], line[1]));
+            parseCSV(methodsCSV, line -> addMapping(line[0], line[1]));
         }
     }
 
