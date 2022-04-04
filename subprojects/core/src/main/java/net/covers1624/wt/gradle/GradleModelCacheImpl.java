@@ -172,8 +172,8 @@ public class GradleModelCacheImpl implements GradleModelCache {
             WorkspaceToolModel run = connection
                     .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))
                     .setJavaHome(javaHome.toAbsolutePath().toFile())
-                    .setJvmArguments("-Xmx3G")
-                    .setJvmArguments("-Dorg.gradle.daemon=false")
+                    .setJvmArguments("-Xmx3G", "-Dorg.gradle.daemon=false")
+                    .setEnvironmentVariables(Map.copyOf(System.getenv()))
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                     .setStandardError(new ConsumingOutputStream(LOGGER::error))
                     .addProgressListener(new GradleProgressListener(context, tailGroup))
