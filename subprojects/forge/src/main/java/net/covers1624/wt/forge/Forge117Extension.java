@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -85,16 +86,15 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
         }
 
         String mcVersion = rootProject.extraProperties.get("MC_VERSION");
-        VersionInfoJson versionInfo = context.blackboard.get(VERSION_INFO);
+        Path assetsDir = Objects.requireNonNull(context.blackboard.get(ASSETS_PATH));
+        VersionInfoJson versionInfo = Objects.requireNonNull(context.blackboard.get(VERSION_INFO));
 
         List<String> progArgs = ImmutableList.of(
                 "--gameDir", ".",
                 "--fml.forgeVersion", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""),
                 "--fml.mcVersion", mcVersion,
                 "--fml.forgeGroup", forgeSubProject.group,
-                "--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION"),
-                "--assetsDir", context.blackboard.get(ASSETS_PATH).toAbsolutePath().toString(),
-                "--assetIndex", versionInfo.assetIndex.id
+                "--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION")
         );
 
         Map<String, String> envVars = new HashMap<>();
@@ -125,8 +125,13 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
             runConfig.envVar(envVars);
             runConfig.sysProp(sysProps);
             runConfig.vmArg(jvmArgs);
-            runConfig.progArg("--launchTarget", ((Forge114RunConfig) runConfig).getLaunchTarget());
             runConfig.progArg(progArgs);
+            String target = ((Forge114RunConfig) runConfig).getLaunchTarget();
+            runConfig.progArg("--launchTarget", target);
+            if (target.contains("client") || target.contains("data")) {
+                runConfig.progArg("--assetsDir", assetsDir.toAbsolutePath().toString());
+                runConfig.progArg("--assetIndex", versionInfo.assetIndex.id);
+            }
         }
     }
 
