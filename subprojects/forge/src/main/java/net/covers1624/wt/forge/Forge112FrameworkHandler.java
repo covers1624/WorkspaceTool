@@ -107,7 +107,7 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
         Map<String, Configuration> configurations = ProjectDataHelper.buildConfigurations(forgeModule, model.getProjectData(), emptyMap());
         forgeModule.setConfigurations(configurations);
         Configuration forgeGradleMcDeps = configurations.get("forgeGradleMcDeps");
-        Configuration runtime = configurations.get("runtime");
+        Configuration runtime = configurations.computeIfAbsent("runtime", ConfigurationImpl::new);
         addSourceSet(forgeModule, "main", ss -> {
             ss.setSource("java", Arrays.asList(
                     forgeDir.resolve("src/main/java"),// Forge's sources.
@@ -123,12 +123,11 @@ public class Forge112FrameworkHandler extends AbstractForgeFrameworkHandler<Forg
             ss.setCompileConfiguration(forgeMainCompile);
             ss.setRuntimeConfiguration(runtime);
         });
+        Dependency forgeDep = new SourceSetDependencyImpl(forgeModule, "main");
         context.modules.forEach(m -> {
-            SourceSet main = m.getSourceSets().get("main");
-            Configuration compileConfiguration = main.getCompileConfiguration();
-            if (compileConfiguration != null) {
-                compileConfiguration.addDependency(new SourceSetDependencyImpl(forgeModule, "main"));
-            }
+            m.getSourceSets().values().forEach(ss -> {
+                ss.getCompileConfiguration().addDependency(forgeDep);
+            });
 
             runtime.addDependency(new SourceSetDependencyImpl(m, "main").setExport(false));
         });

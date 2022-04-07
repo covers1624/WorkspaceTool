@@ -33,6 +33,7 @@ import org.gradle.tooling.ProjectConnection;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -101,13 +102,14 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
         LOGGER.info("Using JDK {}.", javaHome);
         try (ProjectConnection connection = connector.connect()) {
             TailGroup tailGroup = context.console.newGroupFirst();
+            Map<String, String> realEnv = new HashMap<>(System.getenv());
+            realEnv.putAll(env);
             connection.newBuild()
-                    .setEnvironmentVariables(env)
                     .setJavaHome(javaHome.toAbsolutePath().toFile())
                     .forTasks(tasks)
                     .withArguments("-si")
                     .setJvmArguments("-Xmx3G", "-Dorg.gradle.daemon=false")
-                    .setEnvironmentVariables(Map.copyOf(System.getenv()))
+                    .setEnvironmentVariables(realEnv)
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                     .setStandardError(new ConsumingOutputStream(LOGGER::error))
                     .addProgressListener(new GradleProgressListener(context, tailGroup))

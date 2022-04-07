@@ -123,19 +123,21 @@ public class FGDataBuilder implements ExtraDataBuilder {
             return;
         }
 
-        if (fgPluginData.version.isFG2() && pluginData.pluginIds.contains(FG2_PATCHER_PLUGIN)) {
-            Task genGradleProjects = project.getTasks().findByName("genGradleProjects");
-            if (genGradleProjects != null) {
-                Field field = genGradleProjects.getClass().getSuperclass().getDeclaredField("dependencies");
-                field.setAccessible(true);
-                List<String> dependencies = (List<String>) field.get(genGradleProjects);
-                dependencies.forEach(dep -> {
-                    if (dep.startsWith("testCompile")) {
-                        String trimmed = dep.replace("testCompile", "").replace("'", "").trim();
-                        project.getDependencies().add("testCompile", trimmed);
-                    }
-                });
-            }
+        if (!fgPluginData.version.isFG2()) return;
+        if (!pluginData.pluginIds.contains(FG2_PATCHER_PLUGIN)) return;
+        if (project.getConfigurations().findByName("testCompile") == null) return;
+
+        Task genGradleProjects = project.getTasks().findByName("genGradleProjects");
+        if (genGradleProjects != null) {
+            Field field = genGradleProjects.getClass().getSuperclass().getDeclaredField("dependencies");
+            field.setAccessible(true);
+            List<String> dependencies = (List<String>) field.get(genGradleProjects);
+            dependencies.forEach(dep -> {
+                if (dep.startsWith("testCompile")) {
+                    String trimmed = dep.replace("testCompile", "").replace("'", "").trim();
+                    project.getDependencies().add("testCompile", trimmed);
+                }
+            });
         }
     }
 

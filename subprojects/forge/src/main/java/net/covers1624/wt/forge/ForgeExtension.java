@@ -89,7 +89,7 @@ public class ForgeExtension implements Extension {
         // Add WT Forge-Gradle module.
         gradleManager.includeClassMarker("net.covers1624.wt.forge.gradle.FGDataBuilder");
         gradleManager.addDataBuilder("net.covers1624.wt.forge.gradle.FGDataBuilder");
-        gradleManager.executeBefore("genSrgs", "mergeJars");
+        gradleManager.executeBefore("genSrgs", "mergeJars", "setupCiWorkspace");
     }
 
     private void onPrepareScript(PrepareScriptEvent event) {
