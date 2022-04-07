@@ -41,7 +41,7 @@ import static net.covers1624.gradlestuff.dependencies.ConfigurationWalker.Resolv
 @VersionedClass (6)
 public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToolModel> {
 
-    private static final Logger logger = LoggerFactory.getLogger(WorkspaceToolModelBuilder.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkspaceToolModelBuilder.class);
 
     public WorkspaceToolModelBuilder() {
         super(WorkspaceToolModel.class);
@@ -49,23 +49,31 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
 
     @Override
     public WorkspaceToolModel build(Project project, BuildProperties properties) throws Exception {
-        List<ExtraDataBuilder> dataBuilders = properties.getDataBuilders().stream()
-                .map(clazz -> {
-                    try {
-                        return (ExtraDataBuilder) Class.forName(clazz).newInstance();
-                    } catch (ClassNotFoundException e) {
-                        throw new RuntimeException("Unable to find DataBuilder: " + clazz, e);
-                    } catch (IllegalAccessException | InstantiationException e) {
-                        throw new RuntimeException("Data builder '" + clazz + "' does not have a single public constructor.", e);
-                    }
-                })
-                .collect(Collectors.toList());
+        try {
+            LOGGER.info("Starting extraction of data from: {}", project.getName());
+            List<ExtraDataBuilder> dataBuilders = properties.getDataBuilders().stream()
+                    .map(clazz -> {
+                        try {
+                            return (ExtraDataBuilder) Class.forName(clazz).newInstance();
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException("Unable to find DataBuilder: " + clazz, e);
+                        } catch (IllegalAccessException | InstantiationException e) {
+                            throw new RuntimeException("Data builder '" + clazz + "' does not have a single public constructor.", e);
+                        }
+                    })
+                    .collect(Collectors.toList());
 
-        return new WorkspaceToolModelImpl(buildProject(project, null, dataBuilders));
+            WorkspaceToolModelImpl workspaceToolModel = new WorkspaceToolModelImpl(buildProject(project, null, dataBuilders));
+            LOGGER.info("Finished extraction of data from: {}", project.getName());
+            return workspaceToolModel;
+        } catch (Throwable ex) {
+            LOGGER.error("Project data extraction failed!", ex);
+            throw ex;
+        }
     }
 
     public ProjectData buildProject(Project project, @Nullable ProjectData root, List<ExtraDataBuilder> dataBuilders) throws Exception {
-        logger.debug("Building project: {}", project.getName());
+        LOGGER.debug("Building project: {}", project.getName());
         PluginData pluginData = buildPluginData(project);
         for (ExtraDataBuilder e : dataBuilders) {
             e.preBuild(project, pluginData);
