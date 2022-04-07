@@ -18,6 +18,9 @@ public class SimpleRemapper extends Remapper {
     private final Map<String, String> map = new HashMap<>();
 
     protected void addMapping(String from, String to) {
+        if (from.equals(to) || to.equals(map.get(from))) {
+            return;
+        }
         String existing = map.put(from, to);
         if (existing != null) {
             throw new IllegalStateException("Remapper only supports Unique from names, Tried to overwrite " + from + " -> " + existing + " with " + to);
