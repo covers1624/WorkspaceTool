@@ -11,6 +11,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.quack.io.IOUtils;
 import net.covers1624.tconsole.ConsumingOutputStream;
 import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.wt.api.WorkspaceToolContext;
@@ -90,7 +91,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
             throw new RuntimeException("Module without cacheable files? " + modulePath);
         }
         LOGGER.debug("Hashed files: {}", toHash.stream().map(Path::toString).collect(Collectors.joining(", ")));
-        Path dataFile = dataDir.resolve(relPath.replace("/", "_") + "_data.dat");
+        Path dataFile = dataDir.resolve(relPath.replace("\\", "/").replace("/", "_") + "_data.dat");
 
         Hasher moduleHasher = sha256.newHasher();
         toHash.forEach(e -> addToHasher(moduleHasher, e));
@@ -109,7 +110,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
         if (isOutOfDate || isMissingCache) {
             LOGGER.info("Update triggered, {}.", isMissingCache ? "missing cache" : "out-of-date");
             WorkspaceToolModel proxyModel = getModelFromGradle(modulePath, extraTasks);
-            try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(dataFile, StandardOpenOption.CREATE))) {
+            try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(IOUtils.makeParents(dataFile)))) {
                 oos.writeObject(getNonProxyModel(proxyModel));
             } catch (IOException e) {
                 throw new RuntimeException("Unable to write data file. " + dataFile, e);
