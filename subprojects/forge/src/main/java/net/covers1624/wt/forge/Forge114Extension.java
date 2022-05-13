@@ -42,6 +42,16 @@ public class Forge114Extension extends AbstractForge113PlusExtension {
 
     private static void onProcessModules(ProcessModulesEvent event) {
         WorkspaceToolContext context = event.getContext();
+
+        // This is a bit of a hack, we remove the FG3+ 'minecraft' configuration from the 'implementation' configuration
+        //  this configuration should only contain the Deobfuscated & Remapped Forge, and all forge + Minecraft dependencies.
+        //  These dependencies are provided via the module dep on Forge and are safe to remove.
+        for (Module module : event.getContext().modules) {
+            Configuration config = module.getConfigurations().get("implementation");
+            if (config == null) continue;
+            config.getExtendsFrom().removeIf(e -> e.getName().equals("minecraft"));
+        }
+
         if (!context.isFramework(Forge114.class)) return;
 
         GradleBackedModule forgeModule = findForgeRootModule(context);
@@ -62,15 +72,6 @@ public class Forge114Extension extends AbstractForge113PlusExtension {
         for (RunConfig runConfig : context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values()) {
             runConfig.envVar(envVars);
             runConfig.envVar(Collections.singletonMap("target", ((Forge114RunConfig) runConfig).getLaunchTarget()));
-        }
-
-        // This is a bit of a hack, we remove the FG3+ 'minecraft' configuration from the 'implementation' configuration
-        //  this configuration should only contain the Deobfuscated & Remapped Forge, and all forge + Minecraft dependencies.
-        //  These dependencies are provided via the module dep on Forge and are safe to remove.
-        for (Module module : event.getContext().modules) {
-            Configuration config = module.getConfigurations().get("implementation");
-            if (config == null) continue;
-            config.getExtendsFrom().removeIf(e -> e.getName().equals("minecraft"));
         }
     }
 
