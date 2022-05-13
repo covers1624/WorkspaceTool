@@ -23,6 +23,14 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
     void buildWorkspaceModules(Intellij workspace, WorkspaceToolContext context) {
         def modules = [:] as Map<String, IJWorkspaceModuleImpl>
         def outFolder = context.projectDir.resolve("out")
+        def topLevelModule = new IJWorkspaceModuleImpl()
+        topLevelModule.path = context.projectDir
+        topLevelModule.isGroup = true
+        topLevelModule.name = context.projectDir.getFileName().toString()
+        topLevelModule.output = outFolder.resolve(topLevelModule.name.replace(".", "_"))
+        topLevelModule.excludes = [context.projectDir.resolve(".idea"), context.projectDir.resolve(".workspace_tool")]
+        modules[topLevelModule.name] = topLevelModule
+
         context.allModules.each { module ->
             def wModule = new IJWorkspaceModuleImpl()
             wModule.path = module.path
