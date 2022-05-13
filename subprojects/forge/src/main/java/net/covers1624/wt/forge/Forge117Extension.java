@@ -6,7 +6,8 @@
 package net.covers1624.wt.forge;
 
 import com.google.common.collect.ImmutableList;
-import net.covers1624.quack.collection.ColUtils;
+import net.covers1624.quack.collection.StreamableIterable;
+import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.*;
 import net.covers1624.wt.api.gradle.data.ProjectData;
@@ -22,23 +23,30 @@ import net.covers1624.wt.forge.api.script.Forge114RunConfig;
 import net.covers1624.wt.forge.api.script.Forge117;
 import net.covers1624.wt.mc.data.VersionInfoJson;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static net.covers1624.quack.collection.StreamableIterable.of;
 import static net.covers1624.wt.forge.ForgeExtension.*;
 
 /**
  * Created by covers1624 on 27/10/21.
  */
 public class Forge117Extension extends AbstractForge113PlusExtension {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     static void init() {
         ProcessModulesEvent.REGISTRY.register(Forge117Extension::onProcessModules);
@@ -65,12 +73,26 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
         GradleBackedModule forgeSubModule = findForgeSubModule(context);
         ProjectData rootProject = forgeModule.getProjectData();
         ProjectData forgeSubProject = requireNonNull(rootProject.subProjects.get("forge"), "Missing forge submodule.");
-        WorkspaceModule forgeSubProjectWM = ColUtils.only(context.workspaceModules.stream()
-                .filter(e -> e.getName().equals(forgeSubProject.getProjectCoords().replace(":", ".") + ".main")));
-        List<String> runtimeClasspath = forgeSubProjectWM.getDependencies().get(DependencyScope.COMPILE).stream()
+        WorkspaceModule forgeSubProjectWM = of(context.workspaceModules)
+                .filter(e -> e.getName().equals(forgeSubProject.getProjectCoords().replace(":", ".") + ".main"))
+                .only();
+        Map<DependencyScope, Set<Dependency>> depMap = forgeSubProjectWM.getDependencies();
+        StreamableIterable<LibraryDependency> modRuntimeDeps = of(depMap.get(DependencyScope.RUNTIME))
+                .filter(e -> e instanceof WorkspaceModuleDependency)
+                .map(e -> ((WorkspaceModuleDependency) e).getModule())
+                .flatMap(e -> of(e.getDependencies().get(DependencyScope.COMPILE))
+                        .concat(of(e.getDependencies().get(DependencyScope.RUNTIME)))
+                )
+                .filter(e -> e instanceof LibraryDependency)
+                .map(e -> (LibraryDependency) e)
+                .filterNot(e -> !(e.getDependency() instanceof MavenDependency dep) || isMod(dep.getClasses()));
+
+        List<String> runtimeClasspath = of(depMap.get(DependencyScope.COMPILE))
+                .concat(modRuntimeDeps)
                 .map(Forge117Extension::evalDependency)
                 .map(Path::toString)
-                .collect(Collectors.toList());
+                .distinct()
+                .toLinkedList();
         Configuration moduleOnlyConfig = forgeSubModule.getConfigurations().get("moduleonly");
 
         String modulePath = moduleOnlyConfig.getAllDependencies().stream()
@@ -147,4 +169,23 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
         }
         throw new RuntimeException("Unhandled dependency: " + dep.getClass());
     }
+
+    private static boolean isMod(Path file) {
+        // Sure?
+        if (!Files.isRegularFile(file)) return true;
+
+        try (FileSystem fs = IOUtils.getJarFileSystem(file, true)) {
+            if (Files.exists(fs.getPath("/META-INF/mods.toml"))) return true;
+            try (InputStream is = Files.newInputStream(fs.getPath("META-INF/MANIFEST.MF"))) {
+                Manifest manifest = new Manifest(is);
+                if (manifest.getMainAttributes().getValue("FMLModType") != null) {
+                    return true;
+                }
+            }
+        } catch (IOException ex) {
+            LOGGER.warn("Failed to determine if {} is a Forge mod.", file);
+        }
+        return false;
+    }
+
 }
