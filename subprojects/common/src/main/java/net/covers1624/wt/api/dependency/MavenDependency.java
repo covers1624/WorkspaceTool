@@ -39,6 +39,8 @@ public interface MavenDependency extends Dependency {
      */
     Path getSources();
 
+    boolean isRemapped();
+
     /**
      * Sets the MavenNotation for this Dependency.
      *
@@ -76,6 +78,8 @@ public interface MavenDependency extends Dependency {
      */
     @Override
     MavenDependency setExport(boolean value);
+
+    MavenDependency setRemapped(boolean value);
 
     /**
      * {@inheritDoc}

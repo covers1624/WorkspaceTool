@@ -85,7 +85,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 )
                 .filter(e -> e instanceof LibraryDependency)
                 .map(e -> (LibraryDependency) e)
-                .filterNot(e -> !(e.getDependency() instanceof MavenDependency dep) || isMod(dep.getClasses()));
+                .filter(e -> !(e.getDependency() instanceof MavenDependency dep) || !dep.isRemapped() && !isMod(dep.getClasses()));
 
         List<String> runtimeClasspath = of(depMap.get(DependencyScope.COMPILE))
                 .concat(modRuntimeDeps)

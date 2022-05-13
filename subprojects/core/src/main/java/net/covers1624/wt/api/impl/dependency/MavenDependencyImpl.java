@@ -21,6 +21,7 @@ public class MavenDependencyImpl extends AbstractDependency implements MavenDepe
     private Path classes;
     private Path javadoc;
     private Path sources;
+    private boolean remapped;
 
     public MavenDependencyImpl() {
         super();
@@ -46,11 +47,18 @@ public class MavenDependencyImpl extends AbstractDependency implements MavenDepe
         setClasses(other.getClasses());
         setJavadoc(other.getJavadoc());
         setSources(other.getSources());
+        setRemapped(isRemapped());
     }
 
     @Override
     public MavenDependency setExport(boolean export) {
         super.setExport(export);
+        return this;
+    }
+
+    @Override
+    public MavenDependency setRemapped(boolean value) {
+        remapped = value;
         return this;
     }
 
@@ -72,6 +80,11 @@ public class MavenDependencyImpl extends AbstractDependency implements MavenDepe
     @Override
     public Path getSources() {
         return sources;
+    }
+
+    @Override
+    public boolean isRemapped() {
+        return remapped;
     }
 
     @Override
@@ -106,6 +119,7 @@ public class MavenDependencyImpl extends AbstractDependency implements MavenDepe
         i = 31 * i + (getSources() != null ? getSources().hashCode() : 0);
         i = 31 * i + (getJavadoc() != null ? getJavadoc().hashCode() : 0);
         i = 31 * i + (getSources() != null ? getSources().hashCode() : 0);
+        i = 31 * i + (isRemapped() ? 1 : 0);
         return i;
     }
 
@@ -114,15 +128,15 @@ public class MavenDependencyImpl extends AbstractDependency implements MavenDepe
         if (super.equals(obj)) {
             return true;
         }
-        if (!(obj instanceof MavenDependency)) {
+        if (!(obj instanceof MavenDependency other)) {
             return false;
         }
-        MavenDependency other = (MavenDependency) obj;
         return other.getNotation().equals(getNotation())
                 && other.getExport() == getExport()
                 && Objects.equals(other.getClasses(), getClasses())
                 && Objects.equals(other.getJavadoc(), getJavadoc())
-                && Objects.equals(other.getSources(), getSources());
+                && Objects.equals(other.getSources(), getSources())
+                && other.isRemapped() == isRemapped();
     }
 
     @Override

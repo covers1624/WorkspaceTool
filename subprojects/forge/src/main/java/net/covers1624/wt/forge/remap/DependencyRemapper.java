@@ -63,6 +63,7 @@ public class DependencyRemapper {
         if (remappedData.sources != null) {
             ret.setSources(remappedData.sources.toPath());
         }
+        ret.setRemapped(true);
         return ret;
     }
 
