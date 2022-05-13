@@ -160,7 +160,7 @@ public class JarRemapper {
         private String remapMethod(String method) {
             int startDesc = method.indexOf('(');
             String mName = method.substring(0, startDesc);
-            String desc = method.substring(startDesc + 1);
+            String desc = method.substring(startDesc);
             return remapper.mapMethodName("", mName, "") + ":" + remapper.mapMethodDesc(desc);
         }
     }
