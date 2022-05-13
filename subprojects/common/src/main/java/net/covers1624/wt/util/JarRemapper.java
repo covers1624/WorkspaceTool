@@ -6,6 +6,8 @@
 package net.covers1624.wt.util;
 
 import net.covers1624.quack.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -28,6 +30,8 @@ import static net.covers1624.quack.util.SneakyUtils.sneaky;
  * Created by covers1624 on 10/01/19.
  */
 public class JarRemapper {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Remapper remapper;
 
@@ -112,20 +116,53 @@ public class JarRemapper {
         private void transformRefMap(Map<String, String> mappings) {
             for (Map.Entry<String, String> entry : mappings.entrySet()) {
                 String line = entry.getValue();
-                if (!line.startsWith("L")) continue;
-                int firstSemiColon = line.indexOf(";");
-                int descStart = line.indexOf("(");
-                String owner = line.substring(1, firstSemiColon);
-                String name = line.substring(firstSemiColon + 1, descStart);
-                String desc = line.substring(descStart);
-
-                String mappedOwner = remapper.mapType(owner);
-                String mappedName = remapper.mapMethodName(owner, name, desc);
-                String mappedDesc = remapper.mapMethodDesc(desc);
-                entry.setValue("L" + mappedOwner + ";" + mappedName + mappedDesc);
+                try {
+                    if (line.startsWith("L")) {
+                        entry.setValue(remapTarget(line));
+                        continue;
+                    }
+                    if (line.contains(":")) {
+                        entry.setValue(remapField(line));
+                        continue;
+                    }
+                    if (line.contains("(")) {
+                        entry.setValue(remapMethod(line));
+                        continue;
+                    }
+                } catch (Throwable ex) {
+                    LOGGER.error("Failed to remap line: '{}'", line, ex);
+                    continue;
+                }
+                LOGGER.warn("Unknown entry in refmap json! '{}'", line);
             }
         }
 
+        private String remapTarget(String target) {
+            int firstSemiColon = target.indexOf(";");
+            int descStart = target.indexOf("(");
+            String owner = target.substring(1, firstSemiColon);
+            String name = target.substring(firstSemiColon + 1, descStart);
+            String desc = target.substring(descStart);
+
+            String mappedOwner = remapper.mapType(owner);
+            String mappedName = remapper.mapMethodName(owner, name, desc);
+            String mappedDesc = remapper.mapMethodDesc(desc);
+            return "L" + mappedOwner + ";" + mappedName + mappedDesc;
+        }
+
+        private String remapField(String field) {
+            int colon = field.indexOf(':');
+            String fName = field.substring(0, colon);
+            String type = field.substring(colon + 1);
+            return remapper.mapFieldName("", fName, "") + ":" + remapper.mapType(type);
+        }
+
+        private String remapMethod(String method) {
+            int startDesc = method.indexOf('(');
+            String mName = method.substring(0, startDesc);
+            String desc = method.substring(startDesc + 1);
+            return remapper.mapMethodName("", mName, "") + ":" + remapper.mapMethodDesc(desc);
+        }
     }
 
     private static class MixinRefMap {
