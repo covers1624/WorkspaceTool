@@ -147,10 +147,14 @@ public class GradleModelCacheImpl implements GradleModelCache {
             throw new RuntimeException("Unable to get Java install.", e);
         }
         LOGGER.info("Using JDK {}.", javaHome);
+        TailGroup tailGroup = context.console.newGroupFirst();
         try (ProjectConnection connection = connector.connect()) {
             LOGGER.info("Extracting project information..");
             GradleProject project = connection.model(GradleProject.class)
                     .setJavaHome(javaHome.toAbsolutePath().toFile())
+                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
+                    .setStandardError(new ConsumingOutputStream(LOGGER::error))
+                    .addProgressListener(new GradleProgressListener(context, tailGroup))
                     .get();
             Set<String> executeBefore = new HashSet<>();
             executeBefore.addAll(context.gradleManager.getExecuteBefore());
@@ -169,7 +173,6 @@ public class GradleModelCacheImpl implements GradleModelCache {
                 LOGGER.info("The following tasks will not be executed: {}", String.join(", ", notExecuting));
             }
             LOGGER.info("Extracting WorkspaceTool information.");
-            TailGroup tailGroup = context.console.newGroupFirst();
             WorkspaceToolModel run = connection
                     .action(new SimpleBuildAction<>(WorkspaceToolModel.class, context.gradleManager.getDataBuilders()))
                     .setJavaHome(javaHome.toAbsolutePath().toFile())
@@ -180,8 +183,10 @@ public class GradleModelCacheImpl implements GradleModelCache {
                     .addProgressListener(new GradleProgressListener(context, tailGroup))
                     .withArguments("-si", "-I", context.gradleManager.getInitScript().toAbsolutePath().toString())
                     .forTasks(toExecute).run();
-            context.console.removeGroup(tailGroup);
+
             return run;
+        } finally {
+            context.console.removeGroup(tailGroup);
         }
     }
 
