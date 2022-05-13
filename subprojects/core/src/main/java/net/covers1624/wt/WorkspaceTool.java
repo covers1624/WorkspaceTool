@@ -317,6 +317,10 @@ public class WorkspaceTool {
         LOGGER.info("Writing workspace..");
         WorkspaceWriter<?> workspaceWriter = context.workspaceRegistry.getWorkspaceWriter(context.workspaceScript.getWorkspaceType(), context);
         workspaceWriter.write(unsafeCast(context.workspaceScript.getWorkspace()));
+
+        for (RunConfig value : context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values()) {
+            Files.createDirectories(value.getRunDir());
+        }
     }
 
     private static Stream<Path> expandInclude(Path base, String include) {
