@@ -77,7 +77,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
 
     @Override
     public WorkspaceToolModel getModel(Path modulePath, Set<String> extraHash, Set<String> extraTasks) {
-        String relPath = context.projectDir.relativize(modulePath).toString();
+        String relPath = context.projectDir.relativize(modulePath).toString().replace("\\", "/");
         LOGGER.info("Processing module: {}", relPath);
         HashContainer hashContainer = new HashContainer(dataDir.resolve(relPath.replace("/", "_") + "_cache.json"));
 
@@ -91,7 +91,7 @@ public class GradleModelCacheImpl implements GradleModelCache {
             throw new RuntimeException("Module without cacheable files? " + modulePath);
         }
         LOGGER.debug("Hashed files: {}", toHash.stream().map(Path::toString).collect(Collectors.joining(", ")));
-        Path dataFile = dataDir.resolve(relPath.replace("\\", "/").replace("/", "_") + "_data.dat");
+        Path dataFile = dataDir.resolve(relPath.replace("/", "_") + "_data.dat");
 
         Hasher moduleHasher = sha256.newHasher();
         toHash.forEach(e -> addToHasher(moduleHasher, e));
