@@ -1,0 +1,94 @@
+plugins {
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+archivesBaseName = 'wt-wrapper'
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.apache.commons:commons-compress:1.21'
+    implementation 'org.slf4j:slf4j-simple:1.7.32'
+    implementation 'net.covers1624:Quack:0.4.0.44'
+    implementation 'net.covers1624:JdkUtils:0.3.0.7'
+    implementation 'com.google.guava:guava:31.0.1-jre'
+
+    implementation 'org.apache.maven:maven-artifact:3.8.1'
+    implementation 'org.apache.maven:maven-repository-metadata:3.8.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+
+    implementation 'org.jetbrains:annotations:22.0.0'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+}
+
+shadowJar {
+    configurations = [project.configurations.runtimeClasspath]
+
+    from sourceSets.main.output
+
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/plexus/**'
+    exclude 'META-INF/sisu/**'
+    exclude 'module-info.class'
+    exclude '**/Log4j2Plugins.dat'
+    exclude '**/package.html'
+    exclude 'about.html'
+    exclude 'LICENSE.txt'
+}
+
+task shrink(type: proguard.gradle.ProGuardTask, dependsOn: shadowJar) {
+    ext {
+        inputJar = shadowJar.archiveFile.get().asFile
+        outputDir = file("${buildDir}/proguard")
+        outputJar = file("${outputDir}/wt-wrapper.jar")
+        config = 'proguard.pro'
+    }
+    inputs.file inputJar
+    inputs.file config
+
+    outputDir.mkdirs()
+
+    injars inputJar
+    outjars outputJar
+
+    def javaHome = System.getProperty('java.home')
+    if (System.getProperty('java.version').startsWith('1.')) {
+        libraryjars "${javaHome}/lib/rt.jar"
+    } else {
+        libraryjars "${javaHome}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+        libraryjars "${javaHome}/jmods/java.sql.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+    }
+
+    configuration config
+    doLast {
+        logger.lifecycle("PG Shrunk to: ${(int) (outputJar.length() / 1024)}kb from: ${(int) (inputJar.length() / 1024)}kb")
+    }
+}
+
+jar.enabled = false
+task realJar(type: Jar) {
+    dependsOn shrink
+    from zipTree(shrink.outputJar)
+    manifest {
+        attributes 'Main-Class': "net.covers1624.wt.wrapper.Main"
+    }
+    from 'LICENSE.txt'
+}
+assemble.dependsOn realJar
+
+publishing {
+    publications {
+        publication(MavenPublication) {
+            artifactId archivesBaseName
+
+            artifact realJar
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}

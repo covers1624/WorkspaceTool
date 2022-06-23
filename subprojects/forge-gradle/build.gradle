@@ -1,0 +1,19 @@
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+archivesBaseName = 'forge-gradle'
+
+dependencies {
+    api project(":api")
+    api project(":gradle")
+    compileOnly gradleApi()
+}
+
+publishing {
+    publications {
+        publication(MavenPublication) {
+            artifactId archivesBaseName
+
+            from components['java']
+        }
+    }
+}

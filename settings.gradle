@@ -1,1 +1,15 @@
 rootProject.name = 'WorkspaceTool'
+
+include 'api'
+include 'common'
+include 'core'
+include 'forge'
+include 'forge-gradle'
+include 'gradle'
+include 'intellij'
+include 'minecraft'
+include 'wrapper'
+
+rootProject.children.each {
+    it.projectDir = file("subprojects/${it.name}")
+}

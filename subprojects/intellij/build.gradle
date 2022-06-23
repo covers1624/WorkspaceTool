@@ -1,0 +1,23 @@
+plugins {
+    id 'groovy'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+
+archivesBaseName = 'intellij'
+
+dependencies {
+    api project(":common")
+
+    compileOnly project(":core")
+}
+
+publishing {
+    publications {
+        publication(MavenPublication) {
+            artifactId archivesBaseName
+
+            from components['java']
+        }
+    }
+}
