@@ -117,6 +117,11 @@ public class ModuleImpl implements Module {
         public ProjectData getProjectData() {
             return projectData;
         }
+
+        @Override
+        public String toString() {
+            return "GradleModule: " + projectData.getProjectCoords();
+        }
     }
 
     public static List<Module> makeGradleModules(String groupPrefix, ProjectData project, WorkspaceToolContext ctx) {

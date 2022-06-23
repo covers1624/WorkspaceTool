@@ -106,6 +106,10 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
         if (!StringUtils.isEmpty(ignoreList)) {
             ignoreList += ',';
         }
+        ignoreList += "client-extra,ForgeRoot_fmlcore,ForgeRoot_javafmllanguage,ForgeRoot_mclanguage";
+        if (Files.exists(forgeModule.getPath().resolve("lowcodelanguage"))) {
+            ignoreList += ",ForgeRoot_lowcodelanguage";
+        }
 
         String mcVersion = rootProject.extraProperties.get("MC_VERSION");
         Path assetsDir = Objects.requireNonNull(context.blackboard.get(ASSETS_PATH));
@@ -127,7 +131,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
         sysProps.put("eventbus.checkTypesOnDispatch", "true");
 
         sysProps.put("legacyClassPath", String.join(File.pathSeparator, runtimeClasspath));
-        sysProps.put("ignoreList", ignoreList + "client-extra,ForgeRoot_fmlcore,ForgeRoot_javafmllanguage,ForgeRoot_mclanguage");
+        sysProps.put("ignoreList", ignoreList);
         sysProps.put("mergeModules", "jna-5.8.0.jar,jna-platform-58.0.jar,java-objc-bridge-1.0.0.jar"); // TODO, forge hardcodes these? We should probably extract this from their run configs.
         List<String> jvmArgs = ImmutableList.of(
                 "-p", modulePath,

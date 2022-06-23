@@ -75,6 +75,9 @@ public class Forge117FrameworkHandler extends AbstractForge113PlusFrameworkHandl
         writeManifest(forgeDir.resolve("javafmllanguage/src/main/resources/META-INF/MANIFEST.MF"), "LANGPROVIDER");
         writeManifest(forgeDir.resolve("mclanguage/src/main/resources/META-INF/MANIFEST.MF"), "LANGPROVIDER");
         writeManifest(forgeDir.resolve("fmlcore/src/main/resources/META-INF/MANIFEST.MF"), "LIBRARY");
+        if (Files.exists(forgeDir.resolve("lowcodelanguage"))) {
+            writeManifest(forgeDir.resolve("lowcodelanguage/src/main/resources/META-INF/MANIFEST.MF"), "LANGPROVIDER");
+        }
 
         // Build our Forge modules.
         List<Module> modules = ModuleImpl.makeGradleModules("", model.getProjectData(), context);
