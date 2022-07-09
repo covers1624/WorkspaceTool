@@ -137,6 +137,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 "-p", modulePath,
                 "--add-modules", "ALL-MODULE-PATH",
                 "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
+                "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
                 "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
                 "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming",
                 "--add-exports", "cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED"
