@@ -13,6 +13,7 @@ import net.covers1624.wt.intellij.api.script.IntellijRunConfig;
 public abstract class IntellijRunConfigTemplate implements IntellijRunConfig {
 
     private String classpathModule;
+    private boolean classpathShortening;
 
     @Override
     public void setClasspathModule(String classpathModule) {
@@ -22,5 +23,15 @@ public abstract class IntellijRunConfigTemplate implements IntellijRunConfig {
     @Override
     public String getClasspathModule() {
         return classpathModule;
+    }
+
+    @Override
+    public void setClasspathShortening(boolean value) {
+        this.classpathShortening = value;
+    }
+
+    @Override
+    public boolean getClasspathShortening() {
+        return classpathShortening;
     }
 }

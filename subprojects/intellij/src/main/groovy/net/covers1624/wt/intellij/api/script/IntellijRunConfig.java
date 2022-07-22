@@ -35,4 +35,24 @@ public interface IntellijRunConfig extends RunConfig {
      */
     String getClasspathModule();
 
+    /**
+     * Enables Intellij's classpath shortening.
+     */
+    default void withShortClasspath() {
+        setClasspathShortening(true);
+    }
+
+    /**
+     * Sets weather classpath shortening is enabled or not.
+     *
+     * @param bool The value.
+     */
+    void setClasspathShortening(boolean bool);
+
+    /**
+     * Gets weather classpath shortening is enabled.
+     *
+     * @return If classpath shortening is enabled.
+     */
+    boolean getClasspathShortening();
 }

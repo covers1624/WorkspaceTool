@@ -15,6 +15,7 @@ class IJRunConfig {
     String name
     String mainClass
     String classpathModule
+    boolean classpathShortening
     List<String> progArgs = []
     List<String> vmArgs = []
     Map<String, String> sysProps = [:]
@@ -41,6 +42,11 @@ class IJRunConfig {
                 envs.appendNode('env', [name: it.key, value: it.value])
             }
         }
+
+        if (classpathShortening) {
+            configuration.appendNode("shortenClasspath", [name: 'ARGS_FILE'])
+        }
+
         def methodv2 = configuration.appendNode('method', [v: '2'])
         methodv2.appendNode('option', [name: 'MakeProject', enabled: 'true'])
         def path = runConfigFolder.resolve(name + ".xml")

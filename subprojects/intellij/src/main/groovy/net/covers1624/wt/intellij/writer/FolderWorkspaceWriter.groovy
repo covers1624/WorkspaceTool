@@ -211,6 +211,7 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
                 name = cName
                 mainClass = config.mainClass
                 classpathModule = config.classpathModule
+                classpathShortening = config.classpathShortening
                 progArgs = config.progArgs
                 vmArgs = config.vmArgs
                 sysProps = config.sysProps
