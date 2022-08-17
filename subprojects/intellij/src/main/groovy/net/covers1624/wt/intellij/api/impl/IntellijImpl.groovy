@@ -16,6 +16,7 @@ import net.covers1624.wt.intellij.api.script.Intellij
 class IntellijImpl extends AbstractWorkspace implements Intellij {
 
     private String jdkName
+    private List<String> excludeDirs = new ArrayList<>()
 
     IntellijImpl(MixinInstantiator mixinInstantiator) {
         super(mixinInstantiator)
@@ -29,5 +30,15 @@ class IntellijImpl extends AbstractWorkspace implements Intellij {
     @Override
     String getJdkName() {
         return jdkName
+    }
+
+    @Override
+    void excludeDir(String path) {
+        excludeDirs.add(path)
+    }
+
+    @Override
+    List<String> getExcludeDirs() {
+        return excludeDirs
     }
 }

@@ -19,4 +19,8 @@ trait Intellij implements Workspace {
     abstract void setJdkName(String name)
 
     abstract String getJdkName()
+
+    abstract void excludeDir(String path)
+
+    abstract List<String> getExcludeDirs()
 }
