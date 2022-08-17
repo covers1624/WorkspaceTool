@@ -28,15 +28,15 @@ public class DefaultRunConfig implements RunConfig {
     //@formatter:off
     @Override public void mainClass(String name) { mainClass = name; }
     @Override public String getMainClass() { return mainClass; }
-    @Override public void vmArg(List<String> args) { vmArgs.addAll(args); }
+    @Override public void vmArg(List<Object> args) { args.stream().map(RunConfig::toString).forEach(vmArgs::add); }
     @Override public List<String> getVmArgs() { return vmArgs; }
-    @Override public void progArg(List<String> args) { progArgs.addAll(args); }
+    @Override public void progArg(List<Object> args) { args.stream().map(RunConfig::toString).forEach(progArgs::add); }
     @Override public List<String> getProgArgs() { return progArgs; }
     @Override public void runDir(Path path) { runDir = path; }
     @Override public Path getRunDir() { return runDir; }
-    @Override public void envVar(Map<String, String> vars) { envVars.putAll(vars); }
+    @Override public void envVar(Map<String, Object> vars) { vars.forEach((key, value) -> envVars.put(key, RunConfig.toString(value))); }
     @Override public Map<String, String> getEnvVars() { return envVars; }
-    @Override public void sysProp(Map<String, String> props) { sysProps.putAll(props); }
+    @Override public void sysProp(Map<String, Object> props) { props.forEach((key, value) -> sysProps.put(key, RunConfig.toString(value))); }
     @Override public Map<String, String> getSysProps() { return sysProps; }
     //@formatter:on
 }

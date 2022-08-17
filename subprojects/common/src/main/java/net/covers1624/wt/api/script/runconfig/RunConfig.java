@@ -5,6 +5,8 @@
  */
 package net.covers1624.wt.api.script.runconfig;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +37,7 @@ public interface RunConfig {
      *
      * @param args The Arguments.
      */
-    default void vmArg(String... args) {
+    default void vmArg(Object... args) {
         vmArg(Arrays.asList(args));
     }
 
@@ -44,7 +46,7 @@ public interface RunConfig {
      *
      * @param args The Arguments.
      */
-    void vmArg(List<String> args);
+    void vmArg(List<Object> args);
 
     /**
      * @return Gets the Vm Arguments.
@@ -56,7 +58,7 @@ public interface RunConfig {
      *
      * @param args The Arguments.
      */
-    default void progArg(String... args) {
+    default void progArg(Object... args) {
         progArg(Arrays.asList(args));
     }
 
@@ -65,7 +67,7 @@ public interface RunConfig {
      *
      * @param args The Arguments.
      */
-    void progArg(List<String> args);
+    void progArg(List<Object> args);
 
     /**
      * @return Gets the VmArguments.
@@ -89,7 +91,7 @@ public interface RunConfig {
      *
      * @param vars The variables.
      */
-    void envVar(Map<String, String> vars);
+    void envVar(Map<String, Object> vars);
 
     /**
      * @return Gets the Environment Variables for this RunConfiguration.
@@ -101,11 +103,14 @@ public interface RunConfig {
      *
      * @param props The properties.
      */
-    void sysProp(Map<String, String> props);
+    void sysProp(Map<String, Object> props);
 
     /**
      * @return Gets the System Properties for this RunConfiguration.
      */
     Map<String, String> getSysProps();
-}
 
+    static String toString(@Nullable Object obj) {
+        return obj == null ? "" : obj.toString();
+    }
+}

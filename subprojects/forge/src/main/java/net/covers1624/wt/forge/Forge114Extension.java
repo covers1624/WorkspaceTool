@@ -57,7 +57,7 @@ public class Forge114Extension extends AbstractForge113PlusExtension {
         GradleBackedModule forgeModule = findForgeRootModule(context);
         ProjectData rootProject = forgeModule.getProjectData();
         ProjectData forgeSubProject = requireNonNull(rootProject.subProjects.get("forge"), "Missing forge submodule.");
-        Map<String, String> envVars = new HashMap<>();
+        Map<String, Object> envVars = new HashMap<>();
         String mcVersion = rootProject.extraProperties.get("MC_VERSION");
         VersionInfoJson versionInfo = requireNonNull(context.blackboard.get(VERSION_INFO));
 
@@ -115,7 +115,7 @@ public class Forge114Extension extends AbstractForge113PlusExtension {
         //TODO, generate AccessList.
 
         List<String> modClasses = buildModClasses(context, exportedData);
-        Map<String, String> envVars = Collections.singletonMap("MOD_CLASSES", Strings.join(modClasses, File.pathSeparatorChar));
+        Map<String, Object> envVars = Collections.singletonMap("MOD_CLASSES", Strings.join(modClasses, File.pathSeparatorChar));
         for (RunConfig runConfig : context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values()) {
             runConfig.envVar(envVars);
         }
