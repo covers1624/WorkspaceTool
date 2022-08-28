@@ -16,7 +16,7 @@ import net.covers1624.wt.intellij.api.script.Intellij
 class IntellijImpl extends AbstractWorkspace implements Intellij {
 
     private String jdkName
-    private List<String> excludeDirs = new ArrayList<>()
+    private List<String> excludeDirs = new LinkedList<>()
 
     IntellijImpl(MixinInstantiator mixinInstantiator) {
         super(mixinInstantiator)
