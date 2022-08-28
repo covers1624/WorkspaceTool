@@ -167,8 +167,9 @@ public class ForgeExtension implements Extension {
                                         if (!(n2.group.equals(notation.group))) return false;
                                         if (!(n2.module.equals(notation.module))) return false;
                                         if (!(Objects.equals(n2.classifier, notation.classifier))) return false;
-                                        if (!notation.version.contains("_mapped_") && n2.version.equals(notation.version)) return true;
+                                        if (n2.version.equals(notation.version)) return true;
                                         int strip = notation.version.indexOf("_mapped_");
+                                        if (strip == -1) return false;
                                         return n2.version.equals(notation.version.substring(0, strip));
                                     })
                                     .findFirst();
