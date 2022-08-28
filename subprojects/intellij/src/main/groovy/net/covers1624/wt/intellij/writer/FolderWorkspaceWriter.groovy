@@ -210,6 +210,7 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
             runConfigs << new IJRunConfig().with {
                 name = cName
                 mainClass = config.mainClass
+                group = config.group
                 classpathModule = config.classpathModule
                 classpathShortening = config.classpathShortening
                 progArgs = config.progArgs

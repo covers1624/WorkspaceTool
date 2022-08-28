@@ -12,8 +12,19 @@ import net.covers1624.wt.intellij.api.script.IntellijRunConfig;
  */
 public abstract class IntellijRunConfigTemplate implements IntellijRunConfig {
 
+    private String group;
     private String classpathModule;
     private boolean classpathShortening;
+
+    @Override
+    public void setGroup(CharSequence group) {
+        this.group = group.toString();
+    }
+
+    @Override
+    public String getGroup() {
+        return group;
+    }
 
     @Override
     public void setClasspathModule(String classpathModule) {

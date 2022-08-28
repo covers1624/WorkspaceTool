@@ -15,6 +15,27 @@ import net.covers1624.wt.api.script.runconfig.RunConfig;
 public interface IntellijRunConfig extends RunConfig {
 
     /**
+     * Sets the Group the Intellij run config will be a part of.
+     *
+     * @param group The group name.
+     */
+    default void group(CharSequence group) {
+        setGroup(group);
+    }
+
+    /**
+     * Sets the Group the Intellij run config will be a part of.
+     *
+     * @param group The group name.
+     */
+    void setGroup(CharSequence group);
+
+    /**
+     * @return Gets the Group that the run config will be a part of.
+     */
+    String getGroup();
+
+    /**
      * Sets the Classpath Module for Intellij run configs.
      *
      * @param classpathModule The module name.

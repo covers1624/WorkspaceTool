@@ -14,6 +14,7 @@ import java.nio.file.Path
 class IJRunConfig {
     String name
     String mainClass
+    String group
     String classpathModule
     boolean classpathShortening
     List<String> progArgs = []
@@ -30,7 +31,11 @@ class IJRunConfig {
         vmArgs += sysProps.collect { "-D${it.key}=${it.value}" }
 
         def component = new Node(null, 'component', [name: 'ProjectRunConfigurationManager'])
-        def configuration = component.appendNode('configuration', [name: name, type: 'Application', factoryName: 'Application'])
+        def configurationProps = [name: name, type: 'Application', factoryName: 'Application']
+        if (group != null) {
+            configurationProps += [folderName: group]
+        }
+        def configuration = component.appendNode('configuration', configurationProps)
         configuration.appendNode('option', [name: 'MAIN_CLASS_NAME', value: mainClass])
         configuration.appendNode('module', [name: classpathModule])
         configuration.appendNode('option', [name: 'PROGRAM_PARAMETERS', value: progArgs.collect(escape).join(" ")])
