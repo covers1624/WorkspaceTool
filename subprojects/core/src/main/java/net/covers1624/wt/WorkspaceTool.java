@@ -305,6 +305,15 @@ public class WorkspaceTool {
             }
         });
 
+        // add run directories as excluded paths for every module
+        context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values().stream()
+                               .map(RunConfig::getRunDir)
+                               .forEach(path ->
+                                       allModules.forEach(module ->
+                                               module.addExclude(path)
+                                       )
+                               );
+
         ProcessModulesEvent.REGISTRY.fireEvent(new ProcessModulesEvent(context));
 
         stream(allModules.spliterator(), true).forEach(context.dependencyLibrary::consume);

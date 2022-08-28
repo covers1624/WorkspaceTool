@@ -28,7 +28,11 @@ class IntellijWorkspaceHandler implements WorkspaceHandler<Intellij> {
         topLevelModule.isGroup = true
         topLevelModule.name = context.projectDir.getFileName().toString()
         topLevelModule.output = outFolder.resolve(topLevelModule.name.replace(".", "_"))
-        topLevelModule.excludes = [context.projectDir.resolve(".idea"), context.projectDir.resolve(".workspace_tool")]
+	    workspace.excludeDirs.stream()
+                .map(context.projectDir::resolve)
+                .forEach(topLevelModule.excludes::add)
+        topLevelModule.excludes.add(context.projectDir.resolve(".idea"))
+        topLevelModule.excludes.add(context.projectDir.resolve(".workspace_tool"))
         modules[topLevelModule.name] = topLevelModule
 
         context.allModules.each { module ->
