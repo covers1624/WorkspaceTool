@@ -44,7 +44,7 @@ public interface RunConfig {
      *
      * @param args The Arguments.
      */
-    void vmArg(List<Object> args);
+    void vmArg(List<?> args);
 
     /**
      * @return Gets the Vm Arguments.
@@ -65,7 +65,7 @@ public interface RunConfig {
      *
      * @param args The Arguments.
      */
-    void progArg(List<Object> args);
+    void progArg(List<?> args);
 
     /**
      * @return Gets the VmArguments.
@@ -89,7 +89,7 @@ public interface RunConfig {
      *
      * @param vars The variables.
      */
-    void envVar(Map<String, Object> vars);
+    void envVar(Map<String, ?> vars);
 
     /**
      * @return Gets the Environment Variables for this RunConfiguration.
@@ -101,7 +101,7 @@ public interface RunConfig {
      *
      * @param props The properties.
      */
-    void sysProp(Map<String, Object> props);
+    void sysProp(Map<String, ?> props);
 
     /**
      * @return Gets the System Properties for this RunConfiguration.

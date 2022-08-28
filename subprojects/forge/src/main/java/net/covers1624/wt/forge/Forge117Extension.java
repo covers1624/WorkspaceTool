@@ -123,11 +123,11 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 "--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION")
         );
 
-        Map<String, Object> envVars = new HashMap<>();
+        Map<String, String> envVars = new HashMap<>();
         envVars.put("FORGE_SPEC", forgeSubProject.extraProperties.get("SPEC_VERSION"));
         envVars.put("LAUNCHER_VERSION", forgeSubProject.extraProperties.get("SPEC_VERSION"));
 
-        Map<String, Object> sysProps = new HashMap<>();
+        Map<String, String> sysProps = new HashMap<>();
         sysProps.put("eventbus.checkTypesOnDispatch", "true");
 
         sysProps.put("legacyClassPath", String.join(File.pathSeparator, runtimeClasspath));
