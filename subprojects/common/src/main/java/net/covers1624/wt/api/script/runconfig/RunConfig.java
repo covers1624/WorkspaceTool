@@ -5,8 +5,6 @@
  */
 package net.covers1624.wt.api.script.runconfig;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -109,8 +107,4 @@ public interface RunConfig {
      * @return Gets the System Properties for this RunConfiguration.
      */
     Map<String, String> getSysProps();
-
-    static String toString(@Nullable Object obj) {
-        return obj == null ? "" : obj.toString();
-    }
 }
