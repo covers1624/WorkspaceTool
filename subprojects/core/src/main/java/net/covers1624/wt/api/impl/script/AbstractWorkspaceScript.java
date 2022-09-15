@@ -168,7 +168,6 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
 
     @Override
     public void log(String level, Object obj) {
-        var logLevel = Level.toLevel(level);
-        LOGGER.log(logLevel, obj);
+        LOGGER.log(Level.toLevel(level), obj);
     }
 }
