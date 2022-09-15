@@ -18,6 +18,9 @@ import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.api.workspace.WorkspaceRegistry;
 import net.covers1624.wt.event.ScriptWorkspaceEvalEvent;
 import net.covers1624.wt.util.JavaVersion;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +36,7 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     public static final String FR_PROP = "frameworkRegistry";
     public static final String WR_PROP = "workspaceRegistry";
     public static final String MI_PROP = "mixinInstantiator";
+    private static final Logger LOGGER = LogManager.getLogger("Script");
 
     private FrameworkRegistry frameworkRegistry;
     private WorkspaceRegistry workspaceRegistry;
@@ -160,5 +164,10 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     @SuppressWarnings ("unchecked")
     private <T> T getProp(String name) {
         return (T) getProperty(name);
+    }
+
+    @Override
+    public void log(String level, Object obj) {
+        LOGGER.log(Level.toLevel(level), obj);
     }
 }
