@@ -28,6 +28,7 @@ println "Starting build of WorkspaceTool, Version: ${version}"
 def repos = {
     mavenLocal()
     mavenCentral()
+    jcenter()
     maven { url 'https://maven.covers1624.net/' }
     maven { url 'https://files.minecraftforge.net/maven/' }
     maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
