@@ -36,6 +36,7 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     public static final String FR_PROP = "frameworkRegistry";
     public static final String WR_PROP = "workspaceRegistry";
     public static final String MI_PROP = "mixinInstantiator";
+    private static final Logger LOGGER = LogManager.getLogger("Script");
 
     private FrameworkRegistry frameworkRegistry;
     private WorkspaceRegistry workspaceRegistry;
@@ -47,7 +48,6 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     private ModuleContainerSpec moduleContainer;
     private final Map<String, String> depOverrides = new HashMap<>();
     private JavaVersion javaVersion = JavaVersion.JAVA_8;
-    private final Logger logger = LogManager.getLogger("Script");
 
     public AbstractWorkspaceScript() {
         super();
@@ -169,6 +169,6 @@ public abstract class AbstractWorkspaceScript extends Script implements Workspac
     @Override
     public void log(String level, Object obj) {
         var logLevel = Level.toLevel(level);
-        logger.log(logLevel, obj);
+        LOGGER.log(logLevel, obj);
     }
 }
