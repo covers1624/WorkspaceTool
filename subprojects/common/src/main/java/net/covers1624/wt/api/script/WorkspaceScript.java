@@ -9,6 +9,7 @@ import groovy.lang.Closure;
 import net.covers1624.wt.api.script.module.ModuleContainerSpec;
 import net.covers1624.wt.util.ClosureBackedConsumer;
 import net.covers1624.wt.util.JavaVersion;
+import org.apache.logging.log4j.Level;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -125,6 +126,24 @@ public interface WorkspaceScript {
     JavaVersion getJdk();
 
     ModuleContainerSpec getModuleContainer();
+
+    /**
+     * Uses Log4J to print the given parameter to console, with the given log level
+     *
+     * @param level Log Level passed to the Log4J Logger
+     * @param obj Object to log to console
+     * @implNote <b>level</b> must be a valid {@link Level Log4J Level}, if invalid value is specified we default to <b>DEBUG</b>
+     */
+    void log(String level, Object obj);
+
+    /**
+     * Logs the given parameter to console at INFO level
+     *
+     * @param obj Object to log to console
+     */
+    default void log(Object obj) {
+        log("INFO", obj);
+    }
 
 }
 /*Iggy was here*/
