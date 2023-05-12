@@ -11,7 +11,8 @@ import com.google.gson.Gson;
 import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.quack.gson.JsonUtils;
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.quack.net.download.DownloadAction;
+import net.covers1624.quack.net.DownloadAction;
+import net.covers1624.quack.net.java.JavaDownloadAction;
 import net.covers1624.quack.util.HashUtils;
 import net.covers1624.wt.wrapper.json.RuntimeManifest;
 import net.covers1624.wt.wrapper.json.WrapperProperties;
@@ -185,12 +186,12 @@ public class RuntimeResolver {
             }
             Files.copy(urlFile, file, StandardCopyOption.REPLACE_EXISTING);
         } else {
-            DownloadAction action = new DownloadAction();
-            action.setSrc(url);
+            DownloadAction action = new JavaDownloadAction();
+            action.setUrl(url);
             action.setDest(file);
             action.setUseETag(true);
             action.setOnlyIfModified(true);
-            action.setListener(new StatusDownloadListener());
+            action.setDownloadListener(new StatusDownloadListener());
             action.execute();
         }
     }

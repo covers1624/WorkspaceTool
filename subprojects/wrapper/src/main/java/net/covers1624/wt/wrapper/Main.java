@@ -8,7 +8,7 @@ package net.covers1624.wt.wrapper;
 import com.google.gson.Gson;
 import net.covers1624.jdkutils.*;
 import net.covers1624.quack.gson.JsonUtils;
-import net.covers1624.quack.net.apache.ApacheHttpClientDownloadAction;
+import net.covers1624.quack.net.java.JavaDownloadAction;
 import net.covers1624.wt.wrapper.json.JDKProperties;
 import net.covers1624.wt.wrapper.json.WrapperProperties;
 import org.apache.commons.lang3.StringUtils;
@@ -96,7 +96,7 @@ public class Main {
         LOGGER.info("WorkspaceTool has no valid {} JDK configured. Searching for already provisioned jdk..", requiredJava);
         JdkInstallationManager jdkManager = new JdkInstallationManager(
                 WT_JDKS,
-                new AdoptiumProvisioner(ApacheHttpClientDownloadAction::new),
+                new AdoptiumProvisioner(JavaDownloadAction::new),
                 false
         );
         Path jdkFind = jdkManager.findJdk(requiredJava, true);
