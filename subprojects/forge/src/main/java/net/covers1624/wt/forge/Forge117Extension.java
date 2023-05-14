@@ -61,7 +61,10 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
         //  this configuration should only contain the Deobfuscated & Remapped Forge, and all forge + Minecraft dependencies.
         //  These dependencies are provided via the module dep on Forge and are safe to remove.
         for (Module module : event.getContext().modules) {
-            module.getConfigurations().get("minecraft").getDependencies().clear();
+            Configuration minecraftConfig = module.getConfigurations().get("minecraft");
+            if (minecraftConfig != null) {
+                minecraftConfig.getDependencies().clear();
+            }
         }
     }
 
