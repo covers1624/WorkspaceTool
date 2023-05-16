@@ -184,6 +184,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
 
         try (FileSystem fs = IOUtils.getJarFileSystem(file, false)) {
             if (Files.exists(fs.getPath("/META-INF/mods.toml"))) return true;
+            if (Files.notExists(fs.getPath("/META-INF/MANIFEST.MF"))) return false;
             try (InputStream is = Files.newInputStream(fs.getPath("META-INF/MANIFEST.MF"))) {
                 Manifest manifest = new Manifest(is);
                 if (manifest.getMainAttributes().getValue("FMLModType") != null) {
