@@ -182,7 +182,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
         // Sure?
         if (!Files.isRegularFile(file)) return true;
 
-        try (FileSystem fs = IOUtils.getJarFileSystem(file, true)) {
+        try (FileSystem fs = IOUtils.getJarFileSystem(file, false)) {
             if (Files.exists(fs.getPath("/META-INF/mods.toml"))) return true;
             try (InputStream is = Files.newInputStream(fs.getPath("META-INF/MANIFEST.MF"))) {
                 Manifest manifest = new Manifest(is);
@@ -191,7 +191,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 }
             }
         } catch (IOException ex) {
-            LOGGER.warn("Failed to determine if {} is a Forge mod.", file);
+            LOGGER.warn("Failed to determine if {} is a Forge mod.", file, ex);
         }
         return false;
     }
