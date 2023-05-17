@@ -1,5 +1,0 @@
-moduleName=wt-module
-moduleVersion=1.0
-extensionClasses=\
-  net.covers1624.wt.groovy.PathExtensions, \
-  net.covers1624.wt.groovy.XmlExtensions
