@@ -100,10 +100,12 @@ repositories {
 
 configurations {
     packing
+    gradlePluginPath
 }
 
 dependencies {
     packing project(':core')
+    gradlePluginPath project(':gradle-extract')
 }
 
 tasks.register('genVersionManifest') {
@@ -115,30 +117,56 @@ tasks.register('genVersionManifest') {
 
     doLast {
         def dependencies = []
+        def gradlePluginDependencies = []
         def manifest = [
-                'main_class'  : 'net.covers1624.wt.WorkspaceTool',
-                'java_version': 'JAVA_16',
-                'dependencies': dependencies
+                'main_class'              : 'net.covers1624.wt.WorkspaceTool',
+                'java_version'            : 'JAVA_16',
+                'dependencies'            : dependencies,
+                'gradlePluginDependencies': gradlePluginDependencies
         ]
         long totalSize
         configurations.packing.resolvedConfiguration.resolvedArtifacts.each {
-            def id = it.moduleVersion.id
-            def classifier = it.classifier ? ":" + it.classifier : ""
-            def coords = "${id.group}:${it.name}:${id.version}${classifier}"
-
-            def sha256 = Files.readAllBytes(it.file.toPath()).sha256()
             def len = it.file.length()
             totalSize += len
             dependencies.add([
-                    "artifact": coords,
-                    "sha256"  : sha256,
+                    "artifact": toCoords(it),
+                    "sha256"  : Files.readAllBytes(it.file.toPath()).sha256(),
                     "size"    : len
             ])
+        }
+        configurations.gradlePluginPath.resolvedConfiguration.resolvedArtifacts.each {
+            def len = it.file.length()
+            totalSize += len
+            dependencies.add([
+                    "artifact": toCoords(it),
+                    "sha256"  : Files.readAllBytes(it.file.toPath()).sha256(),
+                    "size"    : len
+            ])
+            gradlePluginDependencies << toCoords(it)
         }
         def json = JsonOutput.prettyPrint(JsonOutput.toJson(manifest))
         Files.write(output.toPath(), json.getBytes("UTF-8"))
 //        logger.lifecycle("Total Size: ${(int) (totalSize / 1024)}kb")
     }
+}
+
+tasks.register('genGradlePluginMetaDev') {
+    ext {
+        output = file("build/libs/gradle_plugin_data.json")
+    }
+    inputs.property('gradlePluginPath', configurations.gradlePluginPath)
+    outputs.file output
+
+    def dependencies = []
+    configurations.gradlePluginPath.resolvedConfiguration.resolvedArtifacts.each {
+        if (it.id.componentIdentifier instanceof ProjectComponentIdentifier) {
+            dependencies << project(it.id.componentIdentifier.projectPath).projectDir.absolutePath
+        } else {
+            dependencies << it.file.absolutePath
+        }
+    }
+    def json = JsonOutput.prettyPrint(JsonOutput.toJson(dependencies))
+    Files.write(output.toPath(), json.getBytes("UTF-8"))
 }
 
 task clean {
@@ -152,4 +180,10 @@ idea.project.settings {
         delegateBuildRunToGradle = false
         testRunner = TestRunner.PLATFORM
     }
+}
+
+def toCoords(ResolvedArtifact artifact) {
+    def id = artifact.moduleVersion.id
+    def classifier = artifact.classifier ? ":" + artifact.classifier : ""
+    return "${id.group}:${artifact.name}:${id.version}${classifier}"
 }

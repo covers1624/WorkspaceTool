@@ -1,13 +1,18 @@
-import org.gradle.api.publish.maven.internal.artifact.SingleOutputTaskMavenArtifact
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-archivesBaseName = 'core'
+archivesBaseName = 'gradle'
 
 dependencies {
-    api 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
-    api 'org.apache.logging.log4j:log4j-jul:2.20.0'
-
+    api project(":api")
+    api project(":gradle-api")
     api 'net.covers1624:Quack:0.4.7.71'
+
+    api 'org.apache.commons:commons-lang3:3.12.0'
+    api 'com.google.code.gson:gson:2.10.1'
+
+
+    //noinspection GradlePackageUpdate
+    api 'org.gradle:gradle-tooling-api:4.10.3'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
     compileOnly 'org.jetbrains:annotations:24.0.1'
@@ -19,8 +24,6 @@ publishing {
             artifactId archivesBaseName
 
             from components.java
-            artifact new SingleOutputTaskMavenArtifact(rootProject.tasks.named('genVersionManifest'), "json", "")
         }
     }
 }
-
