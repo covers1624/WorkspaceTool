@@ -149,8 +149,20 @@ public class Forge117FrameworkHandler extends AbstractForge113PlusFrameworkHandl
             boolean unFucked = false;
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
-                if (line.contains("classpath 'net.minecraftforge.gradle:ForgeGradle:")) {
-                    lines.set(i, line.replace(")", "]"));
+                if (line.contains("classpath 'net.minecraftforge.gradle:ForgeGradle:") && line.contains("[")) {
+                    int start = line.indexOf('[');
+                    int end = line.indexOf(')');
+                    if (end == -1) {
+                        end = line.indexOf(']');
+                    }
+                    if (end == -1) {
+                        break; // We don't know what we are looking at.
+                    }
+                    // [5.1.39,) -> 5.1.39
+                    int sep = line.indexOf(',');
+                    String version = line.substring(start, end + 1);
+                    String newVersion = line.substring(start + 1, sep);
+                    lines.set(i, line.replace(version, newVersion));
                     unFucked = true;
                     break;
                 }
