@@ -23,6 +23,7 @@ import net.covers1624.wt.util.Utils;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -55,6 +56,8 @@ public class Forge117FrameworkHandler extends AbstractForge113PlusFrameworkHandl
         handleAts();
 
         extractLaunchResources();
+
+        fixBullshitVersionRange();
 
         WorkspaceToolModel model = context.modelCache.getModel(forgeDir, emptySet(), Collections.singleton("prepareRuns"));
         ProjectData projectData = model.getProjectData();
@@ -137,6 +140,26 @@ public class Forge117FrameworkHandler extends AbstractForge113PlusFrameworkHandl
         if (hashContainer.check(HASH_GSTART_LOGIN, hash1) || !hash2.equals(hash1)) {
             Utils.extractResource("/wt_login/117/net/covers1624/wt/OfflineLaunch.java", offlineLaunch);
             hashContainer.set(HASH_GSTART_LOGIN, hash1);
+        }
+    }
+
+    private void fixBullshitVersionRange() {
+        try {
+            List<String> lines = Files.readAllLines(forgeDir.resolve("build.gradle"), StandardCharsets.UTF_8);
+            boolean unFucked = false;
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line.contains("classpath 'net.minecraftforge.gradle:ForgeGradle:")) {
+                    lines.set(i, line.replace(")", "]"));
+                    unFucked = true;
+                    break;
+                }
+            }
+            if (unFucked) {
+                Files.write(forgeDir.resolve("build.gradle"), lines, StandardCharsets.UTF_8);
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to un-fuck ForgeGradle dependency range.");
         }
     }
 }
