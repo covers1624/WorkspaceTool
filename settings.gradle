@@ -5,6 +5,7 @@ include 'core'
 include 'gradle'
 include 'gradle-api'
 include 'gradle-extract'
+include 'test-api'
 include 'wrapper'
 
 rootProject.children.each {

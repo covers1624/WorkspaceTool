@@ -34,9 +34,13 @@ def repos = {
 }
 
 subprojects { subProject ->
+    // Test api is special, hardcode no Gradle artifacts, and add to testRuntimeOnly for all other projects.
+    boolean isTestApi = subProject.name == 'test-api'
     apply plugin: 'java'
     apply plugin: 'java-library'
-    apply plugin: 'maven-publish'
+    if (!isTestApi) {
+        apply plugin: 'maven-publish'
+    }
 
     group rootProject.group
     version rootProject.version
@@ -55,12 +59,16 @@ subprojects { subProject ->
 
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
         testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+        if (!isTestApi) {
+            testImplementation project(':test-api')
+        }
     }
 
     test {
         useJUnitPlatform()
     }
 
+    if (isTestApi) return
     publishing {
         repositories {
             if (System.getenv('MAVEN_PASS')) {
