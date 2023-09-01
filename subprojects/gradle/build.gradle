@@ -2,6 +2,10 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 archivesBaseName = 'gradle'
 
+sourceSets {
+    main.resources.srcDirs += 'src/main/generated'
+}
+
 dependencies {
     api project(":api")
     api project(":gradle-api")

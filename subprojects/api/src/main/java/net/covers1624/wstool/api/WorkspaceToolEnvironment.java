@@ -15,12 +15,6 @@ public final class WorkspaceToolEnvironment {
     @Nullable
     public static final Path WSTOOL_MANIFEST = getPathProperty("wstool.manifest");
 
-    /**
-     * The path to the dev manifest data for our gradle plugin.
-     */
-    @Nullable
-    public static final Path GRADLE_PLUGIN_DEV_DATA = getPathProperty("wstool.dev.gradle_plugin_data");
-
     @Nullable
     private static Path getPathProperty(String sysProp) {
         String val = System.getProperty(sysProp);

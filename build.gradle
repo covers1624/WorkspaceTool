@@ -166,9 +166,10 @@ tasks.register('genVersionManifest') {
     }
 }
 
+// TODO, this should be automatically run by Gradle import.
 tasks.register('genGradlePluginMetaDev') {
     ext {
-        output = file("build/libs/gradle_plugin_data.json")
+        output = project(':gradle').file("src/main/generated/gradle_plugin_data.json")
     }
     inputs.property('gradlePluginPath', configurations.gradlePluginPath)
     outputs.file output
@@ -182,6 +183,7 @@ tasks.register('genGradlePluginMetaDev') {
         }
     }
     def json = JsonOutput.prettyPrint(JsonOutput.toJson(dependencies))
+    Files.createDirectories(output.toPath().getParent())
     Files.write(output.toPath(), json.getBytes("UTF-8"))
 }
 
