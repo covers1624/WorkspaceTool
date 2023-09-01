@@ -186,7 +186,7 @@ public class GradleModelExtractor {
     private static List<Path> buildJarPathDev() {
         List<String> paths;
         try (InputStream is = GradleModelExtractor.class.getResourceAsStream("/gradle_plugin_data.json")) {
-            if (is == null) throw new IllegalStateException("Missing dev data. Gradle task genGradlePluginMetaDev needs to be run.");
+            if (is == null) throw new IllegalStateException("Missing dev data. Did the genGradlePluginMetaDev gradle task not run on import?");
 
             paths = JsonUtils.parse(GSON, is, LIST_STRING);
         } catch (IOException ex) {

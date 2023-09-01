@@ -174,7 +174,6 @@ tasks.register('genVersionManifest') {
     }
 }
 
-// TODO, this should be automatically run by Gradle import.
 tasks.register('genGradlePluginMetaDev') {
     ext {
         output = project(':gradle').file("src/main/generated/gradle_plugin_data.json")
@@ -205,6 +204,9 @@ idea.project.settings {
     delegateActions {
         delegateBuildRunToGradle = false
         testRunner = TestRunner.PLATFORM
+    }
+    taskTriggers {
+         beforeSync 'genGradlePluginMetaDev'
     }
 }
 
