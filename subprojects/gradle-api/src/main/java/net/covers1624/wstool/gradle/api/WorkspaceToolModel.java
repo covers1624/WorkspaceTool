@@ -1,5 +1,7 @@
 package net.covers1624.wstool.gradle.api;
 
+import java.io.Serializable;
+
 /**
  * The build Gradle 'model', does not actually contain any data.
  * <p>
@@ -8,5 +10,8 @@ package net.covers1624.wstool.gradle.api;
  * Created by covers1624 on 14/5/23.
  * @see ModelProperties
  */
-public interface WorkspaceToolModel {
+public interface WorkspaceToolModel extends Serializable {
+
+    class Dummy implements WorkspaceToolModel {
+    }
 }

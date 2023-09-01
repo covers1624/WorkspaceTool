@@ -57,7 +57,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
             throw new RuntimeException("Fatal exception building model.", ex);
         }
 
-        return new WorkspaceToolModel() { };
+        return new WorkspaceToolModel.Dummy();
     }
 
     @Override
