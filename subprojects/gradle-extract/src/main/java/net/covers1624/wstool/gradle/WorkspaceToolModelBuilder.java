@@ -79,7 +79,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                 String.valueOf(project.getGroup()),
                 String.valueOf(project.findProperty("archivesBaseName"))
         );
-        projectData.data.put(ProjectData.class, buildPlugins(project, dataBuilders));
+        projectData.data.put(PluginData.class, buildPlugins(project, dataBuilders));
 
         for (DataBuilder builder : dataBuilders) {
             builder.buildProjectData(project, projectData);
