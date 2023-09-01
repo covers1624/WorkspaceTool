@@ -125,7 +125,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                         case "jar": {
                             int sep = f.indexOf("!/");
                             fs = IOUtils.getJarFileSystem(URI.create(f.substring(0, sep)), false);
-                            resourcePath = fs.getPath(f.substring(sep - 1)); // -1 to include the leading / from !/
+                            resourcePath = fs.getPath(f.substring(sep + 1)); // + 1 to strip the ! and leave the / from !/
                             break;
                         }
                         case "file": {
@@ -136,6 +136,8 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                         default:
                             continue; // Ignore the file.
                     }
+
+                    if (Files.notExists(resourcePath)) continue;
 
                     try (Stream<Path> s = Files.walk(resourcePath)) {
                         for (Path path : (Iterable<Path>) s::iterator) {
