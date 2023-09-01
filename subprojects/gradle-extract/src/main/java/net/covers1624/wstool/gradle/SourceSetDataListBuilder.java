@@ -3,6 +3,7 @@ package net.covers1624.wstool.gradle;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SourceSetData;
+import net.covers1624.wstool.gradle.api.data.SourceSetDataList;
 import org.codehaus.groovy.runtime.InvokerHelper;
 import org.gradle.api.Project;
 import org.gradle.api.file.SourceDirectorySet;
@@ -31,6 +32,7 @@ public class SourceSetDataListBuilder implements DataBuilder {
     public void buildProjectData(Project project, ProjectData projectData) {
         SourceSetContainer sourceSets = getSourceSetContainer(project);
         if (sourceSets == null) return;
+        SourceSetDataList sourceSetData = new SourceSetDataList();
         for (SourceSet sourceSet : sourceSets) {
             SourceSetData data = new SourceSetData(sourceSet.getName(), sourceSet.getCompileClasspathConfigurationName(), sourceSet.getRuntimeClasspathConfigurationName());
             data.sourceMap.put("resources", getFiles(sourceSet.getResources()));
@@ -38,7 +40,9 @@ public class SourceSetDataListBuilder implements DataBuilder {
 
             addSourcesFromExtension(sourceSet, data);
             addSourcesFromConvention(sourceSet, data);
+            sourceSetData.sourceSets.put(sourceSet.getName(), data);
         }
+        projectData.data.put(SourceSetDataList.class, sourceSetData);
     }
 
     private static void addSourcesFromExtension(SourceSet sourceSet, SourceSetData data) {
