@@ -3,6 +3,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 archivesBaseName = "gradle-api"
 
 dependencies {
+    compileOnly(gradleApi())
     api 'net.covers1624:Quack:0.4.7.71'
 }
 
