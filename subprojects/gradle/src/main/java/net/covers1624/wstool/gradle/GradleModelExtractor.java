@@ -2,11 +2,12 @@ package net.covers1624.wstool.gradle;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.gson.JsonUtils;
 import net.covers1624.quack.io.ConsumingOutputStream;
-import net.covers1624.quack.util.JavaVersion;
 import net.covers1624.quack.util.LazyValue;
+import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.WorkspaceToolEnvironment;
 import net.covers1624.wstool.gradle.api.WorkspaceToolModelAction;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
@@ -57,13 +58,30 @@ public class GradleModelExtractor {
     // The version above which we run Gradle with Java 17.
     private static final GradleVersion MIN_GRADLE_USE_J17 = GradleVersion.version("7.3");
 
-//    public ProjectData extractProjectData(Path project, Set<String> extraTasks) {
-//        GradleVersion gradleVersion = computeProjectGradleVersion(project);
-//
-//    }
+    private final Path workspaceRoot;
+    private final Path cacheDir;
+    private final JdkProvider jdkProvider;
 
-    @VisibleForTesting // TODO, this should not be used for tests, when the rest of this class is built, mock the env and call the regular extractProjectData function.
-    public ProjectData extractProjectData(Path projectDir, Path cacheFile, GradleVersion gradleVersion, Set<String> extraTasks) {
+    public GradleModelExtractor(Path workspaceRoot, Path cacheDir, JdkProvider jdkProvider) {
+        this.workspaceRoot = workspaceRoot;
+        this.cacheDir = cacheDir;
+        this.jdkProvider = jdkProvider;
+    }
+
+    public ProjectData extractProjectData(Path project, Set<String> extraTasks) {
+        return extractProjectData(project, computeProjectGradleVersion(project), extraTasks);
+    }
+
+    public ProjectData extractProjectData(Path project, GradleVersion gradleVersion, Set<String> extraTasks) {
+        JavaVersion javaVersion = getJavaVersionForGradle(gradleVersion);
+        Path javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
+        // TODO this needs a better alg for cache path names. Ideally: `workspaceRoot.relativize(project).toString().replace("/", "_") + ".dat"`
+        //      But that will break for tests, so lets just do this for now.
+        Path cacheFile = cacheDir.resolve(project.getFileName().toString() + ".dat");
+        return extractProjectData(javaHome, project, cacheFile, gradleVersion, extraTasks);
+    }
+
+    private ProjectData extractProjectData(Path javaHome, Path projectDir, Path cacheFile, GradleVersion gradleVersion, Set<String> extraTasks) {
         GradleConnector connector = GradleConnector.newConnector()
                 .useGradleVersion(gradleVersion.getVersion())
                 .forProjectDirectory(projectDir.toFile());
@@ -71,6 +89,7 @@ public class GradleModelExtractor {
             LOGGER.info("Starting Project data extract..");
             LOGGER.info("Extracting available task information..");
             GradleProject project = connection.model(GradleProject.class)
+                    .setJavaHome(javaHome.toFile())
                     .setJvmArguments("-Xmx3G", "-Dorg.gradle.daemon=false")
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                     .setStandardError(new ConsumingOutputStream(LOGGER::info))
@@ -82,6 +101,7 @@ public class GradleModelExtractor {
             LOGGER.info("Extracting WorkspaceTool project data..");
             connection
                     .action(new WorkspaceToolModelAction(cacheFile.toFile(), new HashSet<>()))
+                    .setJavaHome(javaHome.toFile())
                     .setJvmArguments("-Xmx3G", "-Dorg.gradle.daemon=false")
                     .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))

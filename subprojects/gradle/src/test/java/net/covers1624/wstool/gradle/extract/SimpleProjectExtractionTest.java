@@ -31,10 +31,9 @@ public class SimpleProjectExtractionTest extends GradleTestBase {
                 .withBuildGradle("")
                 .finish();
 
-        GradleModelExtractor extractor = new GradleModelExtractor();
+        GradleModelExtractor extractor = new GradleModelExtractor(emitter.getRootProjectDir(), emitter.getRootProjectDir(), JDK_PROVIDER);
         ProjectData data = extractor.extractProjectData(
                 emitter.getRootProjectDir(),
-                emitter.getTempDir().resolve("cache.dat"),
                 GradleVersion.version(gradleVersion),
                 Set.of()
         );
@@ -62,10 +61,9 @@ public class SimpleProjectExtractionTest extends GradleTestBase {
                         """)
                 .finish();
 
-        GradleModelExtractor extractor = new GradleModelExtractor();
+        GradleModelExtractor extractor = new GradleModelExtractor(emitter.getRootProjectDir(), emitter.getRootProjectDir(), JDK_PROVIDER);
         ProjectData data = extractor.extractProjectData(
                 emitter.getRootProjectDir(),
-                emitter.getTempDir().resolve("cache.dat"),
                 GradleVersion.version(gradleVersion),
                 Set.of()
         );

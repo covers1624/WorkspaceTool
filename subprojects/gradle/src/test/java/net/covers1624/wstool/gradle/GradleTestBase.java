@@ -1,7 +1,8 @@
 package net.covers1624.wstool.gradle;
 
 import net.covers1624.quack.io.IOUtils;
-import org.jetbrains.annotations.Nullable;
+import net.covers1624.wstool.api.JdkProvider;
+import net.covers1624.wstool.api.WorkspaceToolEnvironment;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +12,8 @@ import java.nio.file.Path;
  * Created by covers1624 on 1/9/23.
  */
 public class GradleTestBase {
+
+    public static final JdkProvider JDK_PROVIDER = new JdkProvider(WorkspaceToolEnvironment.WSTOOL_JDKS);
 
     protected static GradleEmitter gradleEmitter(String name) throws IOException {
         return new GradleEmitter(name);

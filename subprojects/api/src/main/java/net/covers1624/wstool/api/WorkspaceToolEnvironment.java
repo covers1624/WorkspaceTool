@@ -15,6 +15,18 @@ public final class WorkspaceToolEnvironment {
     @Nullable
     public static final Path WSTOOL_MANIFEST = getPathProperty("wstool.manifest");
 
+    /**
+     * The Global system cache folder for Workspace Tool.
+     */
+    public static final Path WSTOOL_SYSTEM_FOLDER = Path.of(System.getProperty("user.home"), ".workspace_tool")
+            .normalize()
+            .toAbsolutePath();
+
+    /**
+     * The Global system cache folder for provisioned JDK's.
+     */
+    public static final Path WSTOOL_JDKS = WSTOOL_SYSTEM_FOLDER.resolve("jdks");
+
     @Nullable
     private static Path getPathProperty(String sysProp) {
         String val = System.getProperty(sysProp);
