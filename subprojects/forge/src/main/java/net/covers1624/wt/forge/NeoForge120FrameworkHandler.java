@@ -62,6 +62,7 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
 
         GradleBackedModule forgeSubModule = ForgeExtension.findForgeSubModule(context);
         Configuration forgeRuntimeConfig = requireNonNull(forgeSubModule.getConfigurations().get("runtimeOnly"), "'runtimeOnly' Configuration is missing.");
+        forgeRuntimeConfig.addDependency(getDevLoginDependency());
 
         Dependency forgeDep = new SourceSetDependencyImpl(forgeSubModule, "main");
         context.modules.forEach(m -> {

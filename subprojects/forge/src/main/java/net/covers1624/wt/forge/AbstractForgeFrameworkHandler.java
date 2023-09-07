@@ -9,6 +9,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.quack.net.download.DownloadAction;
 import net.covers1624.quack.net.download.DownloadProgressTail;
 import net.covers1624.tconsole.ConsumingOutputStream;
@@ -16,7 +17,9 @@ import net.covers1624.tconsole.api.TailConsole;
 import net.covers1624.tconsole.api.TailGroup;
 import net.covers1624.tconsole.tails.TextTail;
 import net.covers1624.wt.api.WorkspaceToolContext;
+import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.framework.FrameworkHandler;
+import net.covers1624.wt.api.impl.dependency.MavenDependencyImpl;
 import net.covers1624.wt.forge.api.script.ForgeFramework;
 import net.covers1624.wt.gradle.GradleProgressListener;
 import net.covers1624.wt.mc.data.AssetIndexJson;
@@ -46,6 +49,8 @@ import static net.covers1624.quack.util.SneakyUtils.sneaky;
  * Created by covers1624 on 7/8/19.
  */
 public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> implements FrameworkHandler<T> {
+
+    private static final String DEV_LOGIN_VERSION = "0.1.0.3";
 
     protected static final HashCode MARKER_HASH = HashCode.fromString("ff");
     protected static final Logger LOGGER = LogManager.getLogger("ForgeFrameworkHandler");
@@ -123,6 +128,25 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
             downloadAssets(context.cacheDir.resolve("minecraft"), mcVersion);
         } catch (Exception e) {
             throw new RuntimeException("An error occured whilst downloading Minecraft assets.", e);
+        }
+    }
+
+    protected Dependency getDevLoginDependency() {
+        try {
+            Path devLoginFile = context.cacheDir.resolve("libs/DevLogin-" + DEV_LOGIN_VERSION + ".jar");
+            DownloadAction action = new DownloadAction();
+            action.setSrc("https://maven.covers1624.net/net/covers1624/DevLogin/" + DEV_LOGIN_VERSION + "/DevLogin-" + DEV_LOGIN_VERSION + ".jar");
+            action.setDest(devLoginFile);
+            action.setUseETag(true);
+            action.setOnlyIfModified(true);
+            action.execute();
+
+            return new MavenDependencyImpl()
+                    .setNotation(MavenNotation.parse("net.covers1624:DevLogin:" + DEV_LOGIN_VERSION))
+                    .setClasses(devLoginFile)
+                    .setExport(false);
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to download DevLogin.", ex);
         }
     }
 

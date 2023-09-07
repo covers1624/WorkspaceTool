@@ -87,6 +87,7 @@ public class Forge117FrameworkHandler extends AbstractForge113PlusFrameworkHandl
         context.frameworkModules.addAll(modules);
         GradleBackedModule forgeSubModule = ForgeExtension.findForgeSubModule(context);
         Configuration forgeRuntimeConfig = requireNonNull(forgeSubModule.getConfigurations().get("runtimeOnly"), "'runtimeOnly' Configuration is missing.");
+        forgeRuntimeConfig.addDependency(getDevLoginDependency());
 
         Dependency forgeDep = new SourceSetDependencyImpl(forgeSubModule, "main");
         context.modules.forEach(m -> {
