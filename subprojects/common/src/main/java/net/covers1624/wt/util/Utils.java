@@ -352,7 +352,7 @@ public class Utils {
             if (!Files.exists(parent)) {
                 Files.createDirectories(parent);
             }
-            try (OutputStream fos = Files.newOutputStream(to, WRITE, CREATE)) {
+            try (OutputStream fos = Files.newOutputStream(to)) {
                 IOUtils.copy(is, fos);
             }
         } catch (IOException e) {
