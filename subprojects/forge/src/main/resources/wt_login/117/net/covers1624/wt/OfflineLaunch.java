@@ -12,8 +12,6 @@ public class OfflineLaunch {
     public static void main(String[] argsArray) throws Throwable {
         LinkedList<String> args = new LinkedList<>();
         Collections.addAll(args, argsArray);
-        args.add("--version");
-        args.add("forge");
         args.add("--uuid");
         args.add("0");
         args.add("--accessToken");

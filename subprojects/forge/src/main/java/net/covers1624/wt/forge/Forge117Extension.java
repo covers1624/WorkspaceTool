@@ -162,6 +162,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
             if (target.contains("client") || target.contains("data")) {
                 runConfig.progArg("--assetsDir", assetsDir.toAbsolutePath().toString());
                 runConfig.progArg("--assetIndex", versionInfo.assetIndex.id);
+                runConfig.progArg("--version", "forge");
             }
         }
     }
