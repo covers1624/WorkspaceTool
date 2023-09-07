@@ -17,4 +17,5 @@ public class FGPluginData implements ExtraData {
 
     public String versionString;
     public FGVersion version;
+    public boolean isNeoForgeGradle;
 }

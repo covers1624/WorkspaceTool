@@ -71,6 +71,7 @@ public class ForgeExtension implements Extension {
         Forge112Extension.init();
         Forge114Extension.init();
         Forge117Extension.init();
+        NeoForge120Extension.init();
     }
 
     private void onInitialization(InitializationEvent event) {
@@ -82,9 +83,13 @@ public class ForgeExtension implements Extension {
         registry.registerScriptImpl(Forge114.class, Forge114Impl::new);
         registry.registerScriptImpl(Forge117.class, Forge117Impl::new);
 
+        registry.registerScriptImpl(NeoForge120.class, NeoForge120Impl::new);
+
         registry.registerFrameworkHandler(Forge112.class, Forge112FrameworkHandler::new);
         registry.registerFrameworkHandler(Forge114.class, Forge114FrameworkHandler::new);
         registry.registerFrameworkHandler(Forge117.class, Forge117FrameworkHandler::new);
+
+        registry.registerFrameworkHandler(NeoForge120.class, NeoForge120FrameworkHandler::new);
 
         // Add WT Forge-Gradle module.
         gradleManager.includeClassMarker("net.covers1624.wt.forge.gradle.FGDataBuilder");
@@ -107,7 +112,9 @@ public class ForgeExtension implements Extension {
     }
 
     private void onScriptWorkspaceEvalEvent(ScriptWorkspaceEvalEvent event) {
-        if (event.getScript().getFrameworkClass() == Forge114.class || event.getScript().getFrameworkClass() == Forge117.class) {
+        if (event.getScript().getFrameworkClass() == Forge114.class
+            || event.getScript().getFrameworkClass() == Forge117.class
+            || event.getScript().getFrameworkClass() == NeoForge120.class) {
             MixinInstantiator mixinInstantiator = event.getMixinInstantiator();
             mixinInstantiator.addMixinClass(RunConfig.class, Forge114RunConfig.class, Forge114RunConfigTemplate.class);
         }
@@ -213,14 +220,14 @@ public class ForgeExtension implements Extension {
 
     static GradleBackedModule findForgeRootModule(WorkspaceToolContext context) {
         return (GradleBackedModule) context.frameworkModules.stream()
-                .filter(e -> e.getName().equals("Forge") || e.getName().equals("ForgeRoot"))
+                .filter(e -> e.getName().equals("Forge") || e.getName().equals("ForgeRoot") || e.getName().equals("NeoForge"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing Forge module."));
     }
 
     static GradleBackedModule findForgeSubModule(WorkspaceToolContext context) {
         return (GradleBackedModule) context.frameworkModules.stream()
-                .filter(e -> e.getName().equals("Forge/forge") || e.getName().equals("ForgeRoot/forge"))
+                .filter(e -> e.getName().equals("Forge/forge") || e.getName().equals("ForgeRoot/forge") || e.getName().equals("NeoForge/forge"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing Forge module."));
     }

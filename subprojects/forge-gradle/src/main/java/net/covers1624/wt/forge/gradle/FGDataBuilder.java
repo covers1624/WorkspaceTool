@@ -80,8 +80,8 @@ public class FGDataBuilder implements ExtraDataBuilder {
             Set<ResolvedArtifact> artifacts = classpath.getResolvedConfiguration().getResolvedArtifacts();
             Optional<ResolvedArtifact> fgArtifact = artifacts.parallelStream()
                     .map(e -> Pair.of(e, e.getModuleVersion().getId()))
-                    .filter(e -> e.getRight().getGroup().equals("net.minecraftforge.gradle"))
-                    .filter(e -> e.getRight().getName().equals("ForgeGradle"))
+                    .filter(e -> e.getRight().getGroup().equals("net.minecraftforge.gradle") || e.getRight().getGroup().equals("net.neoforged"))
+                    .filter(e -> e.getRight().getName().equals("ForgeGradle") || e.getRight().getName().equals("NeoGradle"))
                     .map(Pair::getLeft)
                     .findFirst();
             if (!fgArtifact.isPresent()) {
@@ -97,6 +97,10 @@ public class FGDataBuilder implements ExtraDataBuilder {
             ModuleVersionIdentifier ident = fgArtifact.get().getModuleVersion().getId();
             String version = ident.getVersion();
             fgPluginData.versionString = version;
+            fgPluginData.isNeoForgeGradle = ident.getGroup().equals("net.neoforged");
+            if (version.startsWith("[")) {
+                version = version.substring(1);
+            }
             if (version.startsWith("2.2")) {
                 fgPluginData.version = FGVersion.FG22;
             } else if (version.startsWith("2.3")) {
@@ -111,12 +115,17 @@ public class FGDataBuilder implements ExtraDataBuilder {
                 fgPluginData.version = FGVersion.FG50;
             } else if (version.startsWith("5.1")) {
                 fgPluginData.version = FGVersion.FG51;
+            } else if (version.startsWith("6.0")) {
+                fgPluginData.version = FGVersion.FG60;
+            } else if (version.startsWith("6.1")) {
+                fgPluginData.version = FGVersion.FG61;
             } else {
                 LOGGER.error("Unknown FG version: '{}', From: '{}' in project {}({})", version, ident, project.getPath(), project.getDisplayName());
             }
         }
         if (fgPluginData.version != FGVersion.UNKNOWN) {
-            LOGGER.info("Found ForgeGradle! Version: {} in project {}({})", fgPluginData.version, project.getPath(), project.getDisplayName());
+            String variant = fgPluginData.isNeoForgeGradle ? "NeoGradle" : "ForgeGradle";
+            LOGGER.info("Found {}! Version: {} in project {}({})", variant, fgPluginData.version, project.getPath(), project.getDisplayName());
             pluginData.extraData.put(FGPluginData.class, fgPluginData);
         } else {
             LOGGER.warn("Failed to find ForgeGradle in project {}({}). :(", project.getPath(), project.getDisplayName());
@@ -248,8 +257,8 @@ public class FGDataBuilder implements ExtraDataBuilder {
                     .map(e -> ((ConfigurationData.MavenDependency) e))
                     .filter(e ->
                             e.mavenNotation.group.equals("net.minecraft")
-                                    && (e.mavenNotation.module.startsWith("mappings_")
-                                    || e.mavenNotation.module.startsWith("official_"))
+                            && (e.mavenNotation.module.startsWith("mappings_")
+                                || e.mavenNotation.module.startsWith("official_"))
                     )
                     .findFirst();
             mappings.ifPresent(e -> {

@@ -27,7 +27,7 @@ public class AbstractForge113PlusExtension {
     static List<String> buildModClasses(WorkspaceToolContext context, ForgeExportedData exportedData) {
         List<String> modClasses = new ArrayList<>();
         context.workspaceModules.stream()
-                .filter(e -> !e.getIsGroup() && !e.getName().startsWith("Forge.") && !e.getName().startsWith("ForgeRoot."))
+                .filter(e -> !e.getIsGroup() && !e.getName().startsWith("Forge.") && !e.getName().startsWith("ForgeRoot.") && !e.getName().startsWith("NeoForge."))
                 .forEach(module -> {
                     int lastDot = module.getName().lastIndexOf(".");
                     String moduleName = module.getName().substring(0, lastDot);

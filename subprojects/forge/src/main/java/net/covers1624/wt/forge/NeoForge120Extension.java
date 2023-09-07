@@ -1,13 +1,7 @@
-/*
- * This file is part of WorkspaceTool and is Licensed under the MIT License.
- *
- * Copyright (c) 2018-2022 covers1624 <https://github.com/covers1624>
- */
 package net.covers1624.wt.forge;
 
 import com.google.common.collect.ImmutableList;
-import net.covers1624.quack.collection.StreamableIterable;
-import net.covers1624.quack.io.IOUtils;
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.*;
 import net.covers1624.wt.api.gradle.data.ProjectData;
@@ -20,43 +14,33 @@ import net.covers1624.wt.event.ProcessModulesEvent;
 import net.covers1624.wt.event.ProcessWorkspaceModulesEvent;
 import net.covers1624.wt.forge.api.export.ForgeExportedData;
 import net.covers1624.wt.forge.api.script.Forge114RunConfig;
-import net.covers1624.wt.forge.api.script.Forge117;
 import net.covers1624.wt.forge.api.script.NeoForge120;
 import net.covers1624.wt.mc.data.VersionInfoJson;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.jar.Manifest;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
-import static net.covers1624.quack.collection.StreamableIterable.of;
+import static net.covers1624.quack.collection.FastStream.of;
 import static net.covers1624.wt.forge.ForgeExtension.*;
 
 /**
- * Created by covers1624 on 27/10/21.
+ * Created by covers1624 on 7/9/23.
  */
-public class Forge117Extension extends AbstractForge113PlusExtension {
-
-    private static final Logger LOGGER = LogManager.getLogger();
+public class NeoForge120Extension extends Forge117Extension {
 
     static void init() {
-        ProcessModulesEvent.REGISTRY.register(Forge117Extension::onProcessModules);
-        ProcessWorkspaceModulesEvent.REGISTRY.register(Forge117Extension::onProcessWorkspaceModules);
+        ProcessModulesEvent.REGISTRY.register(NeoForge120Extension::onProcessModules);
+        ProcessWorkspaceModulesEvent.REGISTRY.register(NeoForge120Extension::onProcessWorkspaceModules);
     }
 
     private static void onProcessModules(ProcessModulesEvent event) {
         WorkspaceToolContext context = event.getContext();
-        if (!context.isFramework(Forge117.class)) return;
+        if (!context.isFramework(NeoForge120.class)) return;
 
         // This is a bit of a hack, we remove the FG3+ 'minecraft' configuration from the 'implementation' configuration
         //  this configuration should only contain the Deobfuscated & Remapped Forge, and all forge + Minecraft dependencies.
@@ -71,7 +55,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
 
     private static void onProcessWorkspaceModules(ProcessWorkspaceModulesEvent event) {
         WorkspaceToolContext context = event.getContext();
-        if (!context.isFramework(Forge117.class)) return;
+        if (!context.isFramework(NeoForge120.class)) return;
 
         GradleBackedModule forgeModule = findForgeRootModule(context);
         GradleBackedModule forgeSubModule = findForgeSubModule(context);
@@ -81,7 +65,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 .filter(e -> e.getName().equals(forgeSubProject.getProjectCoords().replace(":", ".") + ".main"))
                 .only();
         Map<DependencyScope, Set<Dependency>> depMap = forgeSubProjectWM.getDependencies();
-        StreamableIterable<LibraryDependency> modRuntimeDeps = of(depMap.get(DependencyScope.RUNTIME))
+        FastStream<LibraryDependency> modRuntimeDeps = of(depMap.get(DependencyScope.RUNTIME))
                 .filter(e -> e instanceof WorkspaceModuleDependency)
                 .map(e -> ((WorkspaceModuleDependency) e).getModule())
                 .flatMap(e -> of(e.getDependencies().get(DependencyScope.COMPILE))
@@ -97,35 +81,46 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
                 .map(Path::toString)
                 .distinct()
                 .toLinkedList();
-        Configuration moduleOnlyConfig = forgeSubModule.getConfigurations().get("moduleonly");
 
-        String modulePath = moduleOnlyConfig.getAllDependencies().stream()
+        List<Path> moduleOnly = of(forgeSubModule.getConfigurations().get("moduleonly").getAllDependencies())
                 .map(Forge117Extension::evalDependency)
-                .map(Path::toString)
-                .collect(Collectors.joining(File.pathSeparator));
-        String ignoreList = moduleOnlyConfig.getAllDependencies().stream()
+                .toList();
+        List<Path> gameLayerLibrary = of(forgeSubModule.getConfigurations().get("gameLayerLibrary").getAllDependencies())
                 .map(Forge117Extension::evalDependency)
-                .map(e -> e.getFileName().toString().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", ""))
-                .collect(Collectors.joining(","));
+                .toList();
+        List<Path> pluginLayerLibrary = of(forgeSubModule.getConfigurations().get("pluginLayerLibrary").getAllDependencies())
+                .map(Forge117Extension::evalDependency)
+                .toList();
+
+        String ignoreList = FastStream.concat(moduleOnly, gameLayerLibrary, pluginLayerLibrary)
+                .map(e -> {
+                    String fName = e.getFileName().toString();
+                    if (!fName.startsWith("events") && !fName.startsWith("core")) {
+                        fName = fName.replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", "");
+                    }
+                    return fName;
+                })
+                .join(",");
         if (!StringUtils.isEmpty(ignoreList)) {
             ignoreList += ',';
         }
-        ignoreList += "client-extra,ForgeRoot_fmlcore,ForgeRoot_javafmllanguage,ForgeRoot_mclanguage";
-        if (Files.exists(forgeModule.getPath().resolve("lowcodelanguage"))) {
-            ignoreList += ",ForgeRoot_lowcodelanguage";
-        }
+        ignoreList += "client-extra,forge-";
 
         String mcVersion = rootProject.extraProperties.get("MC_VERSION");
         Path assetsDir = Objects.requireNonNull(context.blackboard.get(ASSETS_PATH));
         VersionInfoJson versionInfo = Objects.requireNonNull(context.blackboard.get(VERSION_INFO));
 
-        List<String> progArgs = ImmutableList.of(
-                "--gameDir", ".",
-                "--fml.forgeVersion", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""),
-                "--fml.mcVersion", mcVersion,
-                "--fml.forgeGroup", forgeSubProject.group,
-                "--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION")
-        );
+        ImmutableList.Builder<String> progArgs = ImmutableList.builder();
+        progArgs.add("--gameDir", ".");
+        progArgs.add("--fml.forgeVersion", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""));
+        progArgs.add("--fml.mcVersion", mcVersion);
+        progArgs.add("--fml.forgeGroup", forgeSubProject.group);
+        progArgs.add("--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION"));
+
+        String fmlVersion = rootProject.extraProperties.get("FANCY_MOD_LOADER_VERSION");
+        if (fmlVersion != null) {
+            progArgs.add("--fml.fmlVersion", fmlVersion);
+        }
 
         Map<String, String> envVars = new HashMap<>();
         envVars.put("FORGE_SPEC", forgeSubProject.extraProperties.get("SPEC_VERSION"));
@@ -136,15 +131,16 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
 
         sysProps.put("legacyClassPath", String.join(File.pathSeparator, runtimeClasspath));
         sysProps.put("ignoreList", ignoreList);
-        sysProps.put("mergeModules", "jna-5.8.0.jar,jna-platform-58.0.jar,java-objc-bridge-1.0.0.jar"); // TODO, forge hardcodes these? We should probably extract this from their run configs.
+        sysProps.put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar"); // TODO, forge hardcodes these? We should probably extract this from their run configs.
+        sysProps.put("fml.pluginLayerLibraries", of(pluginLayerLibrary).map(Path::getFileName).join(","));
+        sysProps.put("fml.gameLayerLibraries", of(gameLayerLibrary).map(Path::getFileName).join(","));
         List<String> jvmArgs = ImmutableList.of(
-                "-p", modulePath,
+                "-p", of(moduleOnly).join(File.pathSeparator),
                 "--add-modules", "ALL-MODULE-PATH",
                 "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
                 "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
                 "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
-                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming",
-                "--add-exports", "cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED"
+                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
         );
 
         List<String> modClasses = buildModClasses(context, new ForgeExportedData());
@@ -156,7 +152,7 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
             runConfig.envVar(envVars);
             runConfig.sysProp(sysProps);
             runConfig.vmArg(jvmArgs);
-            runConfig.progArg(progArgs);
+            runConfig.progArg(progArgs.build());
             String target = ((Forge114RunConfig) runConfig).getLaunchTarget();
             runConfig.progArg("--launchTarget", target);
             if (target.contains("client") || target.contains("data")) {
@@ -165,37 +161,4 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
             }
         }
     }
-
-    protected static Path evalDependency(Dependency dep) {
-        if (dep instanceof MavenDependency mvnDep) {
-            return mvnDep.getClasses().toAbsolutePath();
-        }
-        if (dep instanceof LibraryDependency) {
-            return evalDependency(((LibraryDependency) dep).getDependency());
-        }
-        if (dep instanceof WorkspaceModuleDependency) {
-            return ((WorkspaceModuleDependency) dep).getModule().getOutput().toAbsolutePath();
-        }
-        throw new RuntimeException("Unhandled dependency: " + dep.getClass());
-    }
-
-    protected static boolean isMod(Path file) {
-        // Sure?
-        if (!Files.isRegularFile(file)) return true;
-
-        try (FileSystem fs = IOUtils.getJarFileSystem(file, false)) {
-            if (Files.exists(fs.getPath("/META-INF/mods.toml"))) return true;
-            if (Files.notExists(fs.getPath("/META-INF/MANIFEST.MF"))) return false;
-            try (InputStream is = Files.newInputStream(fs.getPath("META-INF/MANIFEST.MF"))) {
-                Manifest manifest = new Manifest(is);
-                if (manifest.getMainAttributes().getValue("FMLModType") != null) {
-                    return true;
-                }
-            }
-        } catch (IOException ex) {
-            LOGGER.warn("Failed to determine if {} is a Forge mod.", file, ex);
-        }
-        return false;
-    }
-
 }

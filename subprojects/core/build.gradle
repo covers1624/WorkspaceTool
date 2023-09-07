@@ -15,7 +15,7 @@ dependencies {
     runtimeOnly project(':forge')
     runtimeOnly project(':intellij')
     runtimeOnly project(':minecraft')
-    runtimeOnly 'net.covers1624:GradleStuff:3.0.1.10'
+    runtimeOnly 'net.covers1624:GradleStuff:3.0.2.11'
 }
 
 publishing {
