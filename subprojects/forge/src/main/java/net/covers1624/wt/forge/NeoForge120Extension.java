@@ -158,6 +158,8 @@ public class NeoForge120Extension extends Forge117Extension {
             if (target.contains("client") || target.contains("data")) {
                 runConfig.progArg("--assetsDir", assetsDir.toAbsolutePath().toString());
                 runConfig.progArg("--assetIndex", versionInfo.assetIndex.id);
+            }
+            if (target.contains("client")) {
                 runConfig.progArg("--version", "forge");
             }
         }
