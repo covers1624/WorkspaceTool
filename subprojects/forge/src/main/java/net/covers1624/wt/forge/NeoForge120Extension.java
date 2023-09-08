@@ -114,7 +114,6 @@ public class NeoForge120Extension extends Forge117Extension {
         progArgs.add("--gameDir", ".");
         progArgs.add("--fml.forgeVersion", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""));
         progArgs.add("--fml.mcVersion", mcVersion);
-        progArgs.add("--fml.forgeGroup", forgeSubProject.group);
         progArgs.add("--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION"));
 
         String fmlVersion = rootProject.extraProperties.get("FANCY_MOD_LOADER_VERSION");
