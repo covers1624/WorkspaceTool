@@ -18,6 +18,10 @@ dependencies {
     api 'org.gradle:gradle-tooling-api:4.10.3'
 }
 
+test {
+    dependsOn(':genGradlePluginMetaDev')
+}
+
 publishing {
     publications {
         publication(MavenPublication) {
