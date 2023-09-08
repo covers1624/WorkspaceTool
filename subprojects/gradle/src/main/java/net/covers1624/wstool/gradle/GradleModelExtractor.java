@@ -75,9 +75,7 @@ public class GradleModelExtractor {
     public ProjectData extractProjectData(Path project, GradleVersion gradleVersion, Set<String> extraTasks) {
         JavaVersion javaVersion = getJavaVersionForGradle(gradleVersion);
         Path javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
-        // TODO this needs a better alg for cache path names. Ideally: `workspaceRoot.relativize(project).toString().replace("/", "_") + ".dat"`
-        //      But that will break for tests, so lets just do this for now.
-        Path cacheFile = cacheDir.resolve(project.getFileName().toString() + ".dat");
+        Path cacheFile = cacheDir.resolve(workspaceRoot.relativize(project).toString().replace("[/\\\\]", "_") + ".dat");
         return extractProjectData(javaHome, project, cacheFile, gradleVersion, extraTasks);
     }
 
