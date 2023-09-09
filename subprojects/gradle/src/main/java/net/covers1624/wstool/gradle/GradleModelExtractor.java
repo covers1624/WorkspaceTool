@@ -100,7 +100,7 @@ public class GradleModelExtractor {
             connection
                     .action(new WorkspaceToolModelAction(cacheFile.toFile(), new HashSet<>()))
                     .setJavaHome(javaHome.toFile())
-                    .setJvmArguments("-Xmx3G")
+                    .setJvmArguments(FastStream.of("-Xmx3G").concat(extraJvmArgs()))
                     .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                     .setStandardError(new ConsumingOutputStream(LOGGER::info))
@@ -118,6 +118,10 @@ public class GradleModelExtractor {
         } catch (IOException | ClassNotFoundException ex) {
             throw new RuntimeException("Failed to read cache file after Gradle execution.", ex);
         }
+    }
+
+    protected Iterable<String> extraJvmArgs() {
+        return FastStream.empty();
     }
 
     private static GradleVersion computeProjectGradleVersion(Path project) {

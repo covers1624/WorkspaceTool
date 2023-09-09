@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Created by covers1624 on 1/9/23.
  */
-public class SimpleProjectExtractionTest extends GradleTestBase {
+public class SimpleProjectExtractionTest extends ExtractTestBase {
 
     // @formatter:off
     @Test public void testBlank4_10_3() throws Throwable { testBlank("4.10.3"); }
@@ -31,7 +31,7 @@ public class SimpleProjectExtractionTest extends GradleTestBase {
                 .withBuildGradle("")
                 .finish();
 
-        GradleModelExtractor extractor = new GradleModelExtractor(emitter.getTempDir(), emitter.getTempDir(), JDK_PROVIDER);
+        GradleModelExtractor extractor = extractor(emitter, false);
         ProjectData data = extractor.extractProjectData(
                 emitter.getRootProjectDir(),
                 GradleVersion.version(gradleVersion),
@@ -61,7 +61,7 @@ public class SimpleProjectExtractionTest extends GradleTestBase {
                         """)
                 .finish();
 
-        GradleModelExtractor extractor = new GradleModelExtractor(emitter.getTempDir(), emitter.getTempDir(), JDK_PROVIDER);
+        GradleModelExtractor extractor = extractor(emitter, false);
         ProjectData data = extractor.extractProjectData(
                 emitter.getRootProjectDir(),
                 GradleVersion.version(gradleVersion),
