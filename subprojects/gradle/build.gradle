@@ -14,8 +14,7 @@ dependencies {
     api 'org.apache.commons:commons-lang3:3.12.0'
     api 'com.google.code.gson:gson:2.10.1'
 
-    //noinspection GradlePackageUpdate
-    api 'org.gradle:gradle-tooling-api:4.10.3'
+    api 'org.gradle:gradle-tooling-api:7.2'
 }
 
 test {

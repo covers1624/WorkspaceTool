@@ -30,7 +30,7 @@ def repos = {
     jcenter()
     maven { url 'https://maven.covers1624.net/' }
     maven { url 'https://files.minecraftforge.net/maven/' }
-    maven { url 'https://repo.gradle.org/gradle/libs-releases-local/' }
+    maven { url 'https://repo.gradle.org/gradle/libs-releases/' }
 }
 
 subprojects { subProject ->

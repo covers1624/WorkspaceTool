@@ -88,7 +88,7 @@ public class GradleModelExtractor {
             LOGGER.info("Extracting available task information..");
             GradleProject project = connection.model(GradleProject.class)
                     .setJavaHome(javaHome.toFile())
-                    .setJvmArguments("-Xmx3G", "-Dorg.gradle.daemon=false")
+                    .setJvmArguments("-Xmx3G")
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                     .setStandardError(new ConsumingOutputStream(LOGGER::info))
                     .get();
@@ -100,13 +100,18 @@ public class GradleModelExtractor {
             connection
                     .action(new WorkspaceToolModelAction(cacheFile.toFile(), new HashSet<>()))
                     .setJavaHome(javaHome.toFile())
-                    .setJvmArguments("-Xmx3G", "-Dorg.gradle.daemon=false")
+                    .setJvmArguments("-Xmx3G")
                     .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                     .setStandardError(new ConsumingOutputStream(LOGGER::info))
                     .withArguments("-si", "-I", initScriptPath.get().toAbsolutePath().toString())
                     .forTasks(tasksToExecute)
                     .run();
+
+            // TODO only do this when unit testing? Makes attaching debugger easier.
+            // Tell the Daemon to shut down after this build.
+            //noinspection UnstableApiUsage
+            connector.disconnect();
         }
         try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(cacheFile))) {
             return (ProjectData) in.readObject();
