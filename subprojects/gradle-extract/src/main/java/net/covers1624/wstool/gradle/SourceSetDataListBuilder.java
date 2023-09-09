@@ -101,7 +101,7 @@ public class SourceSetDataListBuilder implements DataBuilder {
 
     @Nullable
     private static SourceSetContainer getSourceSetContainerConvention(Project project) {
-        // JavaPluginConvention was removed in Gradle 8.
+        // JavaPluginConvention was removed in Gradle 9.
         try {
             Object convention = InvokerHelper.getProperty(project, "convention");
             Method findPlugin = convention.getClass().getMethod("findPlugin", Class.class);
