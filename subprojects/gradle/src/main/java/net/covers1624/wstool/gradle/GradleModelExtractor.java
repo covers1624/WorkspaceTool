@@ -98,7 +98,7 @@ public class GradleModelExtractor {
                     .toSet();
             LOGGER.info("Extracting WorkspaceTool project data..");
             connection
-                    .action(new WorkspaceToolModelAction(cacheFile.toFile(), new HashSet<>()))
+                    .action(new WorkspaceToolModelAction(cacheFile.toFile(), new HashSet<>(), new HashSet<>()))
                     .setJavaHome(javaHome.toFile())
                     .setJvmArguments(FastStream.of("-Xmx3G").concat(extraJvmArgs()))
                     .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))

@@ -1,10 +1,9 @@
 package net.covers1624.wstool.gradle.extract;
 
 import net.covers1624.wstool.gradle.GradleModelExtractor;
-import net.covers1624.wstool.gradle.GradleTestBase;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SourceSetData;
-import net.covers1624.wstool.gradle.api.data.SourceSetDataList;
+import net.covers1624.wstool.gradle.api.data.SourceSetList;
 import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.Test;
 
@@ -68,10 +67,10 @@ public class SimpleProjectExtractionTest extends ExtractTestBase {
                 Set.of()
         );
 
-        SourceSetDataList sourceSetList = data.getData(SourceSetDataList.class);
+        SourceSetList sourceSetList = data.getData(SourceSetList.class);
         assertNotNull(sourceSetList);
 
-        SourceSetData main = sourceSetList.sourceSets.get("main");
+        SourceSetData main = sourceSetList.get("main");
         assertNotNull(main);
         assertEquals("main", main.name);
         assertNotNull(main.compileClasspathConfiguration);
@@ -79,7 +78,7 @@ public class SimpleProjectExtractionTest extends ExtractTestBase {
         assertNotNull(main.sourceMap.get("java"));
         assertNotNull(main.sourceMap.get("resources"));
 
-        SourceSetData test = sourceSetList.sourceSets.get("test");
+        SourceSetData test = sourceSetList.get("test");
         assertNotNull(test);
         assertEquals("test", test.name);
         assertNotNull(test.compileClasspathConfiguration);

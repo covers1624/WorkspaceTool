@@ -15,7 +15,18 @@ public abstract class Data implements Serializable {
     /**
      * Map of data objects build into/from the current data object.
      */
-    public final Map<Class<? extends Data>, Data> data = new HashMap<>();
+    private final Map<Class<? extends Data>, Data> data = new HashMap<>();
+
+    /**
+     * Add a data object of a specific type.
+     *
+     * @param clazz The type.
+     * @param data  The data.
+     */
+    public <T extends Data> T putData(Class<T> clazz, T data) {
+        this.data.put(clazz, data);
+        return data;
+    }
 
     /**
      * Get a data object of a specific type.

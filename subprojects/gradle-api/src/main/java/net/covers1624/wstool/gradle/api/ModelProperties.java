@@ -18,9 +18,16 @@ public interface ModelProperties {
     void setOutputFile(File file);
 
     /**
-     * @return DataBuilders to extract data from the Project.
+     * @return PluginBuilders to extract data from the Project.
      */
-    Set<String> getDataBuilders();
+    Set<String> getPluginBuilders();
 
-    void setDataBuilders(Set<String> builders);
+    void setPluginBuilders(Set<String> builders);
+
+    /**
+     * @return ProjectBuilders to extract data from the Project.
+     */
+    Set<String> getProjectBuilders();
+
+    void setProjectBuilders(Set<String> builders);
 }

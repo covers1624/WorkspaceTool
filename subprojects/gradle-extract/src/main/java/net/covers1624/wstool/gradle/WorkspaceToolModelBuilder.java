@@ -7,6 +7,7 @@ import net.covers1624.wstool.gradle.api.ModelProperties;
 import net.covers1624.wstool.gradle.api.WorkspaceToolModel;
 import net.covers1624.wstool.gradle.api.data.PluginData;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
+import net.covers1624.wstool.gradle.api.data.SubProjectList;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.PluginContainer;
@@ -31,25 +32,27 @@ import java.util.stream.Stream;
 public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuilder<ModelProperties> {
 
     @Override
-    public Class<ModelProperties> getParameterType() {
-        return ModelProperties.class;
-    }
-
-    @Override
     public Object buildAll(String modelName, ModelProperties properties, Project project) {
         try {
-            List<DataBuilder> dataBuilders = new LinkedList<>();
-            dataBuilders.add(new ProjectExtDataBuilder());
-            dataBuilders.add(new SourceSetDataListBuilder());
+            List<PluginBuilder> pluginBuilders = new ArrayList<>();
+            List<ProjectBuilder> projectBuilders = new ArrayList<>();
 
-            for (String builderClazz : properties.getDataBuilders()) {
-                try {
-                    dataBuilders.add((DataBuilder) Class.forName(builderClazz).getConstructor().newInstance());
-                } catch (Throwable e) {
-                    throw new RuntimeException("Failed to instantiate data builder class. " + builderClazz);
-                }
+            projectBuilders.add(new ProjectExtDataBuilder());
+            projectBuilders.add(new SourceSetDataBuilder());
+            projectBuilders.add(new ConfigurationDataBuilder());
+
+            pluginBuilders.addAll(loadBuilders(PluginBuilder.class, properties.getPluginBuilders()));
+            projectBuilders.addAll(loadBuilders(ProjectBuilder.class, properties.getProjectBuilders()));
+
+            LookupCache lookupCache = new LookupCache();
+            ProjectData projectData = buildProjectTree(project, null, pluginBuilders, lookupCache);
+
+            for (ProjectBuilder builder : projectBuilders) {
+                lookupCache.projects.forEach((proj, data) -> {
+                    builder.buildProjectData(proj, data, lookupCache);
+                });
             }
-            ProjectData projectData = buildProject(project, null, dataBuilders);
+
             try (ObjectOutputStream os = new ObjectOutputStream(Files.newOutputStream(properties.getOutputFile().toPath()))) {
                 os.writeObject(projectData);
             }
@@ -60,17 +63,26 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
         return new WorkspaceToolModel.Dummy();
     }
 
-    @Override
-    public boolean canBuild(String modelName) {
-        return modelName.equals(WorkspaceToolModel.class.getName());
+    private static <T> List<T> loadBuilders(Class<? extends T> clazz, Collection<String> classes) {
+        List<T> builders = new ArrayList<>(classes.size());
+        for (String builderClazz : classes) {
+            try {
+                builders.add(clazz.cast(Class.forName(builderClazz).getConstructor().newInstance()));
+            } catch (Throwable e) {
+                throw new RuntimeException("Failed to instantiate data builder class. " + builderClazz);
+            }
+        }
+        return builders;
     }
 
-    @Override
-    public Object buildAll(String modelName, Project project) {
-        throw new UnsupportedOperationException();
-    }
+    // @formatter:off
+    @Override public Class<ModelProperties> getParameterType() { return ModelProperties.class; }
+    @Override public boolean canBuild(String modelName) { return modelName.equals(WorkspaceToolModel.class.getName()); }
+    @Override public Object buildAll(String modelName, Project project) { throw new UnsupportedOperationException(); }
+    // @formatter:on
 
-    private static ProjectData buildProject(Project project, @Nullable ProjectData parent, List<DataBuilder> dataBuilders) {
+    // Build the project tree lookup map and subProject data.
+    private static ProjectData buildProjectTree(Project project, @Nullable ProjectData parent, List<PluginBuilder> pluginBuilders, LookupCache lookupCache) {
         ProjectData projectData = new ProjectData(
                 project.getName(),
                 project.getProjectDir(),
@@ -79,20 +91,24 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                 String.valueOf(project.getGroup()),
                 String.valueOf(project.findProperty("archivesBaseName"))
         );
-        projectData.data.put(PluginData.class, buildPlugins(project, dataBuilders));
+        projectData.putData(PluginData.class, buildPlugins(project, pluginBuilders));
 
-        for (DataBuilder builder : dataBuilders) {
-            builder.buildProjectData(project, projectData);
+        if (lookupCache.projects.containsKey(project)) {
+            throw new IllegalStateException("Already visited project: " + project);
         }
+        lookupCache.projects.put(project, projectData);
 
+        SubProjectList subProjectData = new SubProjectList();
         for (Project subProj : project.getSubprojects()) {
-            projectData.subprojects.put(subProj.getName(), buildProject(subProj, projectData, dataBuilders));
+            subProjectData.put(subProj.getName(), buildProjectTree(subProj, projectData, pluginBuilders, lookupCache));
         }
+        projectData.putData(SubProjectList.class, subProjectData);
 
         return projectData;
     }
 
-    private static PluginData buildPlugins(Project project, List<DataBuilder> dataBuilders) {
+    // Build all plugin specific data for the project.
+    private static PluginData buildPlugins(Project project, List<PluginBuilder> dataBuilders) {
         PluginContainer plugins = project.getPlugins();
 
         Map<String, String> pluginMap = getPluginMap(plugins);
@@ -104,7 +120,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                     data.plugins.put(pluginMap.getOrDefault(cName, cName), cName);
                 });
 
-        for (DataBuilder builder : dataBuilders) {
+        for (PluginBuilder builder : dataBuilders) {
             builder.buildPluginData(project, data);
         }
         return data;

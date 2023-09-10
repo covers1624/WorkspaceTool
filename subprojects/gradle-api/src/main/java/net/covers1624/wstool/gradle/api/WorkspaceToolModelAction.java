@@ -16,18 +16,21 @@ import java.util.Set;
 public class WorkspaceToolModelAction implements BuildAction<WorkspaceToolModel> {
 
     private final File cacheFile;
-    private final Set<String> dataBuilders;
+    private final Set<String> pluginBuilders;
+    private final Set<String> projectBuilders;
 
-    public WorkspaceToolModelAction(File cacheFile, Set<String> dataBuilders) {
+    public WorkspaceToolModelAction(File cacheFile, Set<String> pluginBuilders, Set<String> projectBuilders) {
         this.cacheFile = cacheFile;
-        this.dataBuilders = dataBuilders;
+        this.pluginBuilders = pluginBuilders;
+        this.projectBuilders = projectBuilders;
     }
 
     @Override
     public WorkspaceToolModel execute(BuildController controller) {
         return controller.getModel(WorkspaceToolModel.class, ModelProperties.class, p -> {
             p.setOutputFile(cacheFile);
-            p.setDataBuilders(dataBuilders);
+            p.setPluginBuilders(pluginBuilders);
+            p.setProjectBuilders(projectBuilders);
         });
     }
 }

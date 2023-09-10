@@ -4,19 +4,21 @@ import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.ProjectExtData;
 import org.gradle.api.Project;
 
+import java.util.Map;
+
 /**
  * Created by covers1624 on 16/5/23.
  */
-public class ProjectExtDataBuilder implements DataBuilder {
+public class ProjectExtDataBuilder implements ProjectBuilder {
 
     @Override
-    public void buildProjectData(Project project, ProjectData projectData) {
+    public void buildProjectData(Project project, ProjectData projectData, LookupCache lookupCache) {
         ProjectExtData data = new ProjectExtData();
         project.getExtensions().getExtraProperties().getProperties().forEach((k, v) -> {
             if (v instanceof CharSequence) {
                 data.properties.put(k, v.toString());
             }
         });
-        projectData.data.put(ProjectExtData.class, data);
+        projectData.putData(ProjectExtData.class, data);
     }
 }

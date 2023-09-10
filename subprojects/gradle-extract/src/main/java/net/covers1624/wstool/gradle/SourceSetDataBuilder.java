@@ -3,7 +3,7 @@ package net.covers1624.wstool.gradle;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SourceSetData;
-import net.covers1624.wstool.gradle.api.data.SourceSetDataList;
+import net.covers1624.wstool.gradle.api.data.SourceSetList;
 import org.codehaus.groovy.runtime.InvokerHelper;
 import org.gradle.api.Project;
 import org.gradle.api.file.SourceDirectorySet;
@@ -13,6 +13,7 @@ import org.gradle.api.plugins.ExtensionsSchema;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,13 +27,13 @@ import static net.covers1624.quack.util.SneakyUtils.unsafeCast;
 /**
  * Created by covers1624 on 16/5/23.
  */
-public class SourceSetDataListBuilder implements DataBuilder {
+public class SourceSetDataBuilder implements ProjectBuilder {
 
     @Override
-    public void buildProjectData(Project project, ProjectData projectData) {
+    public void buildProjectData(Project project, ProjectData projectData, LookupCache lookupCache) {
         SourceSetContainer sourceSets = getSourceSetContainer(project);
         if (sourceSets == null) return;
-        SourceSetDataList sourceSetData = new SourceSetDataList();
+        SourceSetList sourceSetData = new SourceSetList();
         for (SourceSet sourceSet : sourceSets) {
             SourceSetData data = new SourceSetData(sourceSet.getName(), sourceSet.getCompileClasspathConfigurationName(), sourceSet.getRuntimeClasspathConfigurationName());
             data.sourceMap.put("resources", getFiles(sourceSet.getResources()));
@@ -40,9 +41,16 @@ public class SourceSetDataListBuilder implements DataBuilder {
 
             addSourcesFromExtension(sourceSet, data);
             addSourcesFromConvention(sourceSet, data);
-            sourceSetData.sourceSets.put(sourceSet.getName(), data);
+            sourceSetData.put(sourceSet.getName(), data);
+
+            SourceSetOutput output = sourceSet.getOutput();
+            SourceSetData existingLookup = lookupCache.sourceSets.get(output);
+            if (existingLookup != null) {
+                throw new IllegalStateException("SourceSetOutput is already in lookup cache! Existing name: " + existingLookup.name + ", New Name: " + data.name);
+            }
+            lookupCache.sourceSets.put(output, data);
         }
-        projectData.data.put(SourceSetDataList.class, sourceSetData);
+        projectData.putData(SourceSetList.class, sourceSetData);
     }
 
     private static void addSourcesFromExtension(SourceSet sourceSet, SourceSetData data) {
@@ -84,7 +92,7 @@ public class SourceSetDataListBuilder implements DataBuilder {
     }
 
     @Nullable
-    private static SourceSetContainer getSourceSetContainer(Project project) {
+    public static SourceSetContainer getSourceSetContainer(Project project) {
         // In Gradle 7.1 all of JavaPluginConvention was mirrored onto JavaPluginExtension, prefer that path.
         if (GradleVersion.current().compareTo(GradleVersion.version("7.1")) >= 0) {
             return getSourceSetContainerExtension(project);
