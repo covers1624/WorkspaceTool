@@ -3,7 +3,12 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+        vendor = JvmVendorSpec.ADOPTOPENJDK
+    }
+}
 
 archivesBaseName = 'wt-wrapper'
 

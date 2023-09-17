@@ -1,4 +1,9 @@
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+        vendor = JvmVendorSpec.ADOPTOPENJDK
+    }
+}
 
 archivesBaseName = 'gradle-extract'
 
