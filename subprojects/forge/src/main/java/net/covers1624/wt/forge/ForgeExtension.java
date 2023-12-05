@@ -136,16 +136,19 @@ public class ForgeExtension implements Extension {
                     }
                     remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new SRGToMCPRemapper(mappingData))));
                 } else {
-                    ProjectData forgeSubModuleData = requireNonNull(projectData.subProjects.get("forge"), "'forge' submodule not found on Forge project.");
-                    FG3McpMappingData mappingData = forgeSubModuleData.getData(FG3McpMappingData.class);
-                    if (mappingData != null) {
-                        try {
-                            remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new CSVRemapper(mappingData.mappingsZip.toPath()))));
-                        } catch (IOException e) {
-                            logger.warn("Unable to setup CSVReampper!", e);
+                    // NeoForge 1.20.2 does not require remapping!
+                    if (!projectData.subProjects.containsKey("neoforge")) {
+                        ProjectData forgeSubModuleData = requireNonNull(projectData.subProjects.get("forge"), "'forge' submodule not found on Forge project.");
+                        FG3McpMappingData mappingData = forgeSubModuleData.getData(FG3McpMappingData.class);
+                        if (mappingData != null) {
+                            try {
+                                remapper = Optional.of(new DependencyRemapper(context.cacheDir, new JarRemapper(new CSVRemapper(mappingData.mappingsZip.toPath()))));
+                            } catch (IOException e) {
+                                logger.warn("Unable to setup CSVReampper!", e);
+                            }
+                        } else {
+                            logger.warn("Forge project does not have FG3McpMappingData!");
                         }
-                    } else {
-                        logger.warn("Forge project does not have FG3McpMappingData!");
                     }
                     //noinspection OptionalAssignedToNull
                     if (remapper == null) {
@@ -227,7 +230,7 @@ public class ForgeExtension implements Extension {
 
     static GradleBackedModule findForgeSubModule(WorkspaceToolContext context) {
         return (GradleBackedModule) context.frameworkModules.stream()
-                .filter(e -> e.getName().equals("Forge/forge") || e.getName().equals("ForgeRoot/forge") || e.getName().equals("NeoForge/forge"))
+                .filter(e -> e.getName().equals("Forge/forge") || e.getName().equals("ForgeRoot/forge") || e.getName().equals("NeoForge/forge") || e.getName().equals("NeoForge/neoforge"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing Forge module."));
     }

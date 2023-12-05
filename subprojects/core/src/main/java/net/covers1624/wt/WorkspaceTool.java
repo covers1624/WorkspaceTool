@@ -240,6 +240,7 @@ public class WorkspaceTool {
                 config.streamAll().forEach(e -> sdkCandidate.getClasspath().forEach(e.getDependencies()::remove));
             }
         });
+        EarlyProcessModulesEvent.REGISTRY.fireEvent(new EarlyProcessModulesEvent(context));
 
         // Run a pass of dependency processing _before_ running dependency aggregation.
         context.modules.forEach(module -> {

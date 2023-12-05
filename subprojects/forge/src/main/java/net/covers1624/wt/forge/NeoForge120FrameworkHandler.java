@@ -45,7 +45,14 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
 
         WorkspaceToolModel model = context.modelCache.getModel(forgeDir, emptySet(), Set.of("prepareRuns"));
         ProjectData projectData = model.getProjectData();
-        projectData.subProjects.remove("clean"); // Useless for WorkspaceTool.
+        boolean isNeo202Plus = projectData.subProjects.containsKey("neoforge");
+
+        if (isNeo202Plus) {
+            projectData.subProjects.remove("base"); // Useless for WorkspaceTool.
+            projectData.subProjects.remove("tests"); // TODO make this configurable?
+        } else {
+            projectData.subProjects.remove("clean"); // Useless for WorkspaceTool.
+        }
         for (ProjectData project : iterable(projectData.streamAllProjects())) {
             // All Test sourcesets seem to be missing a dependency on main.
             // TODO, rework dependency visitor system to not rely on SourceSet dependencies.
@@ -82,12 +89,25 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
             });
         });
 
+        String mcVersion;
+        if (isNeo202Plus) {
+            mcVersion = projectData.extraProperties.get("minecraft_version");
+        } else {
+            mcVersion = projectData.extraProperties.get("MC_VERSION");
+        }
+
         // Run forge setup if required.
         if (needsSetup) {
-            runForgeSetup(of(), "clean", "setup", ":forge:compileJava");
+            String prefix = forgeSubModule.getName().replace("NeoForge/", "");
+            runForgeSetup(of(), "clean");
+            runForgeSetup(of(), "setup");
+            if (isNeo202Plus) {
+                runForgeSetup(of(), "neoforge:selectRawArtifactNet.minecraft_client_" + mcVersion + "_client-extra");
+            }
+            runForgeSetup(of(), ":" + prefix + ":compileJava");
             hashContainer.remove(HASH_MARKER_SETUP);
         }
-        downloadAssets(projectData.extraProperties.get("MC_VERSION"));
+        downloadAssets(mcVersion);
     }
 
     private void extractLaunchResources() {

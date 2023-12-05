@@ -10,6 +10,7 @@ import net.covers1624.wt.api.module.GradleBackedModule;
 import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.api.script.runconfig.RunConfig;
 import net.covers1624.wt.api.workspace.WorkspaceModule;
+import net.covers1624.wt.event.EarlyProcessModulesEvent;
 import net.covers1624.wt.event.ProcessModulesEvent;
 import net.covers1624.wt.event.ProcessWorkspaceModulesEvent;
 import net.covers1624.wt.forge.api.export.ForgeExportedData;
@@ -20,7 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -34,11 +34,11 @@ import static net.covers1624.wt.forge.ForgeExtension.*;
 public class NeoForge120Extension extends Forge117Extension {
 
     static void init() {
-        ProcessModulesEvent.REGISTRY.register(NeoForge120Extension::onProcessModules);
+        EarlyProcessModulesEvent.REGISTRY.register(NeoForge120Extension::onProcessModules);
         ProcessWorkspaceModulesEvent.REGISTRY.register(NeoForge120Extension::onProcessWorkspaceModules);
     }
 
-    private static void onProcessModules(ProcessModulesEvent event) {
+    private static void onProcessModules(EarlyProcessModulesEvent event) {
         WorkspaceToolContext context = event.getContext();
         if (!context.isFramework(NeoForge120.class)) return;
 
@@ -50,6 +50,11 @@ public class NeoForge120Extension extends Forge117Extension {
             if (minecraftConfig != null) {
                 minecraftConfig.getDependencies().clear();
             }
+            for (Configuration config : module.getConfigurations().values()) {
+                if (config.getName().startsWith("ng_dummy_ng_")) {
+                    config.getDependencies().clear();
+                }
+            }
         }
     }
 
@@ -60,7 +65,15 @@ public class NeoForge120Extension extends Forge117Extension {
         GradleBackedModule forgeModule = findForgeRootModule(context);
         GradleBackedModule forgeSubModule = findForgeSubModule(context);
         ProjectData rootProject = forgeModule.getProjectData();
-        ProjectData forgeSubProject = requireNonNull(rootProject.subProjects.get("forge"), "Missing forge submodule.");
+        boolean isNeo202Plus;
+        ProjectData forgeSubProject;
+        if (rootProject.subProjects.containsKey("neoforge")) {
+            forgeSubProject = rootProject.subProjects.get("neoforge");
+            isNeo202Plus = true;
+        } else {
+            forgeSubProject = requireNonNull(rootProject.subProjects.get("forge"), "Missing forge submodule.");
+            isNeo202Plus = false;
+        }
         WorkspaceModule forgeSubProjectWM = of(context.workspaceModules)
                 .filter(e -> e.getName().equals(forgeSubProject.getProjectCoords().replace(":", ".") + ".main"))
                 .only();
@@ -75,14 +88,15 @@ public class NeoForge120Extension extends Forge117Extension {
                 .map(e -> (LibraryDependency) e)
                 .filter(e -> !(e.getDependency() instanceof MavenDependency dep) || !dep.isRemapped() && !isMod(dep.getClasses()));
 
-        List<String> runtimeClasspath = of(depMap.get(DependencyScope.COMPILE))
+        List<String> runtimeClasspath = of(depMap.get(DependencyScope.RUNTIME))
+                .filterNot(e -> e instanceof WorkspaceModuleDependency)
                 .concat(modRuntimeDeps)
                 .map(Forge117Extension::evalDependency)
                 .map(Path::toString)
                 .distinct()
                 .toLinkedList();
 
-        List<Path> moduleOnly = of(forgeSubModule.getConfigurations().get("moduleonly").getAllDependencies())
+        List<Path> moduleOnly = of(forgeSubModule.getConfigurations().get(isNeo202Plus ? "moduleOnly" : "moduleonly").getAllDependencies())
                 .map(Forge117Extension::evalDependency)
                 .toList();
         List<Path> gameLayerLibrary = of(forgeSubModule.getConfigurations().get("gameLayerLibrary").getAllDependencies())
@@ -106,24 +120,33 @@ public class NeoForge120Extension extends Forge117Extension {
         }
         ignoreList += "client-extra,forge-";
 
-        String mcVersion = rootProject.extraProperties.get("MC_VERSION");
         Path assetsDir = Objects.requireNonNull(context.blackboard.get(ASSETS_PATH));
         VersionInfoJson versionInfo = Objects.requireNonNull(context.blackboard.get(VERSION_INFO));
 
+        Map<String, String> envVars = new HashMap<>();
         ImmutableList.Builder<String> progArgs = ImmutableList.builder();
         progArgs.add("--gameDir", ".");
-        progArgs.add("--fml.forgeVersion", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""));
-        progArgs.add("--fml.mcVersion", mcVersion);
-        progArgs.add("--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION"));
+        if (isNeo202Plus) {
+            progArgs.add("--fml.neoForgeVersion", forgeSubProject.version.replace("-wt-local", ""));
+            progArgs.add("--fml.fmlVersion", rootProject.extraProperties.get("fancy_mod_loader_version"));
+            progArgs.add("--fml.mcVersion", rootProject.extraProperties.get("minecraft_version"));
+            progArgs.add("--fml.neoFormVersion", rootProject.extraProperties.get("neoform_version"));
 
-        String fmlVersion = rootProject.extraProperties.get("FANCY_MOD_LOADER_VERSION");
-        if (fmlVersion != null) {
-            progArgs.add("--fml.fmlVersion", fmlVersion);
+            envVars.put("NEOFORGE_SPEC", forgeSubProject.version.replace("-wt-local", ""));
+        } else {
+            String mcVersion = rootProject.extraProperties.get("MC_VERSION");
+            progArgs.add("--fml.forgeVersion", forgeSubProject.version.substring(mcVersion.length() + 1).replace("-wt-local", ""));
+            progArgs.add("--fml.mcVersion", mcVersion);
+            progArgs.add("--fml.mcpVersion", rootProject.extraProperties.get("MCP_VERSION"));
+
+            String fmlVersion = rootProject.extraProperties.get("FANCY_MOD_LOADER_VERSION");
+            if (fmlVersion != null) {
+                progArgs.add("--fml.fmlVersion", fmlVersion);
+            }
+
+            envVars.put("FORGE_SPEC", forgeSubProject.extraProperties.get("SPEC_VERSION"));
+            envVars.put("LAUNCHER_VERSION", forgeSubProject.extraProperties.get("SPEC_VERSION"));
         }
-
-        Map<String, String> envVars = new HashMap<>();
-        envVars.put("FORGE_SPEC", forgeSubProject.extraProperties.get("SPEC_VERSION"));
-        envVars.put("LAUNCHER_VERSION", forgeSubProject.extraProperties.get("SPEC_VERSION"));
 
         Map<String, String> sysProps = new HashMap<>();
         sysProps.put("eventbus.checkTypesOnDispatch", "true");
