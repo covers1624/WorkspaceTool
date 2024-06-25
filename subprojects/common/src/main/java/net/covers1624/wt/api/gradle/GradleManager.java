@@ -22,9 +22,11 @@ import java.util.regex.Pattern;
 public interface GradleManager {
 
     Pattern WRAPPER_URL_REGEX = Pattern.compile("gradle-(.*)(?>-bin|-all).zip$");
+    String MIN_GRADLE_VERSION = "4.10.3";
+
     String MIN_GRADLE_USE_J16 = "7.0";
 
-    String MIN_GRADLE_VERSION = "4.10.3";
+    String MIN_GRADLE_USE_J17 = "7.3";
 
     /**
      * Provides what ever path the specified class was loaded from

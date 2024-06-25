@@ -188,8 +188,10 @@ public class GradleManagerImpl implements Closeable, GradleManager {
     @Override
     public JavaVersion getJavaVersionForGradle(String gradleVersion) {
         GradleVersion installed = GradleVersion.version(gradleVersion);
-        GradleVersion minVersion = GradleVersion.version(MIN_GRADLE_USE_J16);
-        if (installed.compareTo(minVersion) >= 0) {
+        if (installed.compareTo(GradleVersion.version(MIN_GRADLE_USE_J17)) >= 0) {
+            return JavaVersion.JAVA_17;
+        }
+        if (installed.compareTo(GradleVersion.version(MIN_GRADLE_USE_J16)) >= 0) {
             return JavaVersion.JAVA_16;
         }
         return JavaVersion.JAVA_1_8;
