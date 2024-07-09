@@ -151,8 +151,6 @@ public class WorkspaceTool {
 
         // WT-Gradle module
         context.gradleManager.includeClassMarker("net.covers1624.wt.gradle.WorkspaceToolGradlePlugin");
-        // GradleStuff
-        context.gradleManager.includeClassMarker("net.covers1624.gradlestuff.sourceset.SourceSetDependencyPlugin");
         // API
         context.gradleManager.includeClassMarker(ProjectData.class);
         // Guava

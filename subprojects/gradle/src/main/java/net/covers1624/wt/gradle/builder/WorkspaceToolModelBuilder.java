@@ -5,8 +5,6 @@
  */
 package net.covers1624.wt.gradle.builder;
 
-import net.covers1624.gradlestuff.dependencies.ConfigurationVisitor;
-import net.covers1624.gradlestuff.dependencies.ConfigurationWalker;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wt.api.event.VersionedClass;
 import net.covers1624.wt.api.gradle.data.*;
@@ -23,17 +21,19 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.PluginContainer;
 import org.gradle.api.tasks.ScalaSourceSet;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetOutput;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static net.covers1624.gradlestuff.dependencies.ConfigurationWalker.ResolveOptions.*;
+import static net.covers1624.wt.gradle.builder.ConfigurationWalker.ResolveOptions.*;
 
 /**
  * Created by covers1624 on 15/6/19.
@@ -132,7 +132,7 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
             }
         });
 
-        buildConfigurationData(project, projectData);
+        Map<SourceSetOutput, SourceSet> sourceSetMap = new HashMap<>();
         JavaPluginConvention javaConvention = project.getConvention().findPlugin(JavaPluginConvention.class);
         if (javaConvention != null) {
             for (SourceSet sourceSet : javaConvention.getSourceSets()) {
@@ -153,8 +153,10 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
                 data.compileConfiguration = sourceSet.getCompileClasspathConfigurationName();
                 data.runtimeConfiguration = sourceSet.getRuntimeClasspathConfigurationName();
                 data.compileOnlyConfiguration = sourceSet.getCompileOnlyConfigurationName();
+                sourceSetMap.put(sourceSet.getOutput(), sourceSet);
             }
         }
+        buildConfigurationData(project, projectData, sourceSetMap);
 
         return projectData;
     }
@@ -163,9 +165,9 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
         return dirSet.getSrcDirs().stream().map(File::getAbsoluteFile).collect(Collectors.toSet());
     }
 
-    private void buildConfigurationData(Project project, ProjectData projectData) {
-        ConfigurationWalker walker = new ConfigurationWalker(project.getDependencies());
-        Visitor visitor = new Visitor(projectData);
+    private void buildConfigurationData(Project project, ProjectData projectData, Map<SourceSetOutput, SourceSet> sourceSetMap) {
+        ConfigurationWalker walker = new ConfigurationWalker(project);
+        Visitor visitor = new Visitor(projectData, sourceSetMap);
         walker.walk(project.getConfigurations(), visitor, FORCE, SOURCES, JAVADOC);
     }
 
@@ -181,11 +183,13 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
     private static class Visitor implements ConfigurationVisitor {
 
         private final ProjectData projectData;
+        private final Map<SourceSetOutput, SourceSet> sourceSetMap;
         @Nullable
         private ConfigurationData data;
 
-        private Visitor(ProjectData projectData) {
+        private Visitor(ProjectData projectData, Map<SourceSetOutput, SourceSet> sourceSetMap) {
             this.projectData = projectData;
+            this.sourceSetMap = sourceSetMap;
         }
 
         @Override
@@ -209,7 +213,11 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
         }
 
         @Override
-        public void visitSourceSetDependency(SourceSet ss) {
+        public void visitSourceSetDependency(SourceSetOutput ssOutput) {
+            SourceSet ss = sourceSetMap.get(ssOutput);
+            if (ss == null) {
+                throw new RuntimeException("SourceSetOutput missing from lookup.");
+            }
             data.dependencies.add(new ConfigurationData.SourceSetDependency(ss.getName()));
         }
 

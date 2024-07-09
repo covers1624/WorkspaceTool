@@ -4,7 +4,6 @@ archivesBaseName = 'gradle'
 
 dependencies {
     api project(":api")
-    api 'net.covers1624:GradleStuff:3.0.2.11'
 
     compileOnly gradleApi()
 }
