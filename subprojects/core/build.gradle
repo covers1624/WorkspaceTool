@@ -1,9 +1,7 @@
-import org.gradle.api.publish.maven.internal.artifact.SingleOutputTaskMavenArtifact
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
-        vendor = JvmVendorSpec.ADOPTOPENJDK
+        vendor = JvmVendorSpec.ADOPTIUM
     }
 }
 
@@ -22,7 +20,9 @@ publishing {
             artifactId archivesBaseName
 
             from components.java
-            artifact new SingleOutputTaskMavenArtifact(rootProject.tasks.named('genVersionManifest'), "json", "")
+            artifact(rootProject.tasks.named('genVersionManifest')) {
+                extension 'json'
+            }
         }
     }
 }
