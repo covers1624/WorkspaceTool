@@ -9,6 +9,16 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://maven.covers1624.net/' }
+        maven { url 'https://files.minecraftforge.net/maven/' }
+        maven { url 'https://repo.gradle.org/gradle/libs-releases/' }
+    }
+}
+
 rootProject.name = 'WorkspaceTool'
 
 include 'api'

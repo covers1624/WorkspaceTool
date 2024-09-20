@@ -24,15 +24,6 @@ version '0.5.0'
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of WorkspaceTool, Version: ${version}"
 
-def repos = {
-    mavenLocal()
-    mavenCentral()
-    jcenter()
-    maven { url 'https://maven.covers1624.net/' }
-    maven { url 'https://files.minecraftforge.net/maven/' }
-    maven { url 'https://repo.gradle.org/gradle/libs-releases/' }
-}
-
 subprojects { subProject ->
     // Test api is special, hardcode no Gradle artifacts, and add to testRuntimeOnly for all other projects.
     boolean isTestApi = subProject.name == 'test-api'
@@ -44,10 +35,6 @@ subprojects { subProject ->
 
     group rootProject.group
     version rootProject.version
-
-    repositories {
-        with repos
-    }
 
     configurations {
         testCompileOnly.extendsFrom compileOnly
@@ -116,10 +103,6 @@ subprojects { subProject ->
             }
         }
     }
-}
-
-repositories {
-    with repos
 }
 
 configurations {
