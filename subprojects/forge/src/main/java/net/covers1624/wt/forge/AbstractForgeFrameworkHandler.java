@@ -113,7 +113,7 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
                     .setJavaHome(javaHome.toAbsolutePath().toFile())
                     .forTasks(tasks)
                     .withArguments("-si")
-                    .setJvmArguments("-Xmx3G", "-Dorg.gradle.daemon=false")
+                    .setJvmArguments("-Xmx3G", "-Dorg.gradle.daemon=false", "-Didea.active=true", "-Didea.sync.active")
                     .setEnvironmentVariables(realEnv)
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                     .setStandardError(new ConsumingOutputStream(LOGGER::error))

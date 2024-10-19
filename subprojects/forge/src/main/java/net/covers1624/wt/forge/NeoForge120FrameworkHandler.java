@@ -102,7 +102,7 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
             runForgeSetup(of(), "clean");
             runForgeSetup(of(), "setup");
             if (isNeo202Plus) {
-                runForgeSetup(of(), "neoforge:selectRawArtifactNet.minecraft_client_" + mcVersion + "_client-extra");
+                runForgeSetup(of(), "idePostSync");
             }
             runForgeSetup(of(), ":" + prefix + ":compileJava");
             hashContainer.remove(HASH_MARKER_SETUP);
