@@ -28,6 +28,8 @@ public interface GradleManager {
 
     String MIN_GRADLE_USE_J17 = "7.3";
 
+    String MIN_GRADLE_USE_J21 = "8.10";
+
     /**
      * Provides what ever path the specified class was loaded from
      * to WorkspaceTool's Gradle InitScript for use with Model building.
