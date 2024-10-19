@@ -34,7 +34,11 @@ public class AbstractForge113PlusExtension {
                     String sourceSet = module.getName().substring(lastDot + 1);
                     for (Path resourceDir : module.getResources()) {
                         Path modsToml = resourceDir.resolve("META-INF/mods.toml");
-                        if (!Files.exists(modsToml)) continue;
+                        Path neoModsToml = resourceDir.resolve("META-INF/neoforge.mods.toml");
+                        if (!Files.exists(modsToml)) {
+                            if (!Files.exists(neoModsToml)) continue;
+                            modsToml = neoModsToml;
+                        }
                         try (FileConfig config = FileConfig.builder(modsToml).build()) {
                             config.load();
                             if (config.contains("mods") && !(config.get("mods") instanceof Collection)) {

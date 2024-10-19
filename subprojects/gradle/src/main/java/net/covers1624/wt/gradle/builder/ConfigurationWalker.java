@@ -32,6 +32,16 @@ import static java.util.Collections.*;
  */
 public class ConfigurationWalker {
 
+    // These come from 1.21.1 NeoForge. They contain outgoing published dependencies which we don't care about.
+    private static final Set<String> HACKY_CONFIGURATION_EXCLUDE = new HashSet<>(Arrays.asList(
+            "modDevBundle",
+            "modDevConfig",
+            "modDevApiElements",
+            "modDevRuntimeElements",
+            "modDevModulePath",
+            "modDevTestFixtures"
+    ));
+
     private final Project project;
     private final DependencyHandler dependencyHandler;
 
@@ -67,6 +77,10 @@ public class ConfigurationWalker {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         for (Configuration config : configs) {
+            // These configurations we just always skip extracting.
+            if (HACKY_CONFIGURATION_EXCLUDE.contains(config.getName())) continue;
+            // Another hack!
+            if (config.getName().startsWith("neoForgeInstallerToolnet_neoforged")) continue;
             visitor.visitStart(config);
             if (config.isCanBeResolved() || optSet.contains(ResolveOptions.FORCE)) {
                 config = config.copy();

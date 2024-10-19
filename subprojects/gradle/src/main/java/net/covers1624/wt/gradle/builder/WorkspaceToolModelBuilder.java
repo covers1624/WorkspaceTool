@@ -87,6 +87,7 @@ public class WorkspaceToolModelBuilder extends AbstractModelBuilder<WorkspaceToo
             e.build(project, projectData, rootData);
         }
         for (Project subProject : project.getSubprojects()) {
+            if (project.getName().equals("NeoForge") && subProject.getName().equals("tests")) continue;
             projectData.subProjects.put(subProject.getName(), buildProject(subProject, rootData, dataBuilders));
         }
         return projectData;

@@ -22,6 +22,19 @@ public enum JavaVersion {
     JAVA_15("15"),
     JAVA_16("16"),
     JAVA_17("17"),
+    JAVA_18("18"),
+    JAVA_19("19"),
+    JAVA_20("20"),
+    JAVA_21("21"),
+    JAVA_22("22"),
+    JAVA_23("23"),
+    JAVA_24("24"),
+    JAVA_25("25"),
+    JAVA_26("26"),
+    JAVA_27("27"),
+    JAVA_28("28"),
+    JAVA_29("29"),
+    JAVA_30("30"),
     ;
 
     public final String version;

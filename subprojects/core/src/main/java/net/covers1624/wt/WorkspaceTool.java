@@ -286,6 +286,18 @@ public class WorkspaceTool {
                             ProcessDependencyEvent.REGISTRY.fireEvent(event);
                             return event.getResult();
                         })
+                        // Strip any dependencies which don't exist or are empty.
+                        .filter(e -> {
+                            if (e instanceof MavenDependency d) {
+                                if (Files.notExists(d.getClasses())) return false;
+                                try {
+                                    if (Files.size(d.getClasses()) == 0) return false;
+                                } catch (IOException ex) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        })
                         .filter(Objects::nonNull)
                         .collect(Collectors.toCollection(LinkedHashSet::new))
                 );
@@ -306,12 +318,12 @@ public class WorkspaceTool {
 
         // add run directories as excluded paths for every module
         context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values().stream()
-                               .map(RunConfig::getRunDir)
-                               .forEach(path ->
-                                       allModules.forEach(module ->
-                                               module.addExclude(path)
-                                       )
-                               );
+                .map(RunConfig::getRunDir)
+                .forEach(path ->
+                        allModules.forEach(module ->
+                                module.addExclude(path)
+                        )
+                );
 
         ProcessModulesEvent.REGISTRY.fireEvent(new ProcessModulesEvent(context));
 

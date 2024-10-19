@@ -77,7 +77,7 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
                 ss.getCompileConfiguration().addDependency(forgeDep.copy());
                 for (Path resourceDir : ss.getResources()) {
                     //If the SS has a mods.toml file, assume there is _some_ mod there
-                    if (Files.exists(resourceDir.resolve("META-INF/mods.toml"))) {
+                    if (Files.exists(resourceDir.resolve("META-INF/mods.toml")) || Files.exists(resourceDir.resolve("META-INF/neoforge.mods.toml"))) {
                         forgeRuntimeConfig.addDependency(new SourceSetDependencyImpl()
                                 .setModule(m)
                                 .setSourceSet(ss.getName())
