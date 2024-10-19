@@ -186,6 +186,14 @@ public class Forge117Extension extends AbstractForge113PlusExtension {
         // Sure?
         if (!Files.isRegularFile(file)) return true;
 
+        try {
+            if (Files.size(file) == 0) {
+                return false;
+            }
+        } catch (IOException ex) {
+            LOGGER.warn("Failed to determine size of {}.", file);
+            return false;
+        }
         try (FileSystem fs = IOUtils.getJarFileSystem(file, false)) {
             if (Files.exists(fs.getPath("/META-INF/mods.toml"))) return true;
             if (Files.notExists(fs.getPath("/META-INF/MANIFEST.MF"))) return false;
