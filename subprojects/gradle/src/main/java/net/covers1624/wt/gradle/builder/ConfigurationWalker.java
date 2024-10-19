@@ -3,10 +3,7 @@ package net.covers1624.wt.gradle.builder;
 import net.covers1624.quack.collection.ColUtils;
 import net.covers1624.quack.maven.MavenNotation;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.FileCollectionDependency;
-import org.gradle.api.artifacts.ProjectDependency;
+import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
@@ -89,7 +86,7 @@ public class ConfigurationWalker {
                         }
                     } else if (dependency instanceof ProjectDependency) {
                         visitor.visitProjectDependency(((ProjectDependency) dependency).getDependencyProject());
-                    } else {
+                    } else if (!(dependency instanceof ModuleDependency)) {
                         project.getLogger().warn("Unknown dependency type: {}", dependency.getClass().getName());
                     }
                 }
