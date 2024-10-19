@@ -117,7 +117,7 @@ tasks.register('genVersionManifest') {
         def dependencies = []
         def manifest = [
                 'main_class'  : 'net.covers1624.wt.WorkspaceTool',
-                'java_version': 'JAVA_16',
+                'java_version': 'JAVA_17',
                 'dependencies': dependencies
         ]
         long totalSize

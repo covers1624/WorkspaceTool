@@ -2,7 +2,7 @@ plugins {
     id 'groovy'
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 archivesBaseName = 'common'
 
@@ -21,7 +21,7 @@ dependencies {
     api 'org.apache.commons:commons-lang3:3.12.0'
     api 'org.apache.maven:maven-artifact:3.8.1'
     api 'it.unimi.dsi:fastutil:8.5.6'
-    api 'org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r'
+    api 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
     api 'org.apache.httpcomponents:httpclient:4.5.13'
     api 'commons-io:commons-io:2.11.0'
     api 'com.electronwill.night-config:core:3.6.4'

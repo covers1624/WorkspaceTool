@@ -1,5 +1,5 @@
 import org.gradle.api.publish.maven.internal.artifact.SingleOutputTaskMavenArtifact
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 archivesBaseName = 'core'
 
