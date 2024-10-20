@@ -8,7 +8,7 @@ java {
 archivesBaseName = 'test-api'
 
 dependencies {
-    runtimeOnly 'org.apache.logging.log4j:log4j-core:2.20.0'
-    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
-    runtimeOnly 'org.apache.logging.log4j:log4j-jul:2.20.0'
+    runtimeOnly loggerLibs.log4j2.core
+    runtimeOnly loggerLibs.log4j2.slf4j
+    runtimeOnly loggerLibs.log4j2.jul
 }

@@ -8,10 +8,14 @@ java {
 archivesBaseName = 'core'
 
 dependencies {
-    api 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
-    api 'org.apache.logging.log4j:log4j-jul:2.20.0'
+    api project(":api")
+    api project(":gradle")
 
-    api 'net.covers1624:Quack:0.4.7.71'
+    api loggerLibs.log4j2.core
+    api loggerLibs.log4j2.slf4j
+    api loggerLibs.log4j2.jul
+
+    api libs.quack
 }
 
 publishing {

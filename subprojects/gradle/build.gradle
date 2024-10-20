@@ -14,10 +14,11 @@ sourceSets {
 dependencies {
     api project(":api")
     api project(":gradle-api")
-    api 'net.covers1624:Quack:0.4.7.71'
 
-    api 'org.apache.commons:commons-lang3:3.12.0'
-    api 'com.google.code.gson:gson:2.10.1'
+    api libs.quack
+
+    api libs.lang3
+    api libs.gson
 
     api 'org.gradle:gradle-tooling-api:7.2'
 

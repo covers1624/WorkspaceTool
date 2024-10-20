@@ -10,7 +10,7 @@ archivesBaseName = 'gradle-extract'
 dependencies {
     api project(':gradle-api')
 
-    api 'net.covers1624:Quack:0.4.7.71'
+    api libs.quack
 
     compileOnly gradleApi()
 }
