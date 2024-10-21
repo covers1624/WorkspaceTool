@@ -16,6 +16,11 @@ dependencies {
     api loggerLibs.log4j2.jul
 
     api libs.quack
+    api libs.snakeyaml
+
+    runtimeOnly project(':intellij')
+    runtimeOnly project(':lexforge')
+    runtimeOnly project(':neoforge')
 }
 
 publishing {

@@ -27,6 +27,16 @@ public final class WorkspaceToolEnvironment {
      */
     public static final Path WSTOOL_JDKS = WSTOOL_SYSTEM_FOLDER.resolve("jdks");
 
+    /**
+     * The folder which WorkspaceTool is operating on. Also known as the 'project' directory.
+     */
+    public static final Path PROJECT_FOLDER = Path.of(".").toAbsolutePath().normalize();
+
+    /**
+     * The per-project cache folder.
+     */
+    public static final Path PROJECT_CACHE_FOLDER = PROJECT_FOLDER.resolve(".wstool/");
+
     @Nullable
     private static Path getPathProperty(String sysProp) {
         String val = System.getProperty(sysProp);

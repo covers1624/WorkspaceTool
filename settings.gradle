@@ -22,6 +22,8 @@ dependencyResolutionManagement {
             library('guava', 'com.google.guava:guava:33.3.0-jre')
             library('lang3', 'org.apache.commons:commons-lang3:3.12.0')
             library('gson', 'com.google.code.gson:gson:2.10.1')
+
+            library('snakeyaml', 'org.yaml:snakeyaml:2.3')
         }
     }
 }
@@ -33,6 +35,9 @@ include 'core'
 include 'gradle'
 include 'gradle-api'
 include 'gradle-extract'
+include 'intellij'
+include 'lexforge'
+include 'neoforge'
 include 'test-api'
 include 'wrapper'
 

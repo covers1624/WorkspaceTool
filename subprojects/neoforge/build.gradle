@@ -1,0 +1,22 @@
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
+}
+
+archivesBaseName = 'neoforge'
+
+dependencies {
+    api project(':api')
+}
+
+publishing {
+    publications {
+        publication(MavenPublication) {
+            artifactId archivesBaseName
+
+            from components.java
+        }
+    }
+}
