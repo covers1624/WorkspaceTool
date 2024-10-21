@@ -10,13 +10,6 @@ plugins {
 }
 
 dependencyResolutionManagement {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven { url 'https://maven.covers1624.net/' }
-        maven { url 'https://files.minecraftforge.net/maven/' }
-        maven { url 'https://repo.gradle.org/gradle/libs-releases/' }
-    }
     versionCatalogs {
         loggerLibs {
             library('log4j2-api', 'org.apache.logging.log4j:log4j-api:2.20.0')

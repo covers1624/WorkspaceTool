@@ -24,6 +24,18 @@ version '0.5.0'
 version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
 println "Starting build of WorkspaceTool, Version: ${version}"
 
+allprojects {
+    // TODO There is a bug somewhere in Gradle, putting this inside `dependencyResolutionManagement` in settings.gradle
+    //  causes artifacts on my maven to be un-resolvable..
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://maven.covers1624.net/' }
+        maven { url 'https://files.minecraftforge.net/maven/' }
+        maven { url 'https://repo.gradle.org/gradle/libs-releases/' }
+    }
+}
+
 subprojects { subProject ->
     // Test api is special, hardcode no Gradle artifacts, and add to testRuntimeOnly for all other projects.
     boolean isTestApi = subProject.name == 'test-api'
