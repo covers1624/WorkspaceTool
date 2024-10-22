@@ -88,6 +88,16 @@ public class ConfigurationWalker {
                     config.setCanBeResolved(true);
                     config.setCanBeConsumed(true);
                 }
+                if (!project.getRootProject().getName().equals("NeoForge")) {
+                    config.getDependencies().removeIf(e -> {
+                        if (e instanceof ModuleDependency) {
+                            ModuleDependency dep = (ModuleDependency) e;
+                            return "net.neoforged".equals(dep.getGroup()) && "neoforge".equals(dep.getName());
+                        }
+                        return false;
+                    });
+                }
+
                 Map<ComponentArtifactIdentifier, ResolvedArtifactResult> resolvedArtifacts = new HashMap<>();
                 Map<ComponentIdentifier, Map<Class<? extends Artifact>, Set<ResolvedArtifactResult>>> resolvedAuxiliary = new HashMap<>();
                 for (Dependency dependency : config.getAllDependencies()) {
