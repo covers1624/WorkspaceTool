@@ -156,6 +156,8 @@ public class GradleModelCacheImpl implements GradleModelCache {
                     .setStandardError(new ConsumingOutputStream(LOGGER::error))
                     .addProgressListener(new GradleProgressListener(context, tailGroup))
                     .get();
+            context.console.removeGroup(tailGroup);
+            tailGroup = context.console.newGroupFirst();
             Set<String> executeBefore = new HashSet<>();
             executeBefore.addAll(context.gradleManager.getExecuteBefore());
             executeBefore.addAll(extraTasks);
