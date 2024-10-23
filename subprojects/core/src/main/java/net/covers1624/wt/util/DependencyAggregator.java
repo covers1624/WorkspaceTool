@@ -41,14 +41,14 @@ public class DependencyAggregator {
                     .forEach(dep -> {
                         MavenNotation notation = dep.getNotation();
                         Map<ArtifactVersion, MavenDependency> versions = versionTable.computeIfAbsent(getKey(notation), e -> new TreeMap<>());
-                        versions.put(new DefaultArtifactVersion(Objects.requireNonNull(notation.version)), dep);
+                        versions.putIfAbsent(new DefaultArtifactVersion(Objects.requireNonNull(notation.version)), dep);
                     });
             configuration.getDependencies().stream()
                     .filter(e -> e instanceof ScalaSdkDependency)
                     .map(e -> (ScalaSdkDependency) e)
                     .forEach(dep -> {
                         Map<ArtifactVersion, ScalaSdkDependency> versions = scalaVersionTable.computeIfAbsent(dep.getScalaVersion(), e -> new TreeMap<>());
-                        versions.put(new DefaultArtifactVersion(dep.getVersion()), dep);
+                        versions.putIfAbsent(new DefaultArtifactVersion(dep.getVersion()), dep);
                     });
         }
     }
