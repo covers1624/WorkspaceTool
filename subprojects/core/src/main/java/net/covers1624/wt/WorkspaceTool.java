@@ -257,25 +257,23 @@ public class WorkspaceTool {
 
         //Resolve all dependencies, and remove duplicates.
         allModules.forEach(dependencyAggregator::consume);
-        stream(allModules.spliterator(), true)
-                .forEach(module -> {
-                    module.getConfigurations().values()
-                            .parallelStream()
-                            .forEach(config -> {
-                                config.setDependencies(config.getDependencies().stream()
-                                        .map(e -> {
-                                            if (e instanceof MavenDependency dep) {
-                                                return dependencyAggregator.resolve(dep.getNotation());
-                                            }
-                                            if (e instanceof ScalaSdkDependency dep) {
-                                                return dependencyAggregator.resolveScala(dep.getScalaVersion());
-                                            }
-                                            return e;
-                                        })
-                                        .collect(Collectors.toCollection(LinkedHashSet::new))
-                                );
-                            });
-                });
+        allModules.forEach(module -> {
+            module.getConfigurations().values()
+                    .forEach(config -> {
+                        config.setDependencies(config.getDependencies().stream()
+                                .map(e -> {
+                                    if (e instanceof MavenDependency dep) {
+                                        return dependencyAggregator.resolve(dep.getNotation());
+                                    }
+                                    if (e instanceof ScalaSdkDependency dep) {
+                                        return dependencyAggregator.resolveScala(dep.getScalaVersion());
+                                    }
+                                    return e;
+                                })
+                                .collect(Collectors.toCollection(LinkedHashSet::new))
+                        );
+                    });
+        });
 
         //Replace maven dependencies with module dependencies.
         context.modules.forEach(module -> {
@@ -327,7 +325,7 @@ public class WorkspaceTool {
 
         ProcessModulesEvent.REGISTRY.fireEvent(new ProcessModulesEvent(context));
 
-        stream(allModules.spliterator(), true).forEach(context.dependencyLibrary::consume);
+        allModules.forEach(context.dependencyLibrary::consume);
 
         WorkspaceHandler<?> workspaceHandler = context.workspaceRegistry.constructWorkspaceHandlerImpl(context.workspaceScript.getWorkspaceType());
         workspaceHandler.buildWorkspaceModules(unsafeCast(context.workspaceScript.getWorkspace()), context);
@@ -416,7 +414,7 @@ public class WorkspaceTool {
         Dependency dependency = event.getDependency();
         if (dependency instanceof MavenDependency mavenDep) {
             MavenNotation notation = mavenDep.getNotation();
-            Optional<Module> matchingModule = event.getContext().modules.parallelStream()
+            Optional<Module> matchingModule = event.getContext().modules.stream()
                     .filter(e -> e instanceof GradleBackedModule)
                     .map(e -> (GradleBackedModule) e)
                     .filter(e -> e != module)
