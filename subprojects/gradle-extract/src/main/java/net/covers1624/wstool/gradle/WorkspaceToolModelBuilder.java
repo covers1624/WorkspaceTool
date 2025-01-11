@@ -34,15 +34,11 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
     @Override
     public Object buildAll(String modelName, ModelProperties properties, Project project) {
         try {
-            List<PluginBuilder> pluginBuilders = new ArrayList<>();
-            List<ProjectBuilder> projectBuilders = new ArrayList<>();
-
-            projectBuilders.add(new ProjectExtDataBuilder());
-            projectBuilders.add(new SourceSetDataBuilder());
-            projectBuilders.add(new ConfigurationDataBuilder());
-
-            pluginBuilders.addAll(loadBuilders(PluginBuilder.class, properties.getPluginBuilders()));
-            projectBuilders.addAll(loadBuilders(ProjectBuilder.class, properties.getProjectBuilders()));
+            ClassLoader cl = WorkspaceToolModelBuilder.class.getClassLoader();
+            List<PluginBuilder> pluginBuilders = FastStream.of(ServiceLoader.load(PluginBuilder.class, cl))
+                    .toList();
+            List<ProjectBuilder> projectBuilders = FastStream.of(ServiceLoader.load(ProjectBuilder.class, cl))
+                    .toList();
 
             LookupCache lookupCache = new LookupCache();
             ProjectData projectData = buildProjectTree(project, null, pluginBuilders, lookupCache);
@@ -61,18 +57,6 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
         }
 
         return new WorkspaceToolModel.Dummy();
-    }
-
-    private static <T> List<T> loadBuilders(Class<? extends T> clazz, Collection<String> classes) {
-        List<T> builders = new ArrayList<>(classes.size());
-        for (String builderClazz : classes) {
-            try {
-                builders.add(clazz.cast(Class.forName(builderClazz).getConstructor().newInstance()));
-            } catch (Throwable e) {
-                throw new RuntimeException("Failed to instantiate data builder class. " + builderClazz);
-            }
-        }
-        return builders;
     }
 
     // @formatter:off

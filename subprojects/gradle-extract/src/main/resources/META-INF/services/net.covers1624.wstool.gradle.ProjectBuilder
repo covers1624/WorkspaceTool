@@ -1,0 +1,3 @@
+net.covers1624.wstool.gradle.ProjectExtDataBuilder
+net.covers1624.wstool.gradle.SourceSetDataBuilder
+net.covers1624.wstool.gradle.ConfigurationDataBuilder
