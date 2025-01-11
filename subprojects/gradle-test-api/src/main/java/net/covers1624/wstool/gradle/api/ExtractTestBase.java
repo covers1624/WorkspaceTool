@@ -1,8 +1,7 @@
-package net.covers1624.wstool.gradle.extract;
+package net.covers1624.wstool.gradle.api;
 
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
-import net.covers1624.wstool.gradle.GradleTestBase;
 
 /**
  * Created by covers1624 on 9/9/23.

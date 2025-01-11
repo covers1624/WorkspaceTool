@@ -1,4 +1,4 @@
-package net.covers1624.wstool.gradle;
+package net.covers1624.wstool.gradle.api;
 
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.JdkProvider;

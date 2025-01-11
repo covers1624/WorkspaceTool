@@ -1,6 +1,7 @@
 package net.covers1624.wstool.gradle;
 
 import net.covers1624.jdkutils.JavaVersion;
+import net.covers1624.wstool.gradle.api.GradleTestBase;
 import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.Test;
 

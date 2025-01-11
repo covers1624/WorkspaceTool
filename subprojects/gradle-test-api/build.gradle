@@ -1,0 +1,23 @@
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
+}
+
+archivesBaseName = 'gradle-test-api'
+
+sourceSets {
+    main.resources.srcDirs += 'src/main/generated'
+}
+
+dependencies {
+    api project(":api")
+    api project(":gradle")
+
+    api 'org.gradle:gradle-tooling-api:7.2'
+}
+
+processResources {
+    dependsOn(':genGradlePluginMetaDev')
+}

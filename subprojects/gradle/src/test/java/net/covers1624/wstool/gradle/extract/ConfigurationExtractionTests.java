@@ -2,7 +2,8 @@ package net.covers1624.wstool.gradle.extract;
 
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
-import net.covers1624.wstool.gradle.GradleTestBase;
+import net.covers1624.wstool.gradle.api.ExtractTestBase;
+import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.MavenDependency;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.ProjectDependency;

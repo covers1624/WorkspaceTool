@@ -22,11 +22,8 @@ dependencies {
 
     api 'org.gradle:gradle-tooling-api:7.2'
 
+    testImplementation project(':gradle-test-api')
     testRuntimeOnly project(":gradle-extract")
-}
-
-test {
-    dependsOn(':genGradlePluginMetaDev')
 }
 
 publishing {
