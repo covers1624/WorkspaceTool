@@ -12,8 +12,17 @@ import java.util.Map;
 /**
  * Created by covers1624 on 9/9/23.
  */
+// TODO replace with a typed map/blackboard?
 public class LookupCache {
 
+    /**
+     * Used to lookup {@link ProjectData} instances from its originating {@link Project}
+     * when parsing project dependencies.
+     */
     public final Map<Project, ProjectData> projects = new HashMap<>();
+    /**
+     * Used to lookup {@link SourceSetData} instances from its originating {@link SourceSetOutput}
+     * when parsing source set dependencies.
+     */
     public final Map<SourceSetOutput, SourceSetData> sourceSets = new HashMap<>();
 }
