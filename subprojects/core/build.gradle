@@ -19,7 +19,7 @@ dependencies {
     api libs.snakeyaml
 
     runtimeOnly project(':intellij')
-    runtimeOnly project(':lexforge')
+    runtimeOnly project(':mcforge')
     runtimeOnly project(':neoforge')
 }
 

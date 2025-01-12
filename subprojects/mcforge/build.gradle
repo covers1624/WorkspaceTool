@@ -5,7 +5,7 @@ java {
     }
 }
 
-archivesBaseName = 'lexforge'
+archivesBaseName = 'mcforge'
 
 dependencies {
     api project(':api')

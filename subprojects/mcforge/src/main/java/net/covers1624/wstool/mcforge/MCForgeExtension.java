@@ -1,4 +1,4 @@
-package net.covers1624.wstool.lexforge;
+package net.covers1624.wstool.mcforge;
 
 import net.covers1624.wstool.api.extension.Extension;
 
@@ -6,8 +6,8 @@ import net.covers1624.wstool.api.extension.Extension;
  * Created by covers1624 on 21/10/24.
  */
 @Extension.Details (
-        id = "lexforge",
+        id = "mcforge",
         desc = "Integration for MinecraftForge Gradle projects."
 )
-public class LexForgeExtension implements Extension {
+public class MCForgeExtension implements Extension {
 }
