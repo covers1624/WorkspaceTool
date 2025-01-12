@@ -25,6 +25,9 @@ dependencyResolutionManagement {
 
             library('snakeyaml', 'org.yaml:snakeyaml:2.3')
         }
+        gradlelibs {
+            library('tooling', 'org.gradle:gradle-tooling-api:7.3')
+        }
     }
 }
 

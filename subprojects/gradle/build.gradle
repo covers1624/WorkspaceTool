@@ -20,7 +20,7 @@ dependencies {
     api libs.lang3
     api libs.gson
 
-    api 'org.gradle:gradle-tooling-api:7.2'
+    api gradlelibs.tooling
 
     testImplementation project(':gradle-test-api')
     testRuntimeOnly project(":gradle-extract")

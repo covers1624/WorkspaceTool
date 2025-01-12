@@ -15,7 +15,7 @@ dependencies {
     api project(":api")
     api project(":gradle")
 
-    api 'org.gradle:gradle-tooling-api:7.2'
+    api gradlelibs.tooling
 }
 
 processResources {
