@@ -53,6 +53,9 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                 os.writeObject(projectData);
             }
         } catch (Throwable ex) {
+            project.getLogger().error("Fatal error building model.");
+            project.getLogger().error("If this is a Java 8 Gradle instance, this may crash WorkspaceTool with a serialization error.");
+            project.getLogger().error("", ex);
             throw new RuntimeException("Fatal exception building model.", ex);
         }
 
