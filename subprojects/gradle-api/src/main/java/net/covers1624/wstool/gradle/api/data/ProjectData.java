@@ -7,6 +7,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Created by covers1624 on 15/5/23.
  */
@@ -48,5 +50,9 @@ public class ProjectData extends Data implements Serializable {
         this.version = version;
         this.group = group;
         this.archivesBaseName = archivesBaseName;
+    }
+
+    public PluginData pluginData() {
+        return requireNonNull(getData(PluginData.class), "Plugin data does not exist on project: " + name);
     }
 }
