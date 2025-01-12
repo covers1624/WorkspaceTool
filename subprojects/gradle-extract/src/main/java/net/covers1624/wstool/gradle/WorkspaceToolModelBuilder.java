@@ -39,9 +39,15 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                     .toList();
             List<ProjectBuilder> projectBuilders = FastStream.of(ServiceLoader.load(ProjectBuilder.class, cl))
                     .toList();
+            List<ProjectTransformer> projectTransformers = FastStream.of(ServiceLoader.load(ProjectTransformer.class, cl))
+                    .toList();
 
             LookupCache lookupCache = new LookupCache();
             ProjectData projectData = buildProjectTree(project, null, pluginBuilders, lookupCache);
+
+            for (ProjectTransformer transformer : projectTransformers) {
+                lookupCache.projects.forEach(transformer::transformProject);
+            }
 
             for (ProjectBuilder builder : projectBuilders) {
                 lookupCache.projects.forEach((proj, data) -> {
