@@ -125,6 +125,7 @@ configurations {
 dependencies {
     packing project(':core')
     gradlePluginPath project(':gradle-extract')
+    gradlePluginPath project(':mcforge-gradle-extract')
 }
 
 tasks.register('genVersionManifest') {

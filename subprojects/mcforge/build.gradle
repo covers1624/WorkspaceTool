@@ -9,6 +9,15 @@ archivesBaseName = 'mcforge'
 
 dependencies {
     api project(':api')
+    api project(':mcforge-gradle-api')
+
+    testImplementation project(':gradle')
+
+    testImplementation gradlelibs.tooling
+    testImplementation project(':gradle-test-api')
+
+    testRuntimeOnly project(":gradle-extract")
+    testRuntimeOnly project(":mcforge-gradle-extract")
 }
 
 publishing {
