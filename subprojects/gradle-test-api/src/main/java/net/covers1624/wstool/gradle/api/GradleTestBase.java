@@ -71,6 +71,10 @@ public class GradleTestBase {
                 return withFile("settings.gradle", buildGradle);
             }
 
+            public ProjectEmitter withGradleProperties(String properties) throws IOException  {
+                return withFile("gradle.properties", properties);
+            }
+
             public ProjectEmitter withFile(String path, String content) throws IOException {
                 Files.writeString(IOUtils.makeParents(dir.resolve(path)), content);
                 return this;
