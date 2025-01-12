@@ -2,11 +2,8 @@ package net.covers1624.wstool.gradle;
 
 import net.covers1624.quack.collection.ColUtils;
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.wstool.gradle.api.data.ConfigurationData;
+import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.MavenDependency;
-import net.covers1624.wstool.gradle.api.data.ConfigurationList;
-import net.covers1624.wstool.gradle.api.data.ProjectData;
-import net.covers1624.wstool.gradle.api.data.SourceSetData;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -48,10 +45,32 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         this.lookupCache = lookupCache;
         configurationsData = projectData.putData(ConfigurationList.class, new ConfigurationList());
 
-        for (Configuration configuration : project.getConfigurations()) {
+        // For the moment, we only extract the dependencies on the compile/runtime classpaths.
+        // TODO we should evaluate if we actually need this in tree form, or if we can flatten it.
+        SourceSetList sourceSets = projectData.getData(SourceSetList.class);
+        if (sourceSets == null) throw new RuntimeException("SourceSets not extracted prior to Configurations.");
+
+        LinkedList<String> candidates = new LinkedList<>();
+        sourceSets.asMap().values().forEach(e -> {
+            candidates.add(e.compileClasspathConfiguration);
+            candidates.add(e.runtimeClasspathConfiguration);
+        });
+
+        ConfigurationContainer configurations = project.getConfigurations();
+        while (!candidates.isEmpty()) {
+            String configurationName = candidates.removeFirst();
+            Configuration configuration = configurations.findByName(configurationName);
+            if (configuration == null) {
+                project.getLogger().error("Missing configuration: {}", configurationName);
+                continue;
+            }
             ConfigurationData data = getOrCreate(configuration.getName());
 
-            configuration.getExtendsFrom().forEach(extendsFrom -> data.extendsFrom.put(extendsFrom.getName(), getOrCreate(extendsFrom.getName())));
+            configuration.getExtendsFrom().forEach(extendsFrom -> {
+                data.extendsFrom.put(extendsFrom.getName(), getOrCreate(extendsFrom.getName()));
+                // TODO what if different projects? is that possible?
+                candidates.add(extendsFrom.getName());
+            });
 
             data.transitive = configuration.isTransitive();
 
