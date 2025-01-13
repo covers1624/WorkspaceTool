@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Created by covers1624 on 1/11/25.
  */
-public class MCForgeExtractionTests extends ExtractTestBase {
+public class MCForgeUserDevExtractionTests extends ExtractTestBase {
 
     @Test
     public void testFG_2_3() throws IOException {
