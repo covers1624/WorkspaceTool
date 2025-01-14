@@ -24,6 +24,8 @@ dependencyResolutionManagement {
             library('gson', 'com.google.code.gson:gson:2.10.1')
 
             library('snakeyaml', 'org.yaml:snakeyaml:2.3')
+
+            library('jgit', 'org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r')
         }
         gradlelibs {
             library('tooling', 'org.gradle:gradle-tooling-api:7.3')

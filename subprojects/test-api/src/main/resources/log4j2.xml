@@ -6,6 +6,8 @@
         </Console>
     </Appenders>
     <Loggers>
+        <!-- Shut jgit up, I could not care less about its internal debug logging. -->
+        <Logger name="org.eclipse.jgit" level="INFO"/>
         <Root level="all">
             <AppenderRef ref="SysOut" level="${sys:console.level:-debug}"/>
         </Root>
