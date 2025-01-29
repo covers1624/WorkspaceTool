@@ -36,6 +36,11 @@ public class ConfigurationData extends Data {
         public MavenDependency(MavenNotation mavenNotation) {
             this.mavenNotation = mavenNotation;
         }
+
+        @Override
+        public String toString() {
+            return "MavenDependency(" + mavenNotation+ ", files: " + files.size() + ", children: " + children.size() + ")";
+        }
     }
 
     public static class SourceSetDependency extends Dependency {
@@ -45,6 +50,11 @@ public class ConfigurationData extends Data {
         public SourceSetDependency(SourceSetData sourceSet) {
             this.sourceSet = sourceSet;
         }
+
+        @Override
+        public String toString() {
+            return "SourceSetDependency(" + sourceSet.name + ")";
+        }
     }
 
     public static class ProjectDependency extends Dependency {
@@ -53,6 +63,11 @@ public class ConfigurationData extends Data {
 
         public ProjectDependency(ProjectData project) {
             this.project = project;
+        }
+
+        @Override
+        public String toString() {
+            return "ProjectDependency(" + project.name + ")";
         }
     }
 }
