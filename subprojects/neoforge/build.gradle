@@ -9,6 +9,14 @@ archivesBaseName = 'neoforge'
 
 dependencies {
     api project(':api')
+
+    testImplementation project(':gradle')
+
+    testImplementation gradlelibs.tooling
+    testImplementation project(':gradle-test-api')
+
+    testRuntimeOnly project(":gradle-extract")
+    testRuntimeOnly project(":mcforge-gradle-extract")
 }
 
 publishing {

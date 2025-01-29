@@ -1,0 +1,22 @@
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
+}
+
+archivesBaseName = 'neoforge-gradle-api'
+
+dependencies {
+    api project(':gradle-api')
+}
+
+publishing {
+    publications {
+        publication(MavenPublication) {
+            artifactId archivesBaseName
+
+            from components.java
+        }
+    }
+}
