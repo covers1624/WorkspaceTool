@@ -15,10 +15,7 @@ import java.util.Map;
 public class ConfigurationData extends Data {
 
     public final String name;
-    public final Map<String, ConfigurationData> extendsFrom = new HashMap<>();
     public final List<Dependency> dependencies = new ArrayList<>();
-
-    public boolean transitive;
 
     public ConfigurationData(String name) {
         this.name = name;

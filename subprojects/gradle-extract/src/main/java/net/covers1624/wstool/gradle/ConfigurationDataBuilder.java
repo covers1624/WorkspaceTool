@@ -50,43 +50,22 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         SourceSetList sourceSets = projectData.getData(SourceSetList.class);
         if (sourceSets == null) throw new RuntimeException("SourceSets not extracted prior to Configurations.");
 
-        LinkedList<String> candidates = new LinkedList<>();
-        sourceSets.asMap().values().forEach(e -> {
-            candidates.add(e.compileClasspathConfiguration);
-            candidates.add(e.runtimeClasspathConfiguration);
-        });
-
         ConfigurationContainer configurations = project.getConfigurations();
-        while (!candidates.isEmpty()) {
-            String configurationName = candidates.removeFirst();
-            Configuration configuration = configurations.findByName(configurationName);
-            if (configuration == null) {
-                project.getLogger().error("Missing configuration: {}", configurationName);
-                continue;
-            }
-            ConfigurationData data = getOrCreate(configuration.getName());
-
-            configuration.getExtendsFrom().forEach(extendsFrom -> {
-                data.extendsFrom.put(extendsFrom.getName(), getOrCreate(extendsFrom.getName()));
-                // TODO what if different projects? is that possible?
-                candidates.add(extendsFrom.getName());
-            });
-
-            data.transitive = configuration.isTransitive();
-
-            Configuration copy = configuration.copy();
-            copy.setCanBeResolved(true);
-            extractDependencies(copy, data);
-        }
+        sourceSets.asMap().values().forEach(e -> {
+            extractDependencies(configurations.getAt(e.compileClasspathConfiguration), getOrCreate(e.compileClasspathConfiguration));
+            extractDependencies(configurations.getAt(e.runtimeClasspathConfiguration), getOrCreate(e.runtimeClasspathConfiguration));
+        });
     }
 
     private void extractDependencies(Configuration configuration, ConfigurationData data) {
         // Strip out any Dependencies we need to handle specially. Projects, SourceSets, etc.
-        for (Iterator<Dependency> iterator = configuration.getDependencies().iterator(); iterator.hasNext(); ) {
-            ConfigurationData.Dependency dep = consumeRawDependency(iterator.next());
-            if (dep != null) {
-                data.dependencies.add(dep);
-                iterator.remove();
+        for (Configuration config : configuration.getHierarchy()) {
+            for (Iterator<Dependency> iterator = config.getDependencies().iterator(); iterator.hasNext(); ) {
+                ConfigurationData.Dependency dep = consumeRawDependency(iterator.next());
+                if (dep != null) {
+                    data.dependencies.add(dep);
+                    iterator.remove();
+                }
             }
         }
 
@@ -129,32 +108,32 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
 
         List<MavenDependency> builtDeps = new LinkedList<>();
         for (ResolvedDependency dep : dependencies) {
-            // Let's just assume we'll only ever have one artifact per dependency for now.
-            // If this turns out to be a problem, add unit tests!
-            ResolvedArtifact artifact = ColUtils.only(dep.getModuleArtifacts());
+            // If we don't have an artifact, we are likely just a bom/pom dependency which only has children.
+            ResolvedArtifact artifact = ColUtils.onlyOrDefault(dep.getModuleArtifacts());
             MavenNotation notation = new MavenNotation(
                     dep.getModuleGroup(),
                     dep.getModuleName(),
                     dep.getModuleVersion(),
-                    artifact.getClassifier(),
-                    artifact.getExtension()
+                    artifact != null ? artifact.getClassifier() : null,
+                    artifact != null ? artifact.getClassifier() != null ? artifact.getClassifier() : "jar" : "jar"
             );
             MavenDependency dependency = new MavenDependency(notation);
+            if (artifact != null) {
+                dependency.files.put("classes", artifact.getFile());
+                //noinspection UnstableApiUsage,unchecked
+                ArtifactResolutionResult result = depHandler.createArtifactResolutionQuery()
+                        .forComponents(artifact.getId().getComponentIdentifier())
+                        .withArtifacts(JvmLibrary.class, SourcesArtifact.class, JavadocArtifact.class)
+                        .execute();
+                Set<ComponentArtifactsResult> results = result.getResolvedComponents();
+                if (!results.isEmpty()) {
+                    ComponentArtifactsResult r = ColUtils.only(results);
+                    File sources = getArtifactFile(r, SourcesArtifact.class);
+                    File javadoc = getArtifactFile(r, JavadocArtifact.class);
 
-            dependency.files.put("classes", artifact.getFile());
-            //noinspection UnstableApiUsage,unchecked
-            ArtifactResolutionResult result = depHandler.createArtifactResolutionQuery()
-                    .forComponents(artifact.getId().getComponentIdentifier())
-                    .withArtifacts(JvmLibrary.class, SourcesArtifact.class, JavadocArtifact.class)
-                    .execute();
-            Set<ComponentArtifactsResult> results = result.getResolvedComponents();
-            if (!results.isEmpty()) {
-                ComponentArtifactsResult r = ColUtils.only(results);
-                File sources = getArtifactFile(r, SourcesArtifact.class);
-                File javadoc = getArtifactFile(r, JavadocArtifact.class);
-
-                if (sources != null) dependency.files.put("sources", sources);
-                if (javadoc != null) dependency.files.put("javadoc", javadoc);
+                    if (sources != null) dependency.files.put("sources", sources);
+                    if (javadoc != null) dependency.files.put("javadoc", javadoc);
+                }
             }
 
             dependency.children.addAll(buildMavenDependencies(dep.getChildren()));
