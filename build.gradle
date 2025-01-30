@@ -61,6 +61,7 @@ subprojects { subProject ->
         if (!isTestApi) {
             testImplementation project(':test-api')
         }
+        testImplementation 'org.assertj:assertj-core:3.27.3'
     }
 
     test {
@@ -203,7 +204,7 @@ idea.project.settings {
         testRunner = TestRunner.PLATFORM
     }
     taskTriggers {
-         beforeSync 'genGradlePluginMetaDev'
+        beforeSync 'genGradlePluginMetaDev'
     }
 }
 

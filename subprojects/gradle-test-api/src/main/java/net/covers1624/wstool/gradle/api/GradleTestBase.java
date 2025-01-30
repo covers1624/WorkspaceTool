@@ -3,6 +3,7 @@ package net.covers1624.wstool.gradle.api;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.WorkspaceToolEnvironment;
+import org.intellij.lang.annotations.Language;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,15 +64,15 @@ public class GradleTestBase {
                 this.dir = dir;
             }
 
-            public ProjectEmitter withBuildGradle(String buildGradle) throws IOException {
+            public ProjectEmitter withBuildGradle(@Language("gradle") String buildGradle) throws IOException {
                 return withFile("build.gradle", buildGradle);
             }
 
-            public ProjectEmitter withSettingsGradle(String buildGradle) throws IOException {
+            public ProjectEmitter withSettingsGradle(@Language("gradle") String buildGradle) throws IOException {
                 return withFile("settings.gradle", buildGradle);
             }
 
-            public ProjectEmitter withGradleProperties(String properties) throws IOException  {
+            public ProjectEmitter withGradleProperties(@Language("properties") String properties) throws IOException  {
                 return withFile("gradle.properties", properties);
             }
 

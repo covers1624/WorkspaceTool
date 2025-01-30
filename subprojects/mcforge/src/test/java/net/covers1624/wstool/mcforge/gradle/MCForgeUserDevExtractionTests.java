@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -60,6 +61,11 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
         MCForgeGradleVersion version = data.pluginData().getData(MCForgeGradleVersion.class);
         assertNotNull(version);
         assertTrue(version.version.startsWith("2.3."));
+
+        ConfigurationList configurationData = data.getData(ConfigurationList.class);
+        assertNotNull(configurationData);
+        assertNoDependencies(configurationData, "compileClasspath");
+        assertNoDependencies(configurationData, "runtimeClasspath");
     }
 
     @Test
@@ -142,10 +148,10 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
         assertNotNull(version);
         assertTrue(version.version.startsWith("4.1."));
 
-        // we should strip out the minecraft configuration from ever being touched.
         ConfigurationList configurationData = data.getData(ConfigurationList.class);
         assertNotNull(configurationData);
-        assertNull(configurationData.get("minecraft"));
+        assertNoDependencies(configurationData, "compileClasspath");
+        assertNoDependencies(configurationData, "runtimeClasspath");
     }
 
     @Test
@@ -185,10 +191,10 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
         assertNotNull(version);
         assertTrue(version.version.startsWith("5.0."));
 
-        // we should strip out the minecraft configuration from ever being touched.
         ConfigurationList configurationData = data.getData(ConfigurationList.class);
         assertNotNull(configurationData);
-        assertNull(configurationData.get("minecraft"));
+        assertNoDependencies(configurationData, "compileClasspath");
+        assertNoDependencies(configurationData, "runtimeClasspath");
     }
 
     @Test
@@ -242,9 +248,17 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
         assertNotNull(version);
         assertTrue(version.version.startsWith("6.0."));
 
-        // we should strip out the minecraft configuration from ever being touched.
         ConfigurationList configurationData = data.getData(ConfigurationList.class);
         assertNotNull(configurationData);
-        assertNull(configurationData.get("minecraft"));
+        assertNoDependencies(configurationData, "compileClasspath");
+        assertNoDependencies(configurationData, "runtimeClasspath");
+    }
+
+    private void assertNoDependencies(ConfigurationList configurations, String name) {
+        var configuration = configurations.get(name);
+        assertThat(configuration)
+                .isNotNull();
+        assertThat(configuration.dependencies)
+                .isEmpty();
     }
 }
