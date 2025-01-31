@@ -46,12 +46,12 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
             ProjectData projectData = buildProjectTree(project, null, pluginBuilders, lookupCache);
 
             for (ProjectTransformer transformer : projectTransformers) {
-                lookupCache.projects.forEach(transformer::transformProject);
+                lookupCache.projects.forEach((proj, data) -> transformer.transformProject(project.findProject(proj), data));
             }
 
             for (ProjectBuilder builder : projectBuilders) {
                 lookupCache.projects.forEach((proj, data) -> {
-                    builder.buildProjectData(proj, data, lookupCache);
+                    builder.buildProjectData(project.findProject(proj), data, lookupCache);
                 });
             }
 
@@ -89,7 +89,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
         if (lookupCache.projects.containsKey(project)) {
             throw new IllegalStateException("Already visited project: " + project);
         }
-        lookupCache.projects.put(project, projectData);
+        lookupCache.projects.put(project.getPath(), projectData);
 
         SubProjectList subProjectData = new SubProjectList();
         for (Project subProj : project.getSubprojects()) {

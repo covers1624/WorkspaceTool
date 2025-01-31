@@ -85,7 +85,7 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
 
     private ConfigurationData.ProjectDependency processProjectDep(ProjectDependency projectDep) {
         Project project = projectDep.getDependencyProject();
-        ProjectData projectData = requireNonNull(lookupCache.projects.get(project), "Project missing from lookup! " + project);
+        ProjectData projectData = requireNonNull(lookupCache.projects.get(project.getPath()), "Project missing from lookup! " + project);
         return new ConfigurationData.ProjectDependency(projectData);
     }
 
