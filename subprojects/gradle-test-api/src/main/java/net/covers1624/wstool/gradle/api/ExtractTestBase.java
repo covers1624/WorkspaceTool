@@ -1,6 +1,7 @@
 package net.covers1624.wstool.gradle.api;
 
 import net.covers1624.quack.collection.FastStream;
+import net.covers1624.wstool.api.WorkspaceToolEnvironment;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 
 import java.nio.file.Path;
@@ -10,12 +11,16 @@ import java.nio.file.Path;
  */
 public class ExtractTestBase extends GradleTestBase {
 
-    protected static GradleModelExtractor extractor(GradleEmitter emitter, boolean jvmAttach) {
-        return extractor(emitter.getTempDir(), emitter.getTempDir(), jvmAttach);
+    protected static WorkspaceToolEnvironment testEnvironment(Path projectDir) {
+        return WorkspaceToolEnvironment.of(null, projectDir.resolve(".wstool_sys/"), projectDir);
     }
 
-    protected static GradleModelExtractor extractor(Path workspaceRoot, Path cacheDir, boolean jvmAttach) {
-        return new GradleModelExtractor(workspaceRoot, cacheDir, JDK_PROVIDER) {
+    protected static GradleModelExtractor extractor(GradleEmitter emitter, boolean jvmAttach) {
+        return extractor(testEnvironment(emitter.getTempDir()), jvmAttach);
+    }
+
+    protected static GradleModelExtractor extractor(WorkspaceToolEnvironment env, boolean jvmAttach) {
+        return new GradleModelExtractor(env, JDK_PROVIDER) {
             @Override
             protected Iterable<String> extraJvmArgs() {
                 if (jvmAttach) {

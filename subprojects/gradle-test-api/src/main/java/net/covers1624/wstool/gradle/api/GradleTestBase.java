@@ -14,7 +14,7 @@ import java.nio.file.Path;
  */
 public class GradleTestBase {
 
-    public static final JdkProvider JDK_PROVIDER = new JdkProvider(WorkspaceToolEnvironment.WSTOOL_JDKS);
+    public static final JdkProvider JDK_PROVIDER = new JdkProvider(WorkspaceToolEnvironment.of());
 
     protected static GradleEmitter gradleEmitter(String name) throws IOException {
         return new GradleEmitter(name);

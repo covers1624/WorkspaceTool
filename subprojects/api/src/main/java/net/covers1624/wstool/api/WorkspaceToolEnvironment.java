@@ -7,35 +7,51 @@ import java.nio.file.Path;
 /**
  * Created by covers1624 on 17/5/23.
  */
-public final class WorkspaceToolEnvironment {
+public interface WorkspaceToolEnvironment {
 
     /**
-     * The Path to the manifest file the wrapper launched.
+     * @return The manifest file the wrapper launched.
      */
     @Nullable
-    public static final Path WSTOOL_MANIFEST = getPathProperty("wstool.manifest");
+    Path manifestFile();
 
     /**
-     * The Global system cache folder for Workspace Tool.
+     * @return The global system directory for Workspace Tool.
      */
-    public static final Path WSTOOL_SYSTEM_FOLDER = Path.of(System.getProperty("user.home"), ".workspace_tool")
-            .normalize()
-            .toAbsolutePath();
+    Path systemFolder();
 
     /**
-     * The Global system cache folder for provisioned JDK's.
+     * @return The root directory of the project.
      */
-    public static final Path WSTOOL_JDKS = WSTOOL_SYSTEM_FOLDER.resolve("jdks");
+    Path projectRoot();
 
     /**
-     * The folder which WorkspaceTool is operating on. Also known as the 'project' directory.
+     * @return The cache directory inside the root project.
      */
-    public static final Path PROJECT_FOLDER = Path.of(".").toAbsolutePath().normalize();
+    Path projectCache();
 
-    /**
-     * The per-project cache folder.
-     */
-    public static final Path PROJECT_CACHE_FOLDER = PROJECT_FOLDER.resolve(".wstool/");
+    static WorkspaceToolEnvironment of() {
+        return of(
+                getPathProperty("wstool.manifest"),
+                Path.of(System.getProperty("user.home"), ".workspace_tool"),
+                Path.of(".").toAbsolutePath().normalize()
+        );
+    }
+
+    static WorkspaceToolEnvironment of(@Nullable Path manifest, Path sysFolder, Path projectRoot) {
+        return of(manifest, sysFolder, projectRoot, projectRoot.resolve(".wstool/"));
+    }
+
+    static WorkspaceToolEnvironment of(@Nullable Path manifest, Path sysFolder, Path projectRoot, Path projectCache) {
+        // @formatter:off
+        return new WorkspaceToolEnvironment() {
+            @Nullable @Override public Path manifestFile() { return manifest; }
+            @Override public Path systemFolder() { return sysFolder; }
+            @Override public Path projectRoot() { return projectRoot; }
+            @Override public Path projectCache() { return projectCache; }
+        };
+        // @formatter:on
+    }
 
     @Nullable
     private static Path getPathProperty(String sysProp) {

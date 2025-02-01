@@ -1,12 +1,12 @@
 package net.covers1624.wstool.gradle;
 
+import com.google.common.base.Suppliers;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.gson.JsonUtils;
 import net.covers1624.quack.io.ConsumingOutputStream;
-import net.covers1624.quack.util.LazyValue;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.WorkspaceToolEnvironment;
 import net.covers1624.wstool.gradle.api.WorkspaceToolModelAction;
@@ -30,7 +30,11 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,8 +45,6 @@ public class GradleModelExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String GRADLE_PLUGIN_CLASS = "net.covers1624.wstool.gradle.WorkspaceToolGradlePlugin";
-
-    private final LazyValue<Path> initScriptPath = new LazyValue<>(GradleModelExtractor::buildInitScript);
 
     // Regex to get the gradle version from a Gradle wrapper properties file.
     private static final Pattern WRAPPER_URL_REGEX = Pattern.compile("gradle-(.*)(?>-bin|-all).zip$");
@@ -58,13 +60,13 @@ public class GradleModelExtractor {
     // The version above which we run Gradle with Java 17.
     private static final GradleVersion MIN_GRADLE_USE_J17 = GradleVersion.version("7.3");
 
-    private final Path workspaceRoot;
-    private final Path cacheDir;
+    private final Supplier<Path> initScriptPath = Suppliers.memoize(this::buildInitScript);
+
+    private final WorkspaceToolEnvironment env;
     private final JdkProvider jdkProvider;
 
-    public GradleModelExtractor(Path workspaceRoot, Path cacheDir, JdkProvider jdkProvider) {
-        this.workspaceRoot = workspaceRoot;
-        this.cacheDir = cacheDir;
+    public GradleModelExtractor(WorkspaceToolEnvironment env, JdkProvider jdkProvider) {
+        this.env = env;
         this.jdkProvider = jdkProvider;
     }
 
@@ -75,7 +77,7 @@ public class GradleModelExtractor {
     public ProjectData extractProjectData(Path project, GradleVersion gradleVersion, Set<String> extraTasks) {
         JavaVersion javaVersion = getJavaVersionForGradle(gradleVersion);
         Path javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
-        Path cacheFile = cacheDir.resolve(workspaceRoot.relativize(project).toString().replace("[/\\\\]", "_") + ".dat");
+        Path cacheFile = env.projectCache().resolve(env.projectRoot().relativize(project).toString().replace("[/\\\\]", "_") + ".dat");
         return extractProjectData(javaHome, project, cacheFile, gradleVersion, extraTasks);
     }
 
@@ -175,7 +177,7 @@ public class GradleModelExtractor {
         return JavaVersion.JAVA_1_8;
     }
 
-    private static Path buildInitScript() {
+    private Path buildInitScript() {
         LOGGER.info("Building init script.");
         List<String> lines = new LinkedList<>();
         lines.add("initscript {");
@@ -198,8 +200,8 @@ public class GradleModelExtractor {
         return temp;
     }
 
-    private static List<Path> buildJarPath() {
-        if (WorkspaceToolEnvironment.WSTOOL_MANIFEST != null) {
+    private List<Path> buildJarPath() {
+        if (env.manifestFile() != null) {
             throw new NotImplementedException("Not runnable out-of-dev yet.");
         } else {
             LOGGER.info(" Using dev metadata for gradle plugin dependencies..");

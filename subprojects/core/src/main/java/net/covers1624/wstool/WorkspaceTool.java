@@ -37,13 +37,14 @@ public class WorkspaceTool {
     }
 
     public static void main(String[] args) throws IOException {
+        WorkspaceToolEnvironment env = WorkspaceToolEnvironment.of();
         LOGGER.info("Starting WorkspaceTool v@{}", VERSION);
-        LOGGER.info("  Project Directory: {}", WorkspaceToolEnvironment.PROJECT_FOLDER);
+        LOGGER.info("  Project Directory: {}", env.projectRoot());
         List<Extension> extensions = loadExtensions();
 
-        Path configFile = WorkspaceToolEnvironment.PROJECT_FOLDER.resolve("workspace.yml");
+        Path configFile = env.projectRoot().resolve("workspace.yml");
         if (Files.notExists(configFile)) {
-            configFile = WorkspaceToolEnvironment.PROJECT_FOLDER.resolve("workspace.yaml");
+            configFile = env.projectRoot().resolve("workspace.yaml");
         }
         if (Files.notExists(configFile)) {
             LOGGER.error("Expected workspace.yml or workspace.yaml in project directory.");

@@ -18,14 +18,14 @@ public final class JdkProvider {
 
     private final LazyValue<List<JavaInstall>> installs;
 
-    public JdkProvider(Path baseInstallDir) {
+    public JdkProvider(WorkspaceToolEnvironment env) {
         locator = JavaLocator.builder()
                 .useJavaw()
                 .findGradleJdks()
                 .findIntellijJdks()
                 .ignoreOpenJ9()
                 .build();
-        installer = new JdkInstallationManager(baseInstallDir, new AdoptiumProvisioner(JavaDownloadAction::new));
+        installer = new JdkInstallationManager(env.systemFolder().resolve("jdks/"), new AdoptiumProvisioner(JavaDownloadAction::new));
 
         installs = new LazyValue<>(() -> {
             try {

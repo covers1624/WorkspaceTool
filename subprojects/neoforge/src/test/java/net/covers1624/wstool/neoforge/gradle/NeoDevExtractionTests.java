@@ -21,7 +21,7 @@ public class NeoDevExtractionTests extends ExtractTestBase {
         repoManager.setConfig("https://github.com/neoforged/NeoForge.git", "1.21.1", "9e0f669ec00098caaa90c24399c3f43e98c15a6b");
         repoManager.checkout();
 
-        var extractor = extractor(tempDir, tempDir, false);
+        var extractor = extractor(testEnvironment(tempDir), false);
         var data = extractor.extractProjectData(repoManager.getRepoDir(), Set.of());
         assertThat(data.name)
                 .isEqualTo("NeoForge");
@@ -33,7 +33,7 @@ public class NeoDevExtractionTests extends ExtractTestBase {
         repoManager.setConfig("https://github.com/neoforged/NeoForge.git", "1.21.x", "b19a079c7556083c6b77a191a7bbb13898a94972");
         repoManager.checkout();
 
-        var extractor = extractor(tempDir, tempDir, false);
+        var extractor = extractor(testEnvironment(tempDir), false);
         var data = extractor.extractProjectData(repoManager.getRepoDir(), Set.of());
         assertThat(data.name)
                 .isEqualTo("NeoForge-Root");
