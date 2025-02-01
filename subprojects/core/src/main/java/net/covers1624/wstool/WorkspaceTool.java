@@ -2,7 +2,7 @@ package net.covers1624.wstool;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.covers1624.wstool.api.WorkspaceToolEnvironment;
+import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.config.Config;
 import net.covers1624.wstool.api.extension.Extension;
 import net.covers1624.wstool.api.extension.Framework;
@@ -37,7 +37,7 @@ public class WorkspaceTool {
     }
 
     public static void main(String[] args) throws IOException {
-        WorkspaceToolEnvironment env = WorkspaceToolEnvironment.of();
+        Environment env = Environment.of();
         LOGGER.info("Starting WorkspaceTool v@{}", VERSION);
         LOGGER.info("  Project Directory: {}", env.projectRoot());
         List<Extension> extensions = loadExtensions();

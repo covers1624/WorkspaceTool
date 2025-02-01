@@ -18,7 +18,7 @@ public final class JdkProvider {
 
     private final LazyValue<List<JavaInstall>> installs;
 
-    public JdkProvider(WorkspaceToolEnvironment env) {
+    public JdkProvider(Environment env) {
         locator = JavaLocator.builder()
                 .useJavaw()
                 .findGradleJdks()

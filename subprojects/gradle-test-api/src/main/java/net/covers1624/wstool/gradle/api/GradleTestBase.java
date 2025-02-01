@@ -2,7 +2,7 @@ package net.covers1624.wstool.gradle.api;
 
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.JdkProvider;
-import net.covers1624.wstool.api.WorkspaceToolEnvironment;
+import net.covers1624.wstool.api.Environment;
 import org.intellij.lang.annotations.Language;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.nio.file.Path;
  */
 public class GradleTestBase {
 
-    public static final JdkProvider JDK_PROVIDER = new JdkProvider(WorkspaceToolEnvironment.of());
+    public static final JdkProvider JDK_PROVIDER = new JdkProvider(Environment.of());
 
     protected static GradleEmitter gradleEmitter(String name) throws IOException {
         return new GradleEmitter(name);

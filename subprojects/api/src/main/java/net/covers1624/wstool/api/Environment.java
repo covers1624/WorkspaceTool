@@ -7,7 +7,7 @@ import java.nio.file.Path;
 /**
  * Created by covers1624 on 17/5/23.
  */
-public interface WorkspaceToolEnvironment {
+public interface Environment {
 
     /**
      * @return The manifest file the wrapper launched.
@@ -30,7 +30,7 @@ public interface WorkspaceToolEnvironment {
      */
     Path projectCache();
 
-    static WorkspaceToolEnvironment of() {
+    static Environment of() {
         return of(
                 getPathProperty("wstool.manifest"),
                 Path.of(System.getProperty("user.home"), ".workspace_tool"),
@@ -38,13 +38,13 @@ public interface WorkspaceToolEnvironment {
         );
     }
 
-    static WorkspaceToolEnvironment of(@Nullable Path manifest, Path sysFolder, Path projectRoot) {
+    static Environment of(@Nullable Path manifest, Path sysFolder, Path projectRoot) {
         return of(manifest, sysFolder, projectRoot, projectRoot.resolve(".wstool/"));
     }
 
-    static WorkspaceToolEnvironment of(@Nullable Path manifest, Path sysFolder, Path projectRoot, Path projectCache) {
+    static Environment of(@Nullable Path manifest, Path sysFolder, Path projectRoot, Path projectCache) {
         // @formatter:off
-        return new WorkspaceToolEnvironment() {
+        return new Environment() {
             @Nullable @Override public Path manifestFile() { return manifest; }
             @Override public Path systemFolder() { return sysFolder; }
             @Override public Path projectRoot() { return projectRoot; }
