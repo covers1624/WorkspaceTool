@@ -8,6 +8,7 @@ import net.covers1624.wstool.api.extension.Extension;
 import net.covers1624.wstool.api.extension.Framework;
 import net.covers1624.wstool.api.extension.Workspace;
 import net.covers1624.wstool.json.TypeFieldDeserializer;
+import net.covers1624.wstool.module.ModuleUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +51,29 @@ public class WorkspaceTool {
             LOGGER.error("Expected workspace.yml or workspace.yaml in project directory.");
             return;
         }
+
         Config config = deserializeConfig(extensions, configFile);
+        Workspace workspace = config.workspace();
+
+        // TODO, currently only one framework supported.
+        //       Ideally, Fabric will be a framework.
+        if (config.frameworks().size() != 1) {
+            throw new RuntimeException("Expected one framework, got: " + config.frameworks().size());
+        }
+        Framework framework = config.frameworks().get(0);
+
+        List<Path> modulePaths = FastStream.of(config.modules())
+                .flatMap(e -> {
+                    try {
+                        return ModuleUtils.expandModuleReference(env.projectRoot(), e);
+                    } catch (IOException ex) {
+                        throw new RuntimeException("Failed to expand module reference.", ex);
+                    }
+                })
+                .filterNot(e -> e.getFileName().toString().equals("buildSrc"))
+                .filter(e -> Files.exists(e.resolve("build.gradle")))
+                .toList();
+        LOGGER.info("Found {} modules.", modulePaths.size());
     }
 
     private static List<Extension> loadExtensions() {
