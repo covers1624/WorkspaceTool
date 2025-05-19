@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Created by covers1624 on 21/10/24.
  */
-public record RunConfig(
+public record RunConfigTemplate(
         @Nullable String name,
         @SerializedName ("template")
         @Nullable String templateName,

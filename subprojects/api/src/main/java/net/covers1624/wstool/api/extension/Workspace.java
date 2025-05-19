@@ -1,6 +1,6 @@
 package net.covers1624.wstool.api.extension;
 
-import net.covers1624.wstool.api.config.RunConfig;
+import net.covers1624.wstool.api.config.RunConfigTemplate;
 
 import java.util.List;
 
@@ -9,6 +9,6 @@ import java.util.List;
  */
 public interface Workspace {
 
-    List<RunConfig> runs();
+    List<RunConfigTemplate> runs();
 
 }

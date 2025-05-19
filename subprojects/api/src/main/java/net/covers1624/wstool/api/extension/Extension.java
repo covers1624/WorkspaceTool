@@ -10,8 +10,7 @@ import java.lang.annotation.Target;
  */
 public interface Extension {
 
-    default void registerConfigTypes(ConfigTypeRegistry registry) {
-    }
+    default void registerConfigTypes(ConfigTypeRegistry registry) { }
 
     interface ConfigTypeRegistry {
 
@@ -23,7 +22,9 @@ public interface Extension {
     @Target (ElementType.TYPE)
     @Retention (RetentionPolicy.RUNTIME)
     @interface Details {
+
         String id();
+
         String desc();
     }
 }
