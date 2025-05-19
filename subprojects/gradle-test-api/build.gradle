@@ -7,17 +7,9 @@ java {
 
 archivesBaseName = 'gradle-test-api'
 
-sourceSets {
-    main.resources.srcDirs += 'src/main/generated'
-}
-
 dependencies {
     api project(":api")
     api project(":gradle")
 
     api gradlelibs.tooling
-}
-
-processResources {
-    dependsOn(':genGradlePluginMetaDev')
 }

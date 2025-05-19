@@ -174,7 +174,7 @@ tasks.register('genVersionManifest') {
 
 tasks.register('genGradlePluginMetaDev') {
     ext {
-        output = project(':gradle-test-api').file("src/main/generated/gradle_plugin_data.json")
+        output = project(':gradle').file("src/main/generated/gradle_plugin_data.json")
     }
     inputs.property('gradlePluginPath', configurations.gradlePluginPath)
     outputs.file output

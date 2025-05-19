@@ -26,6 +26,10 @@ dependencies {
     testRuntimeOnly project(":gradle-extract")
 }
 
+processResources {
+    dependsOn(':genGradlePluginMetaDev')
+}
+
 publishing {
     publications {
         publication(MavenPublication) {
