@@ -66,6 +66,8 @@ subprojects { subProject ->
 
     test {
         useJUnitPlatform()
+
+        systemProperty('GradleModelExtractor.isGradleTesting', 'true')
     }
 
     if (isTestApi) return

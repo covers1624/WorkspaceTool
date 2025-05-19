@@ -234,6 +234,7 @@ public class GradleModelExtractor {
     private static final Type LIST_STRING = new TypeToken<List<String>>() { }.getType();
 
     private static List<Path> buildJarPathDev() {
+        boolean isGradleTesting = Boolean.getBoolean("GradleModelExtractor.isGradleTesting");
         List<String> paths;
         try (InputStream is = GradleModelExtractor.class.getResourceAsStream("/gradle_plugin_data.json")) {
             if (is == null) throw new IllegalStateException("Missing dev data. Did the genGradlePluginMetaDev gradle task not run on import?");
@@ -248,6 +249,13 @@ public class GradleModelExtractor {
                     if (!Files.isDirectory(p)) {
                         return List.of(p);
                     }
+                    if (isGradleTesting) {
+                        return List.of(
+                                p.resolve("build/classes/java/main"),
+                                p.resolve("build/resources/main")
+                        );
+                    }
+
                     return List.of(
                             p.resolve("out/production/classes"),
                             p.resolve("out/production/resources")
