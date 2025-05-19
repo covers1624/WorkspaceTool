@@ -5,6 +5,7 @@ import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Created by covers1624 on 9/9/23.
@@ -20,7 +21,7 @@ public class ExtractTestBase extends GradleTestBase {
     }
 
     protected static GradleModelExtractor extractor(Environment env, boolean jvmAttach) {
-        return new GradleModelExtractor(env, JDK_PROVIDER) {
+        return new GradleModelExtractor(env, JDK_PROVIDER, List.of()) {
             @Override
             protected Iterable<String> extraJvmArgs() {
                 if (jvmAttach) {

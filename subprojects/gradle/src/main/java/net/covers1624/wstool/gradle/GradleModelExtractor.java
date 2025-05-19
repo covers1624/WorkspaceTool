@@ -7,8 +7,9 @@ import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.gson.JsonUtils;
 import net.covers1624.quack.io.ConsumingOutputStream;
+import net.covers1624.wstool.api.Environment;
+import net.covers1624.wstool.api.HashContainer;
 import net.covers1624.wstool.api.JdkProvider;
-import net.covers1624.wstool.api.WorkspaceToolEnvironment;
 import net.covers1624.wstool.gradle.api.WorkspaceToolModelAction;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import org.apache.commons.lang3.NotImplementedException;
@@ -30,10 +31,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -62,12 +60,21 @@ public class GradleModelExtractor {
 
     private final Supplier<Path> initScriptPath = Suppliers.memoize(this::buildInitScript);
 
-    private final WorkspaceToolEnvironment env;
+    private final Environment env;
     private final JdkProvider jdkProvider;
 
-    public GradleModelExtractor(WorkspaceToolEnvironment env, JdkProvider jdkProvider) {
+    private final List<String> hashableFiles = new ArrayList<>(List.of(
+            "build.gradle",
+            "settings.gradle",
+            "gradle.properties",
+            "build.properties",
+            "gradle/wrapper/gradle-wrapper.properties"
+    ));
+
+    public GradleModelExtractor(Environment env, JdkProvider jdkProvider, List<String> hashableFiles) {
         this.env = env;
         this.jdkProvider = jdkProvider;
+        this.hashableFiles.addAll(hashableFiles);
     }
 
     public ProjectData extractProjectData(Path project, Set<String> extraTasks) {
@@ -75,18 +82,37 @@ public class GradleModelExtractor {
     }
 
     public ProjectData extractProjectData(Path project, GradleVersion gradleVersion, Set<String> extraTasks) {
-        JavaVersion javaVersion = getJavaVersionForGradle(gradleVersion);
-        Path javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
-        Path cacheFile = env.projectCache().resolve(env.projectRoot().relativize(project).toString().replace("[/\\\\]", "_") + ".dat");
-        return extractProjectData(javaHome, project, cacheFile, gradleVersion, extraTasks);
+        Path cacheFile = env.projectCache().resolve(env.projectRoot().relativize(project).toString().replaceAll("[/\\\\]", "_") + ".dat");
+        HashContainer container = new HashContainer(env.projectCache(), cacheFile.getFileName().toString());
+        HashContainer.Entry inputsEntry = container.getEntry("inputs");
+        for (String hashableFile : hashableFiles) {
+            inputsEntry.putFile(project.resolve(hashableFile));
+        }
+
+        HashContainer.Entry outputEntry = container.getEntry("output");
+        outputEntry.putFile(cacheFile);
+
+        if (Files.notExists(cacheFile) || inputsEntry.changed() || outputEntry.changed()) {
+            JavaVersion javaVersion = getJavaVersionForGradle(gradleVersion);
+            Path javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
+            extractProjectData(javaHome, project, cacheFile, gradleVersion, extraTasks);
+            inputsEntry.pushChanges();
+            outputEntry.pushChanges();
+        }
+
+        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(cacheFile))) {
+            return (ProjectData) in.readObject();
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new RuntimeException("Failed to read cache file after Gradle execution.", ex);
+        }
     }
 
-    private ProjectData extractProjectData(Path javaHome, Path projectDir, Path cacheFile, GradleVersion gradleVersion, Set<String> extraTasks) {
+    private void extractProjectData(Path javaHome, Path projectDir, Path cacheFile, GradleVersion gradleVersion, Set<String> extraTasks) {
         GradleConnector connector = GradleConnector.newConnector()
                 .useGradleVersion(gradleVersion.getVersion())
                 .forProjectDirectory(projectDir.toFile());
         try (ProjectConnection connection = connector.connect()) {
-            LOGGER.info("Starting Project data extract..");
+            LOGGER.info("Starting Project data extract for {}", projectDir);
             LOGGER.info("Extracting available task information..");
             GradleProject project = connection.model(GradleProject.class)
                     .setJavaHome(javaHome.toFile())
@@ -114,11 +140,6 @@ public class GradleModelExtractor {
             // Tell the Daemon to shut down after this build.
             //noinspection UnstableApiUsage
             connector.disconnect();
-        }
-        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(cacheFile))) {
-            return (ProjectData) in.readObject();
-        } catch (IOException | ClassNotFoundException ex) {
-            throw new RuntimeException("Failed to read cache file after Gradle execution.", ex);
         }
     }
 

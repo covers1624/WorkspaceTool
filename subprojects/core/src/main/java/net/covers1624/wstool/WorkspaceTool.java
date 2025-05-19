@@ -7,6 +7,8 @@ import net.covers1624.wstool.api.config.Config;
 import net.covers1624.wstool.api.extension.Extension;
 import net.covers1624.wstool.api.extension.Framework;
 import net.covers1624.wstool.api.extension.Workspace;
+import net.covers1624.wstool.gradle.GradleModelExtractor;
+import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.json.TypeFieldDeserializer;
 import net.covers1624.wstool.module.ModuleUtils;
 import org.apache.logging.log4j.LogManager;
@@ -74,6 +76,14 @@ public class WorkspaceTool {
                 .filter(e -> Files.exists(e.resolve("build.gradle")))
                 .toList();
         LOGGER.info("Found {} modules.", modulePaths.size());
+
+        JdkProvider jdkProvider = new JdkProvider(env);
+        GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
+
+        for (Path modulePath : modulePaths) {
+            LOGGER.info("Processing module {}", env.projectRoot().relativize(modulePath));
+            ProjectData projectData = modelExtractor.extractProjectData(modulePath, Set.of());
+        }
     }
 
     private static List<Extension> loadExtensions() {
