@@ -9,6 +9,9 @@ archivesBaseName = 'intellij'
 
 dependencies {
     api project(':api')
+
+    api libs.jdom2
+    api libs.lang3
 }
 
 publishing {

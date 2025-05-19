@@ -2,11 +2,17 @@ package net.covers1624.wstool;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.Environment;
+import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.config.Config;
 import net.covers1624.wstool.api.extension.Extension;
 import net.covers1624.wstool.api.extension.Framework;
 import net.covers1624.wstool.api.extension.Workspace;
+import net.covers1624.wstool.api.module.Dependency;
+import net.covers1624.wstool.api.module.Module;
+import net.covers1624.wstool.api.module.WorkspaceBuilder;
+import net.covers1624.wstool.api.module.SourceSet;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.json.TypeFieldDeserializer;
@@ -16,12 +22,15 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Created by covers1624 on 19/9/24.
@@ -80,9 +89,121 @@ public class WorkspaceTool {
         JdkProvider jdkProvider = new JdkProvider(env);
         GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
 
+        WorkspaceBuilder builder = workspace.builder(env);
         for (Path modulePath : modulePaths) {
             LOGGER.info("Processing module {}", env.projectRoot().relativize(modulePath));
             ProjectData projectData = modelExtractor.extractProjectData(modulePath, Set.of());
+            buildModule(builder, projectData);
+        }
+
+        // TODO process framework modules.
+
+        LOGGER.info("Writing workspace..");
+        builder.writeWorkspace();
+
+        LOGGER.info("Done!");
+    }
+
+    private static void buildModule(WorkspaceBuilder builder, ProjectData project) {
+        Module module = builder.newModule(project.projectDir.toPath(), project.name);
+        module.excludes().add(module.rootDir().resolve(".gradle"));
+
+        // First build the tree of modules.
+        Map<ProjectData, Module> moduleMap = new LinkedHashMap<>();
+        Map<SourceSetData, SourceSet> sourceSetMap = new LinkedHashMap<>();
+        buildModuleTree(moduleMap, sourceSetMap, project, module);
+
+        // Then process them and insert dependencies. This must be done in a 2-pass system, as we need the
+        // module tree to exist in order to make SourceSet/Module dependencies.
+        moduleMap.forEach((p, m) -> {
+            var sourceSets = p.getData(SourceSetList.class);
+            if (sourceSets == null) return;
+
+            var configurationData = p.getData(ConfigurationList.class);
+            if (configurationData == null) return;
+            var configurations = configurationData.asMap();
+
+            for (SourceSetData data : sourceSets.asMap().values()) {
+                SourceSet sourceSet = requireNonNull(sourceSetMap.get(data));
+                // TODO, we can model the gradle data a bit different, perhaps with an enum key in a map,
+                //       and we could collapse both of these.
+                sourceSet.compileDependencies().addAll(
+                        buildDependencies(
+                                moduleMap,
+                                sourceSetMap,
+                                configurations.get(data.compileClasspathConfiguration).dependencies,
+                                sourceSet
+                        )
+                );
+
+                sourceSet.runtimeDependencies().addAll(
+                        buildDependencies(
+                                moduleMap,
+                                sourceSetMap,
+                                configurations.get(data.runtimeClasspathConfiguration).dependencies,
+                                sourceSet
+                        )
+                );
+            }
+        });
+    }
+
+    private static List<Dependency> buildDependencies(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, List<? extends ConfigurationData.Dependency> deps, SourceSet sourceSet) {
+        List<Dependency> dependencies = new ArrayList<>();
+        for (ConfigurationData.Dependency dep : deps) {
+            if (dep instanceof ConfigurationData.MavenDependency maven) {
+                dependencies.add(new Dependency.MavenDependency(
+                        maven.mavenNotation,
+                        FastStream.of(maven.files.entrySet())
+                                .toMap(
+                                        Map.Entry::getKey,
+                                        e -> e.getValue().toPath()
+                                )
+                ));
+                dependencies.addAll(buildDependencies(moduleMap, sourceSetMap, maven.children, sourceSet));
+            } else if (dep instanceof ConfigurationData.SourceSetDependency ss) {
+                dependencies.add(new Dependency.SourceSetDependency(sourceSetMap.get(ss.sourceSet)));
+            } else if (dep instanceof ConfigurationData.ProjectDependency proj) {
+                dependencies.add(new Dependency.SourceSetDependency(moduleMap.get(proj.project).sourceSets().get("main")));
+            } else {
+                throw new RuntimeException("Unhandled dependency type: " + dep.getClass());
+            }
+        }
+
+        return dependencies;
+    }
+
+    private static void buildModuleTree(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, ProjectData project, Module module) {
+        module.excludes().add(module.rootDir().resolve("build"));
+        module.excludes().add(module.rootDir().resolve("out"));
+
+        moduleMap.put(project, module);
+        var sourceSets = project.getData(SourceSetList.class);
+        if (sourceSets != null) {
+            for (SourceSetData data : sourceSets.asMap().values()) {
+                SourceSet sourceSet = module.newSourceSet(data.name);
+                sourceSetMap.put(data, sourceSet);
+
+                sourceSet.sourcePaths().putAll(
+                        FastStream.of(data.sourceMap.entrySet())
+                                .toMap(
+                                        Map.Entry::getKey,
+                                        e -> FastStream.of(e.getValue()).map(File::toPath).toList()
+                                )
+                );
+            }
+        }
+
+        var subProjects = project.getData(SubProjectList.class);
+        if (subProjects != null) {
+            for (ProjectData subProject : subProjects.asMap().values()) {
+                buildModuleTree(
+                        moduleMap,
+                        sourceSetMap,
+                        subProject,
+                        module.newSubModule(subProject.projectDir.toPath(), subProject.name)
+                );
+            }
         }
     }
 
@@ -102,6 +223,7 @@ public class WorkspaceTool {
     }
 
     private static Config deserializeConfig(List<Extension> extensions, Path config) throws IOException {
+        LOGGER.info("Loading config...");
         Gson gson = createDeserializer(extensions).create();
         try (Reader reader = new InputStreamReader(Files.newInputStream(config))) {
             return gson.fromJson(gson.toJson((Object) new Yaml().load(reader)), Config.class);
