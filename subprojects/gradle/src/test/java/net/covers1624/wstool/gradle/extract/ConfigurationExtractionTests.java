@@ -53,11 +53,11 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
         ConfigurationList configurations = data.getData(ConfigurationList.class);
         assertNotNull(configurations);
 
-        ConfigurationData implementation = configurations.get("implementation");
-        assertNotNull(implementation);
+        ConfigurationData compileClasspath = configurations.get("compileClasspath");
+        assertNotNull(compileClasspath);
 
-        assertEquals(1, implementation.dependencies.size());
-        MavenDependency guava = (MavenDependency) implementation.dependencies.get(0);
+        assertEquals(1, compileClasspath.dependencies.size());
+        MavenDependency guava = (MavenDependency) compileClasspath.dependencies.get(0);
 
         assertEquals(MavenNotation.parse("com.google.guava:guava:31.0.1-jre"), guava.mavenNotation);
         assertEquals(6, guava.children.size());
@@ -104,11 +104,11 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
         SourceSetData core = sourceSets.get("core");
         assertNotNull(core);
 
-        ConfigurationData implementation = configurations.get("implementation");
-        assertNotNull(implementation);
+        ConfigurationData compileClasspath = configurations.get("compileClasspath");
+        assertNotNull(compileClasspath);
 
-        assertEquals(1, implementation.dependencies.size());
-        SourceSetDependency dep = (SourceSetDependency) implementation.dependencies.get(0);
+        assertEquals(1, compileClasspath.dependencies.size());
+        SourceSetDependency dep = (SourceSetDependency) compileClasspath.dependencies.get(0);
 
         assertEquals(core, dep.sourceSet);
     }
@@ -166,11 +166,11 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
         ConfigurationList configurations = projectB.getData(ConfigurationList.class);
         assertNotNull(configurations);
 
-        ConfigurationData implementation = configurations.get("implementation");
-        assertNotNull(implementation);
+        ConfigurationData compileClasspath = configurations.get("compileClasspath");
+        assertNotNull(compileClasspath);
 
-        assertEquals(1, implementation.dependencies.size());
-        ConfigurationData.Dependency dep = implementation.dependencies.get(0);
+        assertEquals(1, compileClasspath.dependencies.size());
+        ConfigurationData.Dependency dep = compileClasspath.dependencies.get(0);
         assertTrue(dep instanceof ProjectDependency);
 
         ProjectDependency projectDependency = (ProjectDependency) dep;
