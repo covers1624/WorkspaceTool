@@ -31,9 +31,14 @@ public class SourceSetDataBuilder implements ProjectBuilder {
 
     @Override
     public void buildProjectData(Project project, ProjectData projectData, LookupCache lookupCache) {
-        SourceSetContainer sourceSets = getSourceSetContainer(project);
-        if (sourceSets == null) return;
         SourceSetList sourceSetData = new SourceSetList();
+        // Always add the SourceSetList data to the project, incase there are no source sets for the project.
+        projectData.putData(SourceSetList.class, sourceSetData);
+
+        SourceSetContainer sourceSets = getSourceSetContainer(project);
+        // This module doesn't have any source sets. womp womp
+        if (sourceSets == null) return;
+
         for (SourceSet sourceSet : sourceSets) {
             SourceSetData data = new SourceSetData(sourceSet.getName(), sourceSet.getCompileClasspathConfigurationName(), sourceSet.getRuntimeClasspathConfigurationName());
             data.sourceMap.put("resources", getFiles(sourceSet.getResources()));
@@ -50,7 +55,6 @@ public class SourceSetDataBuilder implements ProjectBuilder {
             }
             lookupCache.sourceSets.put(output, data);
         }
-        projectData.putData(SourceSetList.class, sourceSetData);
     }
 
     private static void addSourcesFromExtension(SourceSet sourceSet, SourceSetData data) {
