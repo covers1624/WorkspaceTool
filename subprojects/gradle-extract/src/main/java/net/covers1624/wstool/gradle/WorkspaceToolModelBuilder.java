@@ -55,7 +55,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                 });
             }
 
-            try (ObjectOutputStream os = new ObjectOutputStream(Files.newOutputStream(properties.getOutputFile().toPath()))) {
+            try (ObjectOutputStream os = new ObjectOutputStream(Files.newOutputStream(IOUtils.makeParents(properties.getOutputFile().toPath())))) {
                 os.writeObject(projectData);
             }
         } catch (Throwable ex) {
