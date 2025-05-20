@@ -49,8 +49,15 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
         List<String> relPathSegments = FastStream.of(env.projectRoot().relativize(rootDir.getParent()))
                 .map(e -> e.getFileName().toString())
                 .toList();
+        ModulePath path = rootPath;
+        // Modules in the root directory don't have any group segments.
+        // TODO fix relPathSegments to just not return a single blank path.
+        // TODO add additional assertions that no pieces of the path in a ModulePath are empty.
+        if (!relPathSegments.equals(List.of(""))) {
+            path = path.with(relPathSegments);
+        }
+        path = path.with(name);
 
-        ModulePath path = rootPath.with(relPathSegments).with(name);
         ensureParentGroupsExist(path);
 
         IJProjectModule projectModule = new IJProjectModule(this, rootDir, path);

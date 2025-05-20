@@ -11,8 +11,8 @@ import net.covers1624.wstool.api.extension.Framework;
 import net.covers1624.wstool.api.extension.Workspace;
 import net.covers1624.wstool.api.module.Dependency;
 import net.covers1624.wstool.api.module.Module;
-import net.covers1624.wstool.api.module.WorkspaceBuilder;
 import net.covers1624.wstool.api.module.SourceSet;
+import net.covers1624.wstool.api.module.WorkspaceBuilder;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.json.TypeFieldDeserializer;
@@ -96,7 +96,12 @@ public class WorkspaceTool {
             buildModule(builder, projectData);
         }
 
-        // TODO process framework modules.
+        framework.buildFrameworks(
+                env,
+                modelExtractor::extractProjectData,
+                WorkspaceTool::buildModule,
+                builder
+        );
 
         LOGGER.info("Writing workspace..");
         builder.writeWorkspace();
@@ -104,7 +109,7 @@ public class WorkspaceTool {
         LOGGER.info("Done!");
     }
 
-    private static void buildModule(WorkspaceBuilder builder, ProjectData project) {
+    private static Module buildModule(WorkspaceBuilder builder, ProjectData project) {
         Module module = builder.newModule(project.projectDir.toPath(), project.name);
         module.excludes().add(module.rootDir().resolve(".gradle"));
 
@@ -146,6 +151,7 @@ public class WorkspaceTool {
                 );
             }
         });
+        return module;
     }
 
     private static List<Dependency> buildDependencies(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, List<? extends ConfigurationData.Dependency> deps, SourceSet sourceSet) {
