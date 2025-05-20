@@ -1,16 +1,20 @@
 package net.covers1624.wstool.intellij.module;
 
 import net.covers1624.quack.collection.FastStream;
+import net.covers1624.quack.util.JavaVersion;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.module.Module;
 import net.covers1624.wstool.api.module.WorkspaceBuilder;
 import net.covers1624.wstool.intellij.IJUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +31,8 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
     private final Environment env;
     private final ModulePath rootPath;
     private final Map<ModulePath, IJModule> modules = new LinkedHashMap<>();
+
+    private int javaVersion = 8;
 
     public IJWorkspaceBuilder(Environment env) {
         this.env = env;
@@ -66,6 +72,11 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
     }
 
     @Override
+    public void setJavaVersion(int version) {
+        javaVersion = version;
+    }
+
+    @Override
     public void writeWorkspace() {
         Path ideaDir = env.projectRoot().resolve(".idea");
         Path modulesDir = ideaDir.resolve("modules");
@@ -84,6 +95,8 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
         }
 
         writeDocument(buildModulesXml(moduleFiles), ideaDir.resolve("modules.xml"));
+
+        emitJavaVersionIntoMisc(ideaDir.resolve("misc.xml"));
     }
 
     private static Document buildModulesXml(List<Path> moduleFiles) {
@@ -104,6 +117,44 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
         component.addContent(modules);
         project.addContent(component);
         return new Document(project);
+    }
+
+    private void emitJavaVersionIntoMisc(Path miscFile) {
+        Document document;
+        if (Files.exists(miscFile)) {
+            try (InputStream is = Files.newInputStream(miscFile)) {
+                document = new SAXBuilder().build(is);
+            } catch (IOException | JDOMException ex) {
+                throw new RuntimeException("Failed to parse existing misc.xml file.", ex);
+            }
+        } else {
+            document = new Document(new Element("project").setAttribute("version", "4"));
+        }
+        Element project = document.getRootElement();
+
+        Element projectRootManager = FastStream.of(project.getChildren("component"))
+                .filter(e -> e.getAttributeValue("name", "").equals("ProjectRootManager"))
+                .onlyOrDefault();
+
+        if (projectRootManager == null) {
+            projectRootManager = new Element("component")
+                    .setAttribute("name", "ProjectRootManager")
+                    .setAttribute("version", "2")
+                    .setAttribute("project-jdk-type", "JavaSDK");
+            project.addContent(projectRootManager);
+        }
+
+        String langVersion = "JDK_";
+        if (javaVersion <= 8) {
+            langVersion += "1_" + javaVersion;
+        } else {
+            langVersion += String.valueOf(javaVersion);
+        }
+
+        projectRootManager.setAttribute("languageLevel", langVersion);
+
+        // TODO see if we can emit sdk's as project libraries yet, let the user select to allocate/name one in the config?
+        writeDocument(document, miscFile);
     }
 
     private static void writeDocument(Document doc, Path file) {

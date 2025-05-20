@@ -53,7 +53,21 @@ public interface NeoForgeFramework extends Framework {
         }
 
         var projectData = dataExtractor.apply(rootDir, Set.of());
+        applyNeoForgeToolchain(projectData, builder);
 
         var module = moduleFactory.apply(builder, projectData);
+    }
+
+    private void applyNeoForgeToolchain(ProjectData projectData, WorkspaceBuilder builder) {
+        var subProjectData = projectData.getData(SubProjectList.class);
+        if (subProjectData == null) return;
+
+        var nfSubProject = subProjectData.get("neoforge");
+        if (nfSubProject == null) return;
+
+        JavaToolchainData toolchainData = nfSubProject.getData(JavaToolchainData.class);
+        if (toolchainData == null) return;
+
+        builder.setJavaVersion(toolchainData.langVersion);
     }
 }

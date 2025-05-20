@@ -27,6 +27,15 @@ public interface WorkspaceBuilder {
     Module newModule(Path rootDir, String name);
 
     /**
+     * Set the Java version for the workspace.
+     * <p>
+     * If not set, the workspace will default to Java 8.
+     *
+     * @param version The version.
+     */
+    void setJavaVersion(int version);
+
+    /**
      * Write the workspace to disk.
      */
     void writeWorkspace();
