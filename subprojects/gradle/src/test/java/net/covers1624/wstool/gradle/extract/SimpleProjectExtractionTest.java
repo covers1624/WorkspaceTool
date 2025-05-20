@@ -2,6 +2,7 @@ package net.covers1624.wstool.gradle.extract;
 
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.ExtractTestBase;
+import net.covers1624.wstool.gradle.api.data.JavaToolchainData;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SourceSetData;
 import net.covers1624.wstool.gradle.api.data.SourceSetList;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -88,5 +90,43 @@ public class SimpleProjectExtractionTest extends ExtractTestBase {
         assertNotNull(test.sourceMap.get("resources"));
 
         return data;
+    }
+
+    // @formatter:off
+    // This Gradle version crashes with java extraction issues with some of my local jvms..
+//    @Test public void testExtractJavaToolchainVersion6_7() throws Throwable { testExtractJavaToolchainVersion("6.7"); }
+    @Test public void testExtractJavaToolchainVersion7_3() throws Throwable { testExtractJavaToolchainVersion("7.3"); }
+    @Test public void testExtractJavaToolchainVersion8_0() throws Throwable { testExtractJavaToolchainVersion("8.0"); }
+    @Test public void testExtractJavaToolchainVersion8_14() throws Throwable { testExtractJavaToolchainVersion("8.14"); }
+    // @formatter:on
+
+    private void testExtractJavaToolchainVersion(String version) throws IOException {
+        GradleEmitter emitter = gradleEmitter("JavaPlugin")
+                .rootProject()
+                // language=Groovy
+                .withBuildGradle("""
+                        plugins {
+                            id 'java'
+                        }
+                        
+                        java {
+                            toolchain {
+                                languageVersion = JavaLanguageVersion.of(21)
+                            }
+                        }
+                        """)
+                .finish();
+
+        GradleModelExtractor extractor = extractor(emitter, false);
+        ProjectData data = extractor.extractProjectData(
+                emitter.getRootProjectDir(),
+                GradleVersion.version(version),
+                Set.of()
+        );
+
+        assertThat(data.getData(JavaToolchainData.class))
+                .isNotNull()
+                .extracting(e -> e.langVersion)
+                .isEqualTo(21);
     }
 }

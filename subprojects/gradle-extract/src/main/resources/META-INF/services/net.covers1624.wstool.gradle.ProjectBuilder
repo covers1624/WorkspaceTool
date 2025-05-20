@@ -1,3 +1,4 @@
-net.covers1624.wstool.gradle.ProjectExtDataBuilder
-net.covers1624.wstool.gradle.SourceSetDataBuilder
-net.covers1624.wstool.gradle.ConfigurationDataBuilder
+net.covers1624.wstool.gradle.databuild.ProjectExtDataBuilder
+net.covers1624.wstool.gradle.databuild.SourceSetDataBuilder
+net.covers1624.wstool.gradle.databuild.ConfigurationDataBuilder
+net.covers1624.wstool.gradle.databuild.ProjectToolchainDataBuilder

@@ -1,6 +1,8 @@
-package net.covers1624.wstool.gradle;
+package net.covers1624.wstool.gradle.databuild;
 
 import net.covers1624.quack.collection.FastStream;
+import net.covers1624.wstool.gradle.LookupCache;
+import net.covers1624.wstool.gradle.ProjectBuilder;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SourceSetData;
 import net.covers1624.wstool.gradle.api.data.SourceSetList;
