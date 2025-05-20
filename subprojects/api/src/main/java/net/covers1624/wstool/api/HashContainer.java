@@ -6,7 +6,6 @@ import com.google.gson.Gson;
 import net.covers1624.quack.gson.JsonUtils;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.quack.util.HashUtils;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,54 +67,8 @@ public class HashContainer {
      * @param property The property.
      * @return It's value.
      */
-    public @Nullable String getProperty(String property) {
-        return getProperty(property, null);
-    }
-
-    /**
-     * Set a saved property.
-     * <p>
-     * These are separate to hash entries and may contain any user data.
-     *
-     * @param property The property.
-     * @param value    The property value.
-     * @return The previously stored value, if any.
-     */
-    public @Nullable String setProperty(String property, @Nullable String value) {
-        String existing = container.properties.put(property, value);
-        save();
-        return existing;
-    }
-
-    /**
-     * Remove a saved property.
-     * <p>
-     * These are separate to hash entries and may contain any user data.
-     *
-     * @param property The property.
-     * @return The previously stored value, if any.
-     */
-    public @Nullable String removeProperty(String property) {
-        String existing = container.properties.remove(property);
-        save();
-        return existing;
-    }
-
-    /**
-     * Get a saved property. These are separate to hash entries and may
-     * contain any user data.
-     *
-     * @param property The property.
-     * @return It's value.
-     */
-    @Contract ("_,!null->!null")
-    public @Nullable String getProperty(String property, @Nullable String defaultValue) {
-        return container.properties.getOrDefault(property, defaultValue);
-    }
-
-    private void storeAndSave(String key, String value) {
-        container.hashes.put(key, value);
-        save();
+    public PropertyEntry getProperty(String property) {
+        return new PropertyEntry(property, container.properties.get(property));
     }
 
     private void save() {
@@ -142,7 +95,7 @@ public class HashContainer {
 
         private final List<Consumer<Hasher>> actions = new ArrayList<>();
 
-        public Entry(String key, @Nullable String value) {
+        private Entry(String key, @Nullable String value) {
             this.key = key;
             this.value = value;
         }
@@ -196,7 +149,113 @@ public class HashContainer {
          * Push the finalized hash into the container and save the result.
          */
         public void pushChanges() {
-            storeAndSave(key, result());
+            container.hashes.put(key, result());
+            save();
+        }
+    }
+
+    /**
+     * Represents a property stored within the container.
+     */
+    public class PropertyEntry {
+
+        private final String name;
+        private @Nullable String value;
+
+        private PropertyEntry(String name, @Nullable String value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        /**
+         * @return If this property has a value.
+         */
+        public boolean hasValue() {
+            return value != null;
+        }
+
+        /**
+         * @return The raw value in this property.
+         */
+        public @Nullable String getValue() {
+            return value;
+        }
+
+        /**
+         * @return The value in this property, parsed as a boolean.
+         */
+        public boolean getBoolean() {
+            return Boolean.parseBoolean(value);
+        }
+
+        /**
+         * If the value in this property is {@code null}, replace it with the
+         * provided default value.
+         *
+         * @param value The value.
+         * @return The same property.
+         */
+        public PropertyEntry withDefault(String value) {
+            if (!hasValue()) {
+                setValue(value);
+            }
+            return this;
+        }
+
+        /**
+         * If the value in this property is {@code null}, replace it with the
+         * provided default value.
+         *
+         * @param value The value.
+         * @return The same property.
+         */
+        public PropertyEntry withDefault(boolean value) {
+            if (!hasValue()) {
+                setValue(value);
+            }
+            return this;
+        }
+
+        /**
+         * Set the properties value.
+         *
+         * @param value The value.
+         * @return The same property.
+         */
+        public PropertyEntry setValue(@Nullable String value) {
+            this.value = value;
+            return this;
+        }
+
+        /**
+         * Set the properties value to a boolean.
+         *
+         * @param value The value.
+         * @return The same property.
+         */
+        public PropertyEntry setValue(boolean value) {
+            this.value = Boolean.toString(value);
+            return this;
+        }
+
+        /**
+         * Delete the value of this property, and remove it from the container.
+         */
+        public void remove() {
+            setValue(null);
+            push();
+        }
+
+        /**
+         * Push any changes in this property to the container.
+         */
+        public void push() {
+            if (value == null) {
+                container.properties.remove(name);
+            } else {
+                container.properties.put(name, value);
+            }
+            save();
         }
     }
 
