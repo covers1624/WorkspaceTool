@@ -15,7 +15,7 @@ public interface WorkspaceBuilder {
     /**
      * @return All top-level modules that have been created.
      */
-    Map<String, Module> modules();
+    Map<String, ? extends Module> modules();
 
     /**
      * Create a new top-level module.

@@ -31,6 +31,7 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
     private final Environment env;
     private final ModulePath rootPath;
     private final Map<ModulePath, IJModule> modules = new LinkedHashMap<>();
+    private final Map<String, IJProjectModule> projectModules = new LinkedHashMap<>();
 
     private int javaVersion = 8;
 
@@ -46,8 +47,8 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
     }
 
     @Override
-    public Map<String, Module> modules() {
-        return Map.of();
+    public Map<String, ? extends Module> modules() {
+        return projectModules;
     }
 
     @Override
@@ -69,6 +70,7 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
 
         IJProjectModule projectModule = new IJProjectModule(this, rootDir, path);
         modules.put(path, projectModule);
+        projectModules.put(name, projectModule);
         return projectModule;
     }
 
