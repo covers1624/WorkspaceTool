@@ -82,8 +82,9 @@ public class GradleModelExtractor {
     }
 
     public ProjectData extractProjectData(Path project, GradleVersion gradleVersion, Set<String> extraTasks) {
-        Path cacheFile = env.projectCache().resolve(env.projectRoot().relativize(project).toString().replaceAll("[/\\\\]", "_") + ".dat");
-        HashContainer container = new HashContainer(env.projectCache(), cacheFile.getFileName().toString());
+        Path gradleCacheDir = env.projectCache().resolve("gradle");
+        Path cacheFile = gradleCacheDir.resolve(env.projectRoot().relativize(project).toString().replaceAll("[/\\\\]", "_") + ".dat");
+        HashContainer container = new HashContainer(gradleCacheDir, cacheFile.getFileName().toString());
         HashContainer.Entry inputsEntry = container.getEntry("inputs");
         for (String hashableFile : hashableFiles) {
             inputsEntry.putFile(project.resolve(hashableFile));
