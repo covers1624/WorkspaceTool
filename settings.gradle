@@ -26,6 +26,8 @@ dependencyResolutionManagement {
             library('snakeyaml', 'org.yaml:snakeyaml:2.3')
             library('jdom2', 'org.jdom:jdom2:2.0.6.1')
 
+            library('mavenartifact', 'org.apache.maven:maven-artifact:3.8.1')
+
             library('jgit', 'org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r')
         }
         gradlelibs {

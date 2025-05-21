@@ -1,11 +1,13 @@
 package net.covers1624.wstool.intellij.module;
 
 import net.covers1624.quack.collection.FastStream;
-import net.covers1624.quack.util.JavaVersion;
+import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.module.Module;
 import net.covers1624.wstool.api.module.WorkspaceBuilder;
 import net.covers1624.wstool.intellij.IJUtils;
+import net.covers1624.wstool.intellij.MavenDependencyCollector;
+import net.covers1624.wstool.util.DeletingFileVisitor;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -89,11 +91,27 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
             throw new RuntimeException("Failed to create directories.", ex);
         }
 
+        MavenDependencyCollector collector = new MavenDependencyCollector();
+        modules().values().forEach(collector::collectFrom);
+
+        collector.hardlinkToCacheDir(env.projectCache());
+
+        Path librariesDir = ideaDir.resolve("libraries");
+        try {
+            Files.walkFileTree(librariesDir, new DeletingFileVisitor(librariesDir));
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to clean libraries dir.", ex);
+        }
+        for (MavenDependencyCollector.CollectedEntry entry : collector.collectedEntries()) {
+            Path file = librariesDir.resolve(entry.name().replace(':', '.') + ".xml");
+            writeDocument(entry.buildDocument(), file);
+        }
+
         List<Path> moduleFiles = new ArrayList<>();
         for (IJModule module : modules.values()) {
             String name = module.path.joinNames(".");
             Path moduleFile = modulesDir.resolve(name + ".iml");
-            writeDocument(module.buildDocument(env), moduleFile);
+            writeDocument(module.buildDocument(env, collector), moduleFile);
             moduleFiles.add(moduleFile);
         }
 
@@ -162,7 +180,7 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
 
     private static void writeDocument(Document doc, Path file) {
         XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
-        try (OutputStream os = Files.newOutputStream(file)) {
+        try (OutputStream os = Files.newOutputStream(IOUtils.makeParents(file))) {
             output.output(doc, os);
         } catch (IOException ex) {
             throw new RuntimeException("Failed to write xml file to " + file, ex);

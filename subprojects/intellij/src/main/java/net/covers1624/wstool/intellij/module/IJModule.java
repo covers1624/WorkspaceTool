@@ -2,11 +2,15 @@ package net.covers1624.wstool.intellij.module;
 
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.Environment;
+import net.covers1624.wstool.api.module.Dependency;
+import net.covers1624.wstool.gradle.api.data.ConfigurationData;
 import net.covers1624.wstool.intellij.IJUtils;
+import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import org.apache.commons.lang3.StringUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
+import java.lang.annotation.ElementType;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +44,11 @@ public abstract class IJModule {
         return FastStream.of(excludes).map(ContentPath::exclude).toList();
     }
 
-    public final Document buildDocument(Environment env) {
+    public List<DependencyEntry> getDependencyEntries() {
+        return List.of();
+    }
+
+    public final Document buildDocument(Environment env, MavenDependencyCollector collector) {
         Element module = new Element("module")
                 .setAttribute("type", "JAVA_MODULE")
                 .setAttribute("version", "4");
@@ -70,6 +78,29 @@ public abstract class IJModule {
                 .setAttribute("type", "sourceFolder")
                 .setAttribute("forTests", "false")
         );
+
+        for (DependencyEntry depEntry : getDependencyEntries()) {
+            Element orderEntry = new Element("orderEntry");
+            orderEntry.setAttribute("scope", depEntry.scope().name());
+            if (depEntry.exported()) {
+                orderEntry.setAttribute("exported", "");
+            }
+            if (depEntry instanceof MavenDependencyEntry ent) {
+                orderEntry.setAttribute("type", "library");
+                orderEntry.setAttribute("level", "project");
+                var library = collector.lookup(ent.dep);
+                if (library == null) {
+                    throw new RuntimeException("Unable to find dependency " + ent.dep + " in the library collector.");
+                }
+                orderEntry.setAttribute("name", library.name());
+            } else if (depEntry instanceof ProjectDependencyEntry ent) {
+                orderEntry.setAttribute("type", "module");
+                orderEntry.setAttribute("module-name", ent.module.path.toString());
+            } else {
+                throw new RuntimeException("Unhandled type " + depEntry.getClass());
+            }
+            moduleRootManager.addContent(orderEntry);
+        }
 
         module.addContent(moduleRootManager);
         return new Document(module);
@@ -108,15 +139,6 @@ public abstract class IJModule {
         return List.of(new ContentRoot(Path.of(commonParent), paths));
     }
 
-    private static boolean isAncestor(Path root, Path child) {
-        while (child != null) {
-            if (root.equals(child)) return true;
-
-            child = child.getParent();
-        }
-        return false;
-    }
-
     public record ContentRoot(Path root, List<ContentPath> contentRootPaths) { }
 
     public record ContentPath(Path path, PathType type) {
@@ -139,7 +161,33 @@ public abstract class IJModule {
         CODE,
         RESOURCES,
         TEST_CODE,
-        TEST_RESOURCES;
+        TEST_RESOURCES,
+    }
+
+    public enum DependencyScope {
+        PROVIDED,
+        COMPILE,
+        RUNTIME,
+        TEST
+    }
+
+    public sealed interface DependencyEntry permits MavenDependencyEntry, ProjectDependencyEntry {
+
+        DependencyScope scope();
+
+        boolean exported();
 
     }
+
+    public record MavenDependencyEntry(
+            Dependency.MavenDependency dep,
+            DependencyScope scope,
+            boolean exported
+    ) implements DependencyEntry { }
+
+    public record ProjectDependencyEntry(
+            IJModule module,
+            DependencyScope scope,
+            boolean exported
+    ) implements DependencyEntry { }
 }

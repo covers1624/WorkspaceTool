@@ -5,7 +5,10 @@ import net.covers1624.wstool.api.module.Module;
 import net.covers1624.wstool.api.module.SourceSet;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by covers1624 on 5/5/25.
@@ -61,5 +64,25 @@ public class IJSourceSetModule extends IJModule implements SourceSet {
         }));
 
         return paths;
+    }
+
+    @Override
+    public List<DependencyEntry> getDependencyEntries() {
+        List<DependencyEntry> entries = new ArrayList<>();
+        compileDependencies.forEach(dep -> entries.add(collectDependency(dep, DependencyScope.COMPILE)));
+        runtimeDependencies.forEach(dep -> entries.add(collectDependency(dep, DependencyScope.RUNTIME)));
+        return entries;
+    }
+
+    // TODO, we don't actually want to always export everything. We should extract more Gradle data about what dependencies
+    //       are publicly exported (api, vs implementation) and use that.
+    private DependencyEntry collectDependency(Dependency dep, DependencyScope scope) {
+        if (dep instanceof Dependency.MavenDependency mavenDep) {
+            return new MavenDependencyEntry(mavenDep, scope, true);
+        }
+        if (dep instanceof Dependency.SourceSetDependency ssDep) {
+            return new ProjectDependencyEntry(((IJModule) ssDep.sourceSet()), scope, true);
+        }
+        throw new RuntimeException("Unexpected dependency type " + dep.getClass());
     }
 }
