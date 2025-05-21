@@ -3,6 +3,7 @@ package net.covers1624.wstool;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.covers1624.quack.collection.FastStream;
+import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.config.Config;
@@ -95,6 +96,8 @@ public class WorkspaceTool {
             ProjectData projectData = modelExtractor.extractProjectData(modulePath, Set.of());
             buildModule(builder, projectData);
         }
+
+        insertCrossModuleLinks(builder);
 
         framework.buildFrameworks(
                 env,
@@ -223,6 +226,41 @@ public class WorkspaceTool {
                         subProject,
                         module.newSubModule(subProject.projectDir.toPath(), subProject.name)
                 );
+            }
+        }
+    }
+
+    // TODO We should pull Gradle publishing data to provide information here, archivesBaseName may be wrong.
+    // TODO, We may want to do this _somehow_ when building the module tree (perhaps extract all then process?),
+    //       as we currently don't trim transitive dependencies from the removed dependency.
+    //       For example: in the case of CCL, we don't trim the transitive Quack dependency.
+    private static void insertCrossModuleLinks(WorkspaceBuilder builder) {
+        Map<MavenNotation, SourceSet> moduleLookup = new HashMap<>();
+        for (Module value : builder.modules().values()) {
+            var projData = value.projectData();
+            if (projData == null) continue;
+
+            // TODO, I'm not sure if we can properly trace which source set a jar is composed from in Gradle. It would be a lot
+            //       of heuristics for tracing various Gradle objects around through task I/O. So for now we just pick main.
+            moduleLookup.put(MavenNotation.parse(projData.group + ":" + projData.archivesBaseName), value.sourceSets().get("main"));
+        }
+
+        for (Module module : builder.modules().values()) {
+            for (SourceSet sourceSet : module.sourceSets().values()) {
+                insertCrossModuleLinks(sourceSet.compileDependencies(), moduleLookup);
+                insertCrossModuleLinks(sourceSet.runtimeDependencies(), moduleLookup);
+            }
+        }
+    }
+
+    private static void insertCrossModuleLinks(List<Dependency> dependencies, Map<MavenNotation, SourceSet> depLookup) {
+        for (int i = 0; i < dependencies.size(); i++) {
+            if (dependencies.get(i) instanceof Dependency.MavenDependency mavenDep) {
+                // TODO, ideally if we pull publishing metadata, we only need to nuke version.
+                var found = depLookup.get(mavenDep.notation().withVersion("").withClassifier("").withExtension("jar"));
+                if (found != null) {
+                    dependencies.set(i, new Dependency.SourceSetDependency(found));
+                }
             }
         }
     }
