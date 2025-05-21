@@ -1,5 +1,8 @@
 package net.covers1624.wstool.api.module;
 
+import net.covers1624.wstool.gradle.api.data.ProjectData;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -53,4 +56,20 @@ public interface Module {
      */
     SourceSet newSourceSet(String name);
 
+    /**
+     * Get the Gradle data this module was built from.
+     * <p>
+     * This is used by frameworks to pull frameworks specific gradle extraction data in.
+     *
+     * @return The Gradle project data that this module was built from.
+     */
+    @Nullable
+    ProjectData projectData();
+
+    /**
+     * Set the project data for this module.
+     *
+     * @param data The data.
+     */
+    void setProjectData(ProjectData data);
 }

@@ -111,6 +111,7 @@ public class WorkspaceTool {
 
     private static Module buildModule(WorkspaceBuilder builder, ProjectData project) {
         Module module = builder.newModule(project.projectDir.toPath(), project.name);
+        module.setProjectData(project);
         module.excludes().add(module.rootDir().resolve(".gradle"));
 
         // First build the tree of modules.

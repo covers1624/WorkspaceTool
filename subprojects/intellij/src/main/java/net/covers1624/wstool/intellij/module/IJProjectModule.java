@@ -3,6 +3,8 @@ package net.covers1624.wstool.intellij.module;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.module.Module;
 import net.covers1624.wstool.api.module.SourceSet;
+import net.covers1624.wstool.gradle.api.data.ProjectData;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -17,6 +19,8 @@ public class IJProjectModule extends IJModuleWithPath implements Module {
     private final Map<ModulePath, IJProjectModule> subModules = new LinkedHashMap<>();
     private final Map<ModulePath, IJSourceSetModule> sourceSets = new LinkedHashMap<>();
 
+    private @Nullable ProjectData gradleData;
+
     public IJProjectModule(IJWorkspaceBuilder container, Path rootDir, ModulePath path) {
         super(rootDir, path);
         this.container = container;
@@ -25,13 +29,13 @@ public class IJProjectModule extends IJModuleWithPath implements Module {
     @Override
     public Map<String, ? extends Module> subModules() {
         return FastStream.of(subModules.entrySet())
-                .toMap(e-> e.getKey().name(), Map.Entry::getValue);
+                .toMap(e -> e.getKey().name(), Map.Entry::getValue);
     }
 
     @Override
     public Map<String, ? extends SourceSet> sourceSets() {
         return FastStream.of(sourceSets.entrySet())
-                .toMap(e-> e.getKey().name(), Map.Entry::getValue);
+                .toMap(e -> e.getKey().name(), Map.Entry::getValue);
     }
 
     @Override
@@ -52,5 +56,15 @@ public class IJProjectModule extends IJModuleWithPath implements Module {
         container.addModule(module);
         sourceSets.put(path, module);
         return module;
+    }
+
+    @Override
+    public @Nullable ProjectData projectData() {
+        return gradleData;
+    }
+
+    @Override
+    public void setProjectData(ProjectData data) {
+        gradleData = data;
     }
 }
