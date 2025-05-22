@@ -11,8 +11,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.covers1624:Quack:0.4.10.105" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="mezz.jei:jei-1.21.1-neoforge:19.21.0.246" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="maven.modrinth:embeddium:1.0.15+mc1.21.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="mezz.jei:jei-1.21.1-neoforge:19.21.0.246" />
     <orderEntry scope="COMPILE" exported="" type="module" module-name="simple.NeoForge.neoforge.main" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.covers1624:Quack:0.4.10.105" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged:DevLaunch:1.0.1" />

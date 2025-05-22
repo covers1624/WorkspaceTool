@@ -175,7 +175,7 @@ public class WorkspaceTool {
 
     private static Set<Dependency> buildDependencies(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, List<? extends ConfigurationData.Dependency> deps, SourceSet sourceSet) {
         // TODO this can likely be converted back to a List when/if we remove the recursive-ness of extracted Gradle dependencies.
-        Set<Dependency> dependencies = new HashSet<>();
+        Set<Dependency> dependencies = new LinkedHashSet<>();
         for (ConfigurationData.Dependency dep : deps) {
             if (dep instanceof ConfigurationData.MavenDependency maven) {
                 dependencies.add(new Dependency.MavenDependency(
