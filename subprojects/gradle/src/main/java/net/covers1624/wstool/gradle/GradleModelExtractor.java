@@ -1,12 +1,16 @@
 package net.covers1624.wstool.gradle;
 
 import com.google.common.base.Suppliers;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.covers1624.jdkutils.JavaVersion;
+import net.covers1624.quack.collection.ColUtils;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.gson.JsonUtils;
 import net.covers1624.quack.io.ConsumingOutputStream;
+import net.covers1624.quack.util.HashUtils;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.HashContainer;
 import net.covers1624.wstool.api.JdkProvider;
@@ -35,6 +39,9 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Created by covers1624 on 17/5/23.
@@ -58,6 +65,8 @@ public class GradleModelExtractor {
     // The version above which we run Gradle with Java 17.
     private static final GradleVersion MIN_GRADLE_USE_J17 = GradleVersion.version("7.3");
 
+    private final Supplier<List<Path>> gradleClassPath = Suppliers.memoize(this::buildClassPath);
+    private final Supplier<String> gradleClassPathHash = Suppliers.memoize(this::hashGradleClassPath);
     private final Supplier<Path> initScriptPath = Suppliers.memoize(this::buildInitScript);
 
     private final Environment env;
@@ -86,6 +95,7 @@ public class GradleModelExtractor {
         Path cacheFile = gradleCacheDir.resolve(env.projectRoot().relativize(project).toString().replaceAll("[/\\\\]", "_") + ".dat");
         HashContainer container = new HashContainer(gradleCacheDir, cacheFile.getFileName().toString());
         HashContainer.Entry inputsEntry = container.getEntry("inputs");
+        inputsEntry.putString(gradleClassPathHash.get());
         for (String hashableFile : hashableFiles) {
             inputsEntry.putFile(project.resolve(hashableFile));
         }
@@ -204,7 +214,7 @@ public class GradleModelExtractor {
         List<String> lines = new LinkedList<>();
         lines.add("initscript {");
         lines.add("  dependencies {");
-        for (Path path : buildJarPath()) {
+        for (Path path : gradleClassPath.get()) {
             lines.add("    classpath files('" + path.toAbsolutePath().toString().replace("\\", "\\\\") + "')");
         }
         lines.add("  }");
@@ -222,19 +232,62 @@ public class GradleModelExtractor {
         return temp;
     }
 
-    private List<Path> buildJarPath() {
+    private List<Path> buildClassPath() {
         if (env.manifestFile() != null) {
             throw new NotImplementedException("Not runnable out-of-dev yet.");
         } else {
             LOGGER.info(" Using dev metadata for gradle plugin dependencies..");
-            return buildJarPathDev();
+            return buildClassPathDev();
         }
+    }
+
+    /**
+     * Generate a stable hash of the Gradle classpath, composed of individual class files, not their
+     * containers or other metadata. Assuming all classes on this classpath don't embed any version numbers
+     * this will only change if the class file changes.
+     *
+     * @return The hash.
+     */
+    @SuppressWarnings ("UnstableApiUsage")
+    private String hashGradleClassPath() {
+        Hasher hasher = Hashing.sha256().newHasher();
+
+        try {
+            for (Path path : FastStream.of(gradleClassPath.get()).sorted()) {
+                if (Files.isDirectory(path)) {
+                    try (Stream<Path> files = Files.walk(path)) {
+                        var sorted = FastStream.of(files)
+                                .filter(Files::isRegularFile)
+                                .filter(e -> e.toString().endsWith(".class"))
+                                .toList();
+                        for (Path clazzFile : sorted) {
+                            HashUtils.addToHasher(hasher, clazzFile);
+                        }
+                    }
+                } else if (path.toString().endsWith(".jar")) {
+                    try (ZipFile zip = new ZipFile(path.toFile())) {
+                        for (ZipEntry entry : ColUtils.iterable(zip.entries())) {
+                            if (!entry.getName().endsWith(".class")) continue;
+
+                            try (InputStream is = zip.getInputStream(entry)) {
+                                HashUtils.addToHasher(hasher, is);
+                            }
+                        }
+                    }
+                } else {
+                    throw new RuntimeException("I don't know how to hash this file. " + path);
+                }
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to hash class path.", ex);
+        }
+        return hasher.hash().toString();
     }
 
     private static final Gson GSON = new Gson();
     private static final Type LIST_STRING = new TypeToken<List<String>>() { }.getType();
 
-    private static List<Path> buildJarPathDev() {
+    private static List<Path> buildClassPathDev() {
         boolean isGradleTesting = Boolean.getBoolean("GradleModelExtractor.isGradleTesting");
         List<String> paths;
         try (InputStream is = GradleModelExtractor.class.getResourceAsStream("/gradle_plugin_data.json")) {
@@ -263,6 +316,6 @@ public class GradleModelExtractor {
                     );
                 })
                 .filter(Files::exists)
-                .toList();
+                .toImmutableList();
     }
 }
