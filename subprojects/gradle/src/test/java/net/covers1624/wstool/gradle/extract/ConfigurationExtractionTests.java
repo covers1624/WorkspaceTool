@@ -3,7 +3,7 @@ package net.covers1624.wstool.gradle.extract;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.ExtractTestBase;
-import net.covers1624.wstool.gradle.api.GradleTestBase;
+import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.MavenDependency;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.ProjectDependency;
@@ -28,7 +28,7 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
     // @formatter:on
 
     private void testSimpleDependency(String gradleVersion) throws IOException {
-        GradleTestBase.GradleEmitter emitter = gradleEmitter("SimpleDependency")
+        GradleEmitter emitter = gradleEmitter("SimpleDependency")
                 .rootProject()
                 // language=Groovy
                 .withBuildGradle("""
@@ -73,7 +73,7 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
     // @formatter:on
 
     private void testSourceSetDependency(String gradleVersion) throws IOException {
-        GradleTestBase.GradleEmitter emitter = gradleEmitter("ProjectDependency")
+        GradleEmitter emitter = gradleEmitter("ProjectDependency")
                 .rootProject()
                 // language=Groovy
                 .withBuildGradle("""
@@ -120,7 +120,7 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
     // @formatter:on
 
     private void testProjectDependency(String gradleVersion) throws IOException {
-        GradleTestBase.GradleEmitter emitter = gradleEmitter("ProjectDependency")
+        GradleEmitter emitter = gradleEmitter("ProjectDependency")
                 .rootProject()
                 .withBuildGradle("")
                 // language=Groovy

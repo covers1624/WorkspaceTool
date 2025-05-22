@@ -7,6 +7,10 @@ import java.nio.file.Path;
  */
 public class IJUtils {
 
+    public static String projectRootRelative(Path projectDir, String str) {
+        return str.replace(projectDir.toString(), "$PROJECT_DIR$");
+    }
+
     public static String fileUrl(Path path) {
         String absPath = path.toAbsolutePath().toString();
         if (absPath.endsWith(".jar")) {

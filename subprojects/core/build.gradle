@@ -21,6 +21,12 @@ dependencies {
     runtimeOnly project(':intellij')
     runtimeOnly project(':mcforge')
     runtimeOnly project(':neoforge')
+
+    testImplementation project(':gradle-test-api')
+}
+
+test {
+    systemProperty("net.covers1624.covers1624.wstool.test_update", project.findProperty("test_update") != null)
 }
 
 publishing {

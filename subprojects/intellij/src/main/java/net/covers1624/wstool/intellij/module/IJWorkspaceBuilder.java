@@ -5,7 +5,6 @@ import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.module.Module;
 import net.covers1624.wstool.api.module.WorkspaceBuilder;
-import net.covers1624.wstool.intellij.IJUtils;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import net.covers1624.wstool.util.DeletingFileVisitor;
 import org.jdom2.Document;
@@ -24,6 +23,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static net.covers1624.wstool.intellij.IJUtils.*;
 
 /**
  * Created by covers1624 on 5/3/25.
@@ -98,7 +99,9 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
 
         Path librariesDir = ideaDir.resolve("libraries");
         try {
-            Files.walkFileTree(librariesDir, new DeletingFileVisitor(librariesDir));
+            if (Files.exists(librariesDir)) {
+                Files.walkFileTree(librariesDir, new DeletingFileVisitor(librariesDir));
+            }
         } catch (IOException ex) {
             throw new RuntimeException("Failed to clean libraries dir.", ex);
         }
@@ -120,7 +123,7 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
         emitJavaVersionIntoMisc(ideaDir.resolve("misc.xml"));
     }
 
-    private static Document buildModulesXml(List<Path> moduleFiles) {
+    private Document buildModulesXml(List<Path> moduleFiles) {
         Element project = new Element("project")
                 .setAttribute("version", "4");
 
@@ -130,8 +133,8 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
         Element modules = new Element("modules");
         for (Path file : moduleFiles) {
             modules.addContent(new Element("module")
-                    .setAttribute("fileurl", IJUtils.fileUrl(file))
-                    .setAttribute("filepath", file.toString())
+                    .setAttribute("fileurl", projectRootRelative(env.projectRoot(), fileUrl(file)))
+                    .setAttribute("filepath", projectRootRelative(env.projectRoot(), file.toString()))
             );
         }
 

@@ -50,7 +50,10 @@ public class WorkspaceTool {
     }
 
     public static void main(String[] args) throws IOException {
-        Environment env = Environment.of();
+        run(Environment.of());
+    }
+
+    public static void run(Environment env) throws IOException {
         LOGGER.info("Starting WorkspaceTool v@{}", VERSION);
         LOGGER.info("  Project Directory: {}", env.projectRoot());
         List<Extension> extensions = loadExtensions();

@@ -17,7 +17,7 @@ public class ExtractTestBase extends GradleTestBase {
     }
 
     protected static GradleModelExtractor extractor(GradleEmitter emitter, boolean jvmAttach) {
-        return extractor(testEnvironment(emitter.getTempDir()), jvmAttach);
+        return extractor(testEnvironment(emitter.getRootProjectDir().getParent()), jvmAttach);
     }
 
     protected static GradleModelExtractor extractor(Environment env, boolean jvmAttach) {

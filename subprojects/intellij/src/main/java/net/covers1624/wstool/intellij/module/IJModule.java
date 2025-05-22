@@ -3,17 +3,17 @@ package net.covers1624.wstool.intellij.module;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.module.Dependency;
-import net.covers1624.wstool.gradle.api.data.ConfigurationData;
 import net.covers1624.wstool.intellij.IJUtils;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import org.apache.commons.lang3.StringUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
-import java.lang.annotation.ElementType;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.covers1624.wstool.intellij.IJUtils.*;
 
 /**
  * Created by covers1624 on 5/4/25.
@@ -59,15 +59,16 @@ public abstract class IJModule {
 
         moduleRootManager.addContent(new Element("exclude-output"));
 
+        Path projectRoot = env.projectRoot();
         Path outDir = env.projectRoot().resolve("out").resolve(path.joinNames("_"));
         moduleRootManager.addContent(
                 new Element(isForTests() ? "output-test" : "output")
-                        .setAttribute("url", IJUtils.fileUrl(outDir))
+                        .setAttribute("url", projectRootRelative(projectRoot, fileUrl(outDir)))
         );
 
         List<ContentRoot> roots = buildContentRoots(getContentPaths());
         for (ContentRoot root : roots) {
-            moduleRootManager.addContent(buildContentRootElement(root));
+            moduleRootManager.addContent(buildContentRootElement(root, projectRoot));
         }
 
         moduleRootManager.addContent(new Element("orderEntry")
@@ -106,13 +107,13 @@ public abstract class IJModule {
         return new Document(module);
     }
 
-    private static Element buildContentRootElement(ContentRoot root) {
+    private static Element buildContentRootElement(ContentRoot root, Path projectRoot) {
         Element content = new Element("content");
-        content.setAttribute("url", IJUtils.fileUrl(root.root));
+        content.setAttribute("url", projectRootRelative(projectRoot, fileUrl(root.root)));
 
         for (ContentPath path : root.contentRootPaths()) {
             Element element = new Element(path.type == PathType.EXCLUDE ? "excludeFolder" : "sourceFolder");
-            element.setAttribute("url", IJUtils.fileUrl(path.path));
+            element.setAttribute("url", projectRootRelative(projectRoot, fileUrl(path.path)));
             switch (path.type) {
                 case CODE -> element.setAttribute("isTestSource", "false");
                 case TEST_CODE -> element.setAttribute("isTestSource", "true");

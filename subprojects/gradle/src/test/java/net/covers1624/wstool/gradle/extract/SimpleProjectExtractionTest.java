@@ -2,6 +2,7 @@ package net.covers1624.wstool.gradle.extract;
 
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.ExtractTestBase;
+import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.gradle.api.data.JavaToolchainData;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SourceSetData;
