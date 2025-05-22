@@ -22,10 +22,7 @@ import org.gradle.language.java.artifact.JavadocArtifact;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
@@ -110,36 +107,58 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
 
         List<MavenDependency> builtDeps = new LinkedList<>();
         for (ResolvedDependency dep : dependencies) {
-            // If we don't have an artifact, we are likely just a bom/pom dependency which only has children.
-            ResolvedArtifact artifact = ColUtils.onlyOrDefault(dep.getModuleArtifacts());
-            MavenNotation notation = new MavenNotation(
-                    dep.getModuleGroup(),
-                    dep.getModuleName(),
-                    dep.getModuleVersion(),
-                    artifact != null ? artifact.getClassifier() : null,
-                    artifact != null ? artifact.getClassifier() != null ? artifact.getClassifier() : "jar" : "jar"
-            );
-            MavenDependency dependency = new MavenDependency(notation);
-            if (artifact != null) {
-                dependency.files.put("classes", artifact.getFile());
-                //noinspection UnstableApiUsage,unchecked
-                ArtifactResolutionResult result = depHandler.createArtifactResolutionQuery()
-                        .forComponents(artifact.getId().getComponentIdentifier())
-                        .withArtifacts(JvmLibrary.class, SourcesArtifact.class, JavadocArtifact.class)
-                        .execute();
-                Set<ComponentArtifactsResult> results = result.getResolvedComponents();
-                if (!results.isEmpty()) {
-                    ComponentArtifactsResult r = ColUtils.only(results);
-                    File sources = getArtifactFile(r, SourcesArtifact.class);
-                    File javadoc = getArtifactFile(r, JavadocArtifact.class);
+            // We may get any range of module artifacts for this dependency.
+            // Zero usually indicates that it's a pom only dependency.
+            // One is the normal.
+            // More than one for a bom/pom dependency, This has only been seen with LWJGL provided by NeoForge.
+            // We Just resolve all possible into a list and handle it bellow.
+            List<MavenDependency> nestedDeps = new ArrayList<>();
+            for (ResolvedArtifact artifact : dep.getModuleArtifacts()) {
+                MavenNotation notation = new MavenNotation(
+                        dep.getModuleGroup(),
+                        dep.getModuleName(),
+                        dep.getModuleVersion(),
+                        artifact != null ? artifact.getClassifier() : null,
+                        artifact != null ? artifact.getClassifier() != null ? artifact.getClassifier() : "jar" : "jar"
+                );
+                MavenDependency dependency = new MavenDependency(notation);
+                if (artifact != null) {
+                    dependency.files.put("classes", artifact.getFile());
+                    //noinspection UnstableApiUsage,unchecked
+                    ArtifactResolutionResult result = depHandler.createArtifactResolutionQuery()
+                            .forComponents(artifact.getId().getComponentIdentifier())
+                            .withArtifacts(JvmLibrary.class, SourcesArtifact.class, JavadocArtifact.class)
+                            .execute();
+                    Set<ComponentArtifactsResult> results = result.getResolvedComponents();
+                    if (!results.isEmpty()) {
+                        ComponentArtifactsResult r = ColUtils.only(results);
+                        File sources = getArtifactFile(r, SourcesArtifact.class);
+                        File javadoc = getArtifactFile(r, JavadocArtifact.class);
 
-                    if (sources != null) dependency.files.put("sources", sources);
-                    if (javadoc != null) dependency.files.put("javadoc", javadoc);
+                        if (sources != null) dependency.files.put("sources", sources);
+                        if (javadoc != null) dependency.files.put("javadoc", javadoc);
+                    }
                 }
+                nestedDeps.add(dependency);
+            }
+            // If we got exactly one, then it's our primary dependency.
+            MavenDependency primaryDep;
+            if (nestedDeps.size() == 1) {
+                primaryDep = nestedDeps.get(0);
+            } else {
+                // If we got more than one or zero, we make a group dependency.
+                primaryDep = new MavenDependency(new MavenNotation(
+                        dep.getModuleGroup(),
+                        dep.getModuleName(),
+                        dep.getModuleVersion(),
+                        null,
+                        "pom" // Pom dep used here as group, Not entirely sure if this is maven spec compliant.
+                ));
+                primaryDep.children.addAll(nestedDeps);
             }
 
-            dependency.children.addAll(buildMavenDependencies(dep.getChildren()));
-            builtDeps.add(dependency);
+            primaryDep.children.addAll(buildMavenDependencies(dep.getChildren()));
+            builtDeps.add(primaryDep);
         }
         return builtDeps;
     }
