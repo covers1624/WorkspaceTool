@@ -1,22 +1,26 @@
 package net.covers1624.wstool.test;
 
+import com.google.common.collect.Sets;
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.CopyingFileVisitor;
 import net.covers1624.wstool.WorkspaceTool;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.util.DeletingFileVisitor;
-import org.assertj.core.api.Condition;
+import org.assertj.core.api.AutoCloseableSoftAssertions;
+import org.assertj.core.api.SoftAssertions;
 import org.intellij.lang.annotations.Language;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Created by covers1624 on 5/22/25.
@@ -77,51 +81,51 @@ public abstract class TestBase {
         public void close() throws IOException {
             Path ideaDir = projectDir.resolve(".idea");
             assertThat(ideaDir)
-                    .is(fileExists(ideaDir));
+                    .exists();
+
+            if (!includeLibraries) {
+                Files.walkFileTree(ideaDir.resolve("libraries"), new DeletingFileVisitor());
+            }
 
             if (!IS_UPDATE) {
-                List<Path> newFiles = listDir(ideaDir);
-                for (Path newFile : newFiles) {
-                    Path rel = ideaDir.relativize(newFile);
-                    Path old = outputDir.resolve(rel);
+                try (AutoCloseableSoftAssertions softly = new AutoCloseableSoftAssertions()) {
+                    Set<Path> newFiles = listRelative(ideaDir);
+                    Set<Path> oldFiles = listRelative(outputDir);
+                    Set<Path> added = Sets.difference(newFiles, oldFiles);
+                    Set<Path> removed = Sets.difference(oldFiles, newFiles);
+                    Set<Path> common = Sets.intersection(newFiles, oldFiles);
 
-                    assertThat(old).is(fileExists("File was removed. %s", old));
-                    assertThat(Files.readString(newFile)).isEqualTo(Files.readString(old));
-                }
+                    softly.assertThat(added)
+                            .withFailMessage("Files were added to the workspace. %s", added)
+                            .isEmpty();
 
-                List<Path> oldFiles = listDir(outputDir);
-                for (Path oldFile : oldFiles) {
-                    Path rel = ideaDir.relativize(oldFile);
-                    Path newFile = outputDir.resolve(rel);
+                    softly.assertThat(removed)
+                            .withFailMessage("Files were removed from the workspace. %s", removed)
+                            .isEmpty();
 
-                    assertThat(newFile).is(fileExists("File was added. %s", newFile));
-                    assertThat(Files.readString(oldFile)).isEqualTo(Files.readString(newFile));
+                    for (Path path : common) {
+                        Path newFile = ideaDir.resolve(path);
+                        Path oldFile = outputDir.resolve(path);
+                        softly.assertThat(newFile)
+                                .hasSameTextualContentAs(oldFile, StandardCharsets.UTF_8);
+                    }
                 }
             } else {
                 if (Files.exists(outputDir)) {
                     Files.walkFileTree(outputDir, new DeletingFileVisitor(outputDir));
                 }
-                Files.walkFileTree(ideaDir, new CopyingFileVisitor(ideaDir, outputDir, e -> includeLibraries || !e.toString().startsWith("libraries/")));
+                Files.walkFileTree(ideaDir, new CopyingFileVisitor(ideaDir, outputDir));
             }
 
             Files.walkFileTree(projectDir, new DeletingFileVisitor());
         }
 
-        public static Condition<Path> fileExists() {
-            return fileExists("Expected file to exist.");
-        }
-
-        public static Condition<Path> fileExists(Path file) {
-            return fileExists("Expected file %s to exist.", file);
-        }
-
-        public static Condition<Path> fileExists(String desc, Object... args) {
-            return new Condition<>(Files::exists, desc, args);
-        }
-
-        private static List<Path> listDir(Path dir) throws IOException {
+        private static Set<Path> listRelative(Path dir) throws IOException {
             try (Stream<Path> stream = Files.list(dir)) {
-                return stream.toList();
+                return FastStream.of(stream)
+                        .filter(Files::isRegularFile)
+                        .map(dir::relativize)
+                        .toLinkedHashSet();
             }
         }
     }
