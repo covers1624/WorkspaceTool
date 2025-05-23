@@ -9,7 +9,6 @@ import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.util.DeletingFileVisitor;
 import org.assertj.core.api.AutoCloseableSoftAssertions;
-import org.assertj.core.api.SoftAssertions;
 import org.intellij.lang.annotations.Language;
 
 import java.io.IOException;
@@ -87,9 +86,20 @@ public abstract class TestBase {
                 Files.walkFileTree(ideaDir.resolve("libraries"), new DeletingFileVisitor());
             }
 
+            // This makes the files stable, but, incompatible with Intellij :(
+            Set<Path> newFiles = listRelative(ideaDir);
+            for (Path newFileRel : newFiles) {
+                Path newFile = ideaDir.resolve(newFileRel);
+                String fName = newFile.getFileName().toString();
+                if (fName.endsWith(".iml") || fName.endsWith(".xml")) {
+                    String str = Files.readString(newFile, StandardCharsets.UTF_8);
+                    str = str.replaceAll(projectDir.toString(), "\\$PROJECT_DIR\\$");
+                    Files.writeString(newFile, str, StandardCharsets.UTF_8);
+                }
+            }
+
             if (!IS_UPDATE) {
                 try (AutoCloseableSoftAssertions softly = new AutoCloseableSoftAssertions()) {
-                    Set<Path> newFiles = listRelative(ideaDir);
                     Set<Path> oldFiles = listRelative(outputDir);
                     Set<Path> added = Sets.difference(newFiles, oldFiles);
                     Set<Path> removed = Sets.difference(oldFiles, newFiles);

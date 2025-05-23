@@ -63,7 +63,7 @@ public abstract class IJModule {
         Path outDir = env.projectRoot().resolve("out").resolve(path.joinNames("_"));
         moduleRootManager.addContent(
                 new Element(isForTests() ? "output-test" : "output")
-                        .setAttribute("url", projectRootRelative(projectRoot, fileUrl(outDir)))
+                        .setAttribute("url", fileUrl(outDir))
         );
 
         List<ContentRoot> roots = buildContentRoots(getContentPaths());
@@ -109,11 +109,11 @@ public abstract class IJModule {
 
     private static Element buildContentRootElement(ContentRoot root, Path projectRoot) {
         Element content = new Element("content");
-        content.setAttribute("url", projectRootRelative(projectRoot, fileUrl(root.root)));
+        content.setAttribute("url", fileUrl(root.root));
 
         for (ContentPath path : root.contentRootPaths()) {
             Element element = new Element(path.type == PathType.EXCLUDE ? "excludeFolder" : "sourceFolder");
-            element.setAttribute("url", projectRootRelative(projectRoot, fileUrl(path.path)));
+            element.setAttribute("url", fileUrl(path.path));
             switch (path.type) {
                 case CODE -> element.setAttribute("isTestSource", "false");
                 case TEST_CODE -> element.setAttribute("isTestSource", "true");

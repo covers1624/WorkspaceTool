@@ -133,8 +133,8 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
         Element modules = new Element("modules");
         for (Path file : moduleFiles) {
             modules.addContent(new Element("module")
-                    .setAttribute("fileurl", projectRootRelative(env.projectRoot(), fileUrl(file)))
-                    .setAttribute("filepath", projectRootRelative(env.projectRoot(), file.toString()))
+                    .setAttribute("fileurl", fileUrl(file))
+                    .setAttribute("filepath", file.toString())
             );
         }
 
