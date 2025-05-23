@@ -56,6 +56,9 @@ public class SourceSetDataBuilder implements ProjectBuilder {
                 throw new IllegalStateException("SourceSetOutput is already in lookup cache! Existing name: " + existingLookup.name + ", New Name: " + data.name);
             }
             lookupCache.sourceSets.put(output, data);
+            for (File dir : output.getFiles()) {
+                lookupCache.sourceSetOutputs.put(dir, data);
+            }
         }
     }
 

@@ -157,18 +157,6 @@ public class WorkspaceTool {
                         )
                 );
             }
-
-            // TODO, this is a workaround for Gradle extraction not properly extracting some sourceset deps.
-            //       Specifically the `test` source set has its 'compileClasspath' and `runtimeClasspath` file collections
-            //       appended with the main source set output, instead of it being placed on the associated configuration.
-            //       Currently, we only pull the configuration data. We should instead pull the classpath data and match the
-            //       source set output dirs to find the right links. This should more match what Intellij does.
-            SourceSet mainSourceSet = m.sourceSets().get("main");
-            SourceSet testSourceSet = m.sourceSets().get("test");
-            if (mainSourceSet != null && testSourceSet != null) {
-                testSourceSet.compileDependencies().add(new Dependency.SourceSetDependency(mainSourceSet));
-                testSourceSet.runtimeDependencies().add(new Dependency.SourceSetDependency(mainSourceSet));
-            }
         });
         return module;
     }

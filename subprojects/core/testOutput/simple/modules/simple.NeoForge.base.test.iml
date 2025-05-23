@@ -9,6 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="simple.NeoForge.base.main" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.github.oshi:oshi-core:6.4.10" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.java.dev.jna:jna-platform:5.14.0" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.java.dev.jna:jna:5.14.0" />
@@ -82,7 +83,7 @@
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="ca.weblite:java-objc-bridge:1.1" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api@api" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.jetbrains:annotations:24.1.0" />
-    <orderEntry scope="COMPILE" exported="" type="module" module-name="simple.NeoForge.base.main" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.base.main" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.github.oshi:oshi-core:6.4.10" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.java.dev.jna:jna-platform:5.14.0" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.java.dev.jna:jna:5.14.0" />
@@ -161,6 +162,5 @@
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.ow2.asm:asm:9.7" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.minecraftforge:srgutils:0.4.15" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.jetbrains:annotations:24.1.0" />
-    <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.base.main" />
   </component>
 </module>

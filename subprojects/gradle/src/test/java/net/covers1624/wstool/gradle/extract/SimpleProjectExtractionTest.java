@@ -3,16 +3,15 @@ package net.covers1624.wstool.gradle.extract;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.ExtractTestBase;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
-import net.covers1624.wstool.gradle.api.data.JavaToolchainData;
-import net.covers1624.wstool.gradle.api.data.ProjectData;
-import net.covers1624.wstool.gradle.api.data.SourceSetData;
-import net.covers1624.wstool.gradle.api.data.SourceSetList;
+import net.covers1624.wstool.gradle.api.data.*;
+import org.assertj.core.api.Assertions;
 import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -89,6 +88,29 @@ public class SimpleProjectExtractionTest extends ExtractTestBase {
         assertNotNull(test.runtimeClasspathConfiguration);
         assertNotNull(test.sourceMap.get("java"));
         assertNotNull(test.sourceMap.get("resources"));
+
+        var configurations = data.getData(ConfigurationList.class);
+        assertThat(configurations).isNotNull();
+
+        var mainCompileClasspathConfiguration = configurations.get(main.compileClasspathConfiguration);
+        assertThat(mainCompileClasspathConfiguration)
+                .isNotNull();
+        assertThat(mainCompileClasspathConfiguration.dependencies)
+                .isEmpty();
+
+        var mainRuntimeClasspathConfiguration = configurations.get(main.runtimeClasspathConfiguration);
+        assertThat(mainRuntimeClasspathConfiguration)
+                .isNotNull();
+        assertThat(mainRuntimeClasspathConfiguration.dependencies)
+                .isEmpty();
+
+        var testCompileClasspathConfiguration = configurations.get(test.compileClasspathConfiguration);
+        assertThat(testCompileClasspathConfiguration)
+                .isNotNull();
+        assertThat(testCompileClasspathConfiguration.dependencies)
+                .isNotEmpty()
+                .first()
+                .isEqualTo(new ConfigurationData.SourceSetDependency(main));
 
         return data;
     }

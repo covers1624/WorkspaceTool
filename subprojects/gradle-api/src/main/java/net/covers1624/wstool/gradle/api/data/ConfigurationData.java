@@ -35,6 +35,22 @@ public class ConfigurationData extends Data {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            MavenDependency that = (MavenDependency) o;
+            return mavenNotation.equals(that.mavenNotation) && files.equals(that.files) && children.equals(that.children);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = mavenNotation.hashCode();
+            result = 31 * result + files.hashCode();
+            result = 31 * result + children.hashCode();
+            return result;
+        }
+
+        @Override
         public String toString() {
             return "MavenDependency(" + mavenNotation+ ", files: " + files.size() + ", children: " + children.size() + ")";
         }
@@ -49,6 +65,19 @@ public class ConfigurationData extends Data {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SourceSetDependency that = (SourceSetDependency) o;
+            return sourceSet.equals(that.sourceSet);
+        }
+
+        @Override
+        public int hashCode() {
+            return sourceSet.hashCode();
+        }
+
+        @Override
         public String toString() {
             return "SourceSetDependency(" + sourceSet.name + ")";
         }
@@ -60,6 +89,19 @@ public class ConfigurationData extends Data {
 
         public ProjectDependency(ProjectData project) {
             this.project = project;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ProjectDependency that = (ProjectDependency) o;
+            return project.equals(that.project);
+        }
+
+        @Override
+        public int hashCode() {
+            return project.hashCode();
         }
 
         @Override

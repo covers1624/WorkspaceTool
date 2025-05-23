@@ -15,6 +15,8 @@ import org.gradle.api.artifacts.result.ComponentArtifactsResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.component.Artifact;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.jvm.JvmLibrary;
 import org.gradle.language.base.artifact.SourcesArtifact;
@@ -44,6 +46,9 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         this.lookupCache = lookupCache;
         configurationsData = projectData.putData(ConfigurationList.class, new ConfigurationList());
 
+        SourceSetContainer sourceSetContainer = SourceSetDataBuilder.getSourceSetContainer(project);
+        if (sourceSetContainer == null) return;
+
         // For the moment, we only extract the dependencies on the compile/runtime classpaths.
         // TODO we should evaluate if we actually need this in tree form, or if we can flatten it.
         SourceSetList sourceSets = projectData.getData(SourceSetList.class);
@@ -51,12 +56,21 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
 
         ConfigurationContainer configurations = project.getConfigurations();
         sourceSets.asMap().values().forEach(e -> {
-            extractDependencies(configurations.getAt(e.compileClasspathConfiguration), getOrCreate(e.compileClasspathConfiguration));
-            extractDependencies(configurations.getAt(e.runtimeClasspathConfiguration), getOrCreate(e.runtimeClasspathConfiguration));
+            SourceSet ss = sourceSetContainer.getByName(e.name);
+            extractDependencies(
+                    ss.getCompileClasspath().minus(ss.getOutput()), // subtract the current source sets output from the classpath.
+                    configurations.getAt(e.compileClasspathConfiguration),
+                    getOrCreate(e.compileClasspathConfiguration)
+            );
+            extractDependencies(
+                    ss.getRuntimeClasspath().minus(ss.getOutput()),  // subtract the current source sets output from the classpath.
+                    configurations.getAt(e.runtimeClasspathConfiguration),
+                    getOrCreate(e.runtimeClasspathConfiguration)
+            );
         });
     }
 
-    private void extractDependencies(Configuration configuration, ConfigurationData data) {
+    private void extractDependencies(FileCollection classpath, Configuration configuration, ConfigurationData data) {
         // Strip out any Dependencies we need to handle specially. Projects, SourceSets, etc.
         for (Configuration config : configuration.getHierarchy()) {
             for (Iterator<Dependency> iterator = config.getDependencies().iterator(); iterator.hasNext(); ) {
@@ -66,6 +80,24 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
                     iterator.remove();
                 }
             }
+        }
+
+        // We must run this after we potentially modify the configuration above, Once we poke at it by iterating files, etc,
+        // it becomes immutable.
+
+        // Process inter source set dependencies placed directly onto the classpath of another sourceset.
+        // This is most commonly used by the `test` source set compile/runtime classpath, which contains the output directories
+        // of the main source set.
+        Set<SourceSetData> sourceSetDeps = new HashSet<>();
+        for (File file : classpath) {
+            SourceSetData dep = lookupCache.sourceSetOutputs.get(file);
+            if (dep != null) {
+                sourceSetDeps.add(dep);
+            }
+        }
+
+        for (SourceSetData sourceSetDep : sourceSetDeps) {
+            data.dependencies.add(new ConfigurationData.SourceSetDependency(sourceSetDep));
         }
 
         ResolvedConfiguration resolved = configuration.getResolvedConfiguration();

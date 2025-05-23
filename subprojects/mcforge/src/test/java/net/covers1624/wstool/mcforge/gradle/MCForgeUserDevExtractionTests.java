@@ -3,13 +3,13 @@ package net.covers1624.wstool.mcforge.gradle;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.ExtractTestBase;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
-import net.covers1624.wstool.gradle.api.data.ConfigurationList;
-import net.covers1624.wstool.gradle.api.data.ProjectData;
+import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.mcforge.gradle.api.MCForgeGradleVersion;
 import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +43,8 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
                             mappings = "snapshot_20171003"
                         }
                         
+                        getAssets.enabled = false
+                        
                         // repositories {
                         //     maven { url 'https://maven.covers1624.net/' }
                         // }
@@ -57,16 +59,21 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
         ProjectData data = extractor.extractProjectData(
                 emitter.getRootProjectDir(),
                 GradleVersion.version("4.10.3"),
-                Set.of()
+                Set.of("setupDevWorkspace")
         );
         MCForgeGradleVersion version = data.pluginData().getData(MCForgeGradleVersion.class);
         assertNotNull(version);
         assertTrue(version.version.startsWith("2.3."));
 
+        SourceSetList sourceSets = data.getData(SourceSetList.class);
+        assertThat(sourceSets).isNotNull();
+        var apiSourceSet = sourceSets.get("api");
+        assertThat(apiSourceSet).isNotNull();
+
         ConfigurationList configurationData = data.getData(ConfigurationList.class);
         assertNotNull(configurationData);
-        assertNoDependencies(configurationData, "compileClasspath");
-        assertNoDependencies(configurationData, "runtimeClasspath");
+        assertDependenciesEquals(configurationData, "compileClasspath", List.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
+        assertDependenciesEquals(configurationData, "runtimeClasspath", List.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
     }
 
     @Test
@@ -261,5 +268,13 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
                 .isNotNull();
         assertThat(configuration.dependencies)
                 .isEmpty();
+    }
+
+    private void assertDependenciesEquals(ConfigurationList configurations, String name, List<ConfigurationData.Dependency> deps) {
+        var configuration = configurations.get(name);
+        assertThat(configuration)
+                .isNotNull();
+        assertThat(configuration.dependencies)
+                .isEqualTo(deps);
     }
 }

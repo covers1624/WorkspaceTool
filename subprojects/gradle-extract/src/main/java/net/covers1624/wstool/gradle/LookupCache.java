@@ -6,6 +6,7 @@ import org.gradle.api.Project;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetOutput;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,4 +27,10 @@ public class LookupCache {
      * when parsing source set dependencies.
      */
     public final Map<SourceSetOutput, SourceSetData> sourceSets = new LinkedHashMap<>();
+
+    /**
+     * Used to lookup {@link SourceSetData} instances from any of its originating file outputs
+     * when parsing source set dependencies.
+     */
+    public final Map<File, SourceSetData> sourceSetOutputs = new LinkedHashMap<>();
 }
