@@ -17,6 +17,6 @@ public class GradleTestBase {
     protected static GradleEmitter gradleEmitter(String name) throws IOException {
         Path tempDir = Files.createTempDirectory("wstool-gradle-test-project");
         tempDir.toFile().deleteOnExit();
-        return new GradleEmitter(name, tempDir);
+        return new GradleEmitter(name, tempDir.resolve(name));
     }
 }
