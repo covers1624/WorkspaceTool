@@ -143,8 +143,7 @@ public class WorkspaceTool {
                         buildDependencies(
                                 moduleMap,
                                 sourceSetMap,
-                                configurations.get(data.compileClasspathConfiguration).dependencies,
-                                sourceSet
+                                configurations.get(data.compileClasspathConfiguration).dependencies
                         )
                 );
 
@@ -152,8 +151,7 @@ public class WorkspaceTool {
                         buildDependencies(
                                 moduleMap,
                                 sourceSetMap,
-                                configurations.get(data.runtimeClasspathConfiguration).dependencies,
-                                sourceSet
+                                configurations.get(data.runtimeClasspathConfiguration).dependencies
                         )
                 );
             }
@@ -161,7 +159,7 @@ public class WorkspaceTool {
         return module;
     }
 
-    private static Set<Dependency> buildDependencies(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, List<? extends ConfigurationData.Dependency> deps, SourceSet sourceSet) {
+    private static Set<Dependency> buildDependencies(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, Set<? extends ConfigurationData.Dependency> deps) {
         // TODO this can likely be converted back to a List when/if we remove the recursive-ness of extracted Gradle dependencies.
         Set<Dependency> dependencies = new LinkedHashSet<>();
         for (ConfigurationData.Dependency dep : deps) {
@@ -174,7 +172,7 @@ public class WorkspaceTool {
                                         e -> e.getValue().toPath()
                                 )
                 ));
-                dependencies.addAll(buildDependencies(moduleMap, sourceSetMap, maven.children, sourceSet));
+                dependencies.addAll(buildDependencies(moduleMap, sourceSetMap, maven.children));
             } else if (dep instanceof ConfigurationData.SourceSetDependency ss) {
                 dependencies.add(new Dependency.SourceSetDependency(sourceSetMap.get(ss.sourceSet)));
             } else if (dep instanceof ConfigurationData.ProjectDependency proj) {

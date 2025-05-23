@@ -20,6 +20,8 @@
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.junit.platform:junit-platform-commons:1.10.2" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apiguardian:apiguardian-api:1.1.2" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.opentest4j:opentest4j:1.3.0" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.neoforge.main" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.testframework.main" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.assertj:assertj-core:3.25.1" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.bytebuddy:byte-buddy:1.14.11" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged.fancymodloader:junit-fml:4.0.34" />

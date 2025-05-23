@@ -55,6 +55,18 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         if (sourceSets == null) throw new RuntimeException("SourceSets not extracted prior to Configurations.");
 
         ConfigurationContainer configurations = project.getConfigurations();
+        Map<Configuration, List<Dependency>> toRemove = new HashMap<>();
+        sourceSets.asMap().values().forEach(e -> {
+            extractProjectDependencies(toRemove, configurations.getAt(e.compileClasspathConfiguration), getOrCreate(e.compileClasspathConfiguration));
+            extractProjectDependencies(toRemove, configurations.getAt(e.runtimeClasspathConfiguration), getOrCreate(e.runtimeClasspathConfiguration));
+        });
+
+        // We must first iterate, every source set, then remove after. As inherited dependencies will get nuked from their
+        // original location otherwise.
+        toRemove.forEach((config, deps) -> deps.forEach(config.getDependencies()::remove));
+
+        // We must run this after we potentially modify the configuration above, Once we poke at it by iterating files, etc,
+        // it becomes immutable.
         sourceSets.asMap().values().forEach(e -> {
             SourceSet ss = sourceSetContainer.getByName(e.name);
             extractDependencies(
@@ -70,21 +82,20 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         });
     }
 
-    private void extractDependencies(FileCollection classpath, Configuration configuration, ConfigurationData data) {
-        // Strip out any Dependencies we need to handle specially. Projects, SourceSets, etc.
+    private void extractProjectDependencies(Map<Configuration, List<Dependency>> toRemove, Configuration configuration, ConfigurationData data) {
         for (Configuration config : configuration.getHierarchy()) {
-            for (Iterator<Dependency> iterator = config.getDependencies().iterator(); iterator.hasNext(); ) {
-                ConfigurationData.Dependency dep = consumeRawDependency(iterator.next());
+            for (Dependency dependency : config.getDependencies()) {
+                ConfigurationData.Dependency dep = consumeRawDependency(dependency);
                 if (dep != null) {
                     data.dependencies.add(dep);
-                    iterator.remove();
+                    toRemove.computeIfAbsent(config, e -> new ArrayList<>())
+                            .add(dependency);
                 }
             }
         }
+    }
 
-        // We must run this after we potentially modify the configuration above, Once we poke at it by iterating files, etc,
-        // it becomes immutable.
-
+    private void extractDependencies(FileCollection classpath, Configuration configuration, ConfigurationData data) {
         // Process inter source set dependencies placed directly onto the classpath of another sourceset.
         // This is most commonly used by the `test` source set compile/runtime classpath, which contains the output directories
         // of the main source set.

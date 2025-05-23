@@ -9,7 +9,11 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="simple.NeoForge.neoforge.main" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="simple.NeoForge.testframework.main" />
     <orderEntry scope="COMPILE" exported="" type="module" module-name="simple.NeoForge.tests.main" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.neoforge.main" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.testframework.main" />
     <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.tests.main" />
   </component>
 </module>

@@ -74,7 +74,29 @@ public class NeoDevExtractionTests extends ExtractTestBase {
                 .isNotNull()
                 .extracting(e -> e.children.size())
                 .isEqualTo(2);
+    }
 
+    @Test
+    public void test_Neo_1_21_1_regressionProjectDependenciesMissing(@TempDir Path tempDir) throws Throwable {
+        GitRepoManager repoManager = new GitRepoManager(tempDir.resolve("NeoForge"));
+        repoManager.setConfig("https://github.com/neoforged/NeoForge.git", "1.21.1", "f7a5bc85bff4ba5d5a2fd5e521eaa375d52dbadf");
+        repoManager.checkout();
+
+        var extractor = extractor(testEnvironment(tempDir), false);
+        var data = extractor.extractProjectData(repoManager.getRepoDir(), Set.of());
+        assertThat(data.name)
+                .isEqualTo("NeoForge");
+
+        assertThat(data.getData(SubProjectList.class))
+                .isNotNull()
+                .extracting(e -> e.get("tests"))
+                .isNotNull()
+                .extracting(e -> e.getData(ConfigurationList.class))
+                .isNotNull()
+                .extracting(e -> e.get("compileClasspath"))
+                .isNotNull()
+                .extracting(e -> e.dependencies.size())
+                .isNotEqualTo(1);
     }
 
     @Test

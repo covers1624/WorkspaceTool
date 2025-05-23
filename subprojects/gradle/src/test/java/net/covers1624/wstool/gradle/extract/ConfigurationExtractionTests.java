@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Created by covers1624 on 9/9/23.
@@ -54,16 +56,21 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
         assertNotNull(configurations);
 
         ConfigurationData compileClasspath = configurations.get("compileClasspath");
-        assertNotNull(compileClasspath);
+        assertThat(compileClasspath)
+                .isNotNull();
 
-        assertEquals(1, compileClasspath.dependencies.size());
-        MavenDependency guava = (MavenDependency) compileClasspath.dependencies.get(0);
-
-        assertEquals(MavenNotation.parse("com.google.guava:guava:31.0.1-jre"), guava.mavenNotation);
-        assertEquals(6, guava.children.size());
-        assertNotNull(guava.files.get("classes"));
-        assertNotNull(guava.files.get("sources"));
-        assertNotNull(guava.files.get("javadoc"));
+        var guava = assertThat(compileClasspath.dependencies)
+                .hasSize(1)
+                .first()
+                .isInstanceOf(MavenDependency.class)
+                .extracting(e -> (MavenDependency) e);
+        guava.extracting(e -> e.mavenNotation)
+                .isEqualTo(MavenNotation.parse("com.google.guava:guava:31.0.1-jre"));
+        guava.extracting(e -> e.children.size())
+                .isEqualTo(6);
+        guava.extracting(e -> e.files.get("classes")).isNotNull();
+        guava.extracting(e -> e.files.get("sources")).isNotNull();
+        guava.extracting(e -> e.files.get("javadoc")).isNotNull();
     }
 
     // @formatter:off
@@ -108,9 +115,11 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
         assertNotNull(compileClasspath);
 
         assertEquals(1, compileClasspath.dependencies.size());
-        SourceSetDependency dep = (SourceSetDependency) compileClasspath.dependencies.get(0);
-
-        assertEquals(core, dep.sourceSet);
+        assertThat(compileClasspath.dependencies)
+                .first()
+                .isInstanceOf(SourceSetDependency.class)
+                .extracting(e -> ((SourceSetDependency) e).sourceSet)
+                .isEqualTo(core);
     }
 
     // @formatter:off
@@ -169,11 +178,11 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
         ConfigurationData compileClasspath = configurations.get("compileClasspath");
         assertNotNull(compileClasspath);
 
-        assertEquals(1, compileClasspath.dependencies.size());
-        ConfigurationData.Dependency dep = compileClasspath.dependencies.get(0);
-        assertTrue(dep instanceof ProjectDependency);
-
-        ProjectDependency projectDependency = (ProjectDependency) dep;
-        assertEquals(projectA, projectDependency.project);
+        assertThat(compileClasspath.dependencies)
+                .hasSize(1)
+                .first()
+                .isInstanceOf(ProjectDependency.class)
+                .extracting(e -> ((ProjectDependency) e).project)
+                .isEqualTo(projectA);
     }
 }

@@ -10,6 +10,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="simple.NeoForge.neoforge.main" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="simple.NeoForge.testframework.main" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.jetbrains:annotations:24.1.0" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.neoforge.main" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="simple.NeoForge.testframework.main" />
   </component>
 </module>

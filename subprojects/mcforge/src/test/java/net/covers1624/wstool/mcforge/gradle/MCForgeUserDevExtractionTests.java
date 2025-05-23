@@ -72,8 +72,8 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
 
         ConfigurationList configurationData = data.getData(ConfigurationList.class);
         assertNotNull(configurationData);
-        assertDependenciesEquals(configurationData, "compileClasspath", List.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
-        assertDependenciesEquals(configurationData, "runtimeClasspath", List.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
+        assertDependenciesEquals(configurationData, "compileClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
+        assertDependenciesEquals(configurationData, "runtimeClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
     }
 
     @Test
@@ -270,7 +270,7 @@ public class MCForgeUserDevExtractionTests extends ExtractTestBase {
                 .isEmpty();
     }
 
-    private void assertDependenciesEquals(ConfigurationList configurations, String name, List<ConfigurationData.Dependency> deps) {
+    private void assertDependenciesEquals(ConfigurationList configurations, String name, Set<ConfigurationData.Dependency> deps) {
         var configuration = configurations.get(name);
         assertThat(configuration)
                 .isNotNull();

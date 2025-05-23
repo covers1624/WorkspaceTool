@@ -4,10 +4,7 @@ import net.covers1624.quack.maven.MavenNotation;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by covers1624 on 9/9/23.
@@ -15,7 +12,7 @@ import java.util.Map;
 public class ConfigurationData extends Data {
 
     public final String name;
-    public final List<Dependency> dependencies = new ArrayList<>();
+    public final Set<Dependency> dependencies = new LinkedHashSet<>();
 
     public ConfigurationData(String name) {
         this.name = name;
@@ -28,7 +25,7 @@ public class ConfigurationData extends Data {
         public final MavenNotation mavenNotation;
 
         public final Map<String, File> files = new HashMap<>();
-        public final List<MavenDependency> children = new ArrayList<>();
+        public final Set<MavenDependency> children = new LinkedHashSet<>();
 
         public MavenDependency(MavenNotation mavenNotation) {
             this.mavenNotation = mavenNotation;
