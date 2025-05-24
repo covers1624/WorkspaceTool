@@ -93,6 +93,7 @@ public class WorkspaceTool {
         JdkProvider jdkProvider = new JdkProvider(env);
         GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
 
+        LOGGER.info("Processing modules.");
         Workspace workspace = workspaceType.newWorkspace(env);
         for (Path modulePath : modulePaths) {
             LOGGER.info("Processing module {}", env.projectRoot().relativize(modulePath));
@@ -100,8 +101,10 @@ public class WorkspaceTool {
             buildModule(workspace, projectData);
         }
 
+        LOGGER.info("Discovering cross-project links.");
         insertCrossModuleLinks(workspace);
 
+        LOGGER.info("Setting up frameworks.");
         frameworkType.buildFrameworks(
                 env,
                 modelExtractor::extractProjectData,
