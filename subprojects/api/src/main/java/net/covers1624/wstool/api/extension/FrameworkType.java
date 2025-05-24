@@ -1,8 +1,8 @@
 package net.covers1624.wstool.api.extension;
 
 import net.covers1624.wstool.api.Environment;
-import net.covers1624.wstool.api.module.Module;
-import net.covers1624.wstool.api.module.WorkspaceBuilder;
+import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 
 import java.nio.file.Path;
@@ -12,7 +12,7 @@ import java.util.function.BiFunction;
 /**
  * Created by covers1624 on 20/10/24.
  */
-public interface Framework {
+public interface FrameworkType {
 
     /**
      * Build the framework and its modules.
@@ -23,12 +23,12 @@ public interface Framework {
      * @param env              The {@link Environment}.
      * @param dataExtractor    A function to extract a {@link ProjectData} from a project path.
      * @param moduleFactory    A function to build a {@link Module} from a {@link ProjectData}.
-     * @param workspaceBuilder The {@link WorkspaceBuilder}.
+     * @param workspace The {@link Workspace}.
      */
     void buildFrameworks(
             Environment env,
             BiFunction<Path, Set<String>, ProjectData> dataExtractor,
-            BiFunction<WorkspaceBuilder, ProjectData, Module> moduleFactory,
-            WorkspaceBuilder workspaceBuilder
+            BiFunction<Workspace, ProjectData, Module> moduleFactory,
+            Workspace workspace
     );
 }

@@ -2,9 +2,9 @@ package net.covers1624.wstool.intellij;
 
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.quack.maven.MavenNotation;
-import net.covers1624.wstool.api.module.Dependency;
-import net.covers1624.wstool.api.module.Module;
-import net.covers1624.wstool.api.module.SourceSet;
+import net.covers1624.wstool.api.workspace.Dependency;
+import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.SourceSet;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.jdom2.Document;
 import org.jdom2.Element;

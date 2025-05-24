@@ -8,12 +8,12 @@ import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.config.Config;
 import net.covers1624.wstool.api.extension.Extension;
-import net.covers1624.wstool.api.extension.Framework;
-import net.covers1624.wstool.api.extension.Workspace;
-import net.covers1624.wstool.api.module.Dependency;
-import net.covers1624.wstool.api.module.Module;
-import net.covers1624.wstool.api.module.SourceSet;
-import net.covers1624.wstool.api.module.WorkspaceBuilder;
+import net.covers1624.wstool.api.extension.FrameworkType;
+import net.covers1624.wstool.api.extension.WorkspaceType;
+import net.covers1624.wstool.api.workspace.Dependency;
+import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.SourceSet;
+import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.json.TypeFieldDeserializer;
@@ -68,14 +68,14 @@ public class WorkspaceTool {
         }
 
         Config config = deserializeConfig(extensions, configFile);
-        Workspace workspace = config.workspace();
+        WorkspaceType workspaceType = config.workspace();
 
         // TODO, currently only one framework supported.
         //       Ideally, Fabric will be a framework.
         if (config.frameworks().size() != 1) {
             throw new RuntimeException("Expected one framework, got: " + config.frameworks().size());
         }
-        Framework framework = config.frameworks().get(0);
+        FrameworkType frameworkType = config.frameworks().get(0);
 
         List<Path> modulePaths = FastStream.of(config.modules())
                 .flatMap(e -> {
@@ -93,30 +93,30 @@ public class WorkspaceTool {
         JdkProvider jdkProvider = new JdkProvider(env);
         GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
 
-        WorkspaceBuilder builder = workspace.builder(env);
+        Workspace workspace = workspaceType.newWorkspace(env);
         for (Path modulePath : modulePaths) {
             LOGGER.info("Processing module {}", env.projectRoot().relativize(modulePath));
             ProjectData projectData = modelExtractor.extractProjectData(modulePath, Set.of());
-            buildModule(builder, projectData);
+            buildModule(workspace, projectData);
         }
 
-        insertCrossModuleLinks(builder);
+        insertCrossModuleLinks(workspace);
 
-        framework.buildFrameworks(
+        frameworkType.buildFrameworks(
                 env,
                 modelExtractor::extractProjectData,
                 WorkspaceTool::buildModule,
-                builder
+                workspace
         );
 
         LOGGER.info("Writing workspace..");
-        builder.writeWorkspace();
+        workspace.writeWorkspace();
 
         LOGGER.info("Done!");
     }
 
-    private static Module buildModule(WorkspaceBuilder builder, ProjectData project) {
-        Module module = builder.newModule(project.projectDir.toPath(), project.name);
+    private static Module buildModule(Workspace workspace, ProjectData project) {
+        Module module = workspace.newModule(project.projectDir.toPath(), project.name);
         module.setProjectData(project);
         module.excludes().add(module.rootDir().resolve(".gradle"));
 
@@ -223,9 +223,9 @@ public class WorkspaceTool {
     // TODO, We may want to do this _somehow_ when building the module tree (perhaps extract all then process?),
     //       as we currently don't trim transitive dependencies from the removed dependency.
     //       For example: in the case of CCL, we don't trim the transitive Quack dependency.
-    private static void insertCrossModuleLinks(WorkspaceBuilder builder) {
+    private static void insertCrossModuleLinks(Workspace workspace) {
         Map<MavenNotation, SourceSet> moduleLookup = new HashMap<>();
-        for (Module value : builder.modules().values()) {
+        for (Module value : workspace.modules().values()) {
             var projData = value.projectData();
             if (projData == null) continue;
 
@@ -234,7 +234,7 @@ public class WorkspaceTool {
             moduleLookup.put(MavenNotation.parse(projData.group + ":" + projData.archivesBaseName), value.sourceSets().get("main"));
         }
 
-        for (Module module : builder.modules().values()) {
+        for (Module module : workspace.modules().values()) {
             for (SourceSet sourceSet : module.sourceSets().values()) {
                 insertCrossModuleLinks(sourceSet.compileDependencies(), moduleLookup);
                 insertCrossModuleLinks(sourceSet.runtimeDependencies(), moduleLookup);
@@ -280,20 +280,20 @@ public class WorkspaceTool {
     private static @NotNull GsonBuilder createDeserializer(List<Extension> extensions) {
         GsonBuilder builder = new GsonBuilder();
 
-        Map<String, Class<? extends Framework>> frameworkTypes = new HashMap<>();
-        Map<String, Class<? extends Workspace>> workspaceTypes = new HashMap<>();
-        builder.registerTypeAdapter(Framework.class, new TypeFieldDeserializer<>("framework", frameworkTypes));
-        builder.registerTypeAdapter(Workspace.class, new TypeFieldDeserializer<>("workspace", workspaceTypes));
+        Map<String, Class<? extends FrameworkType>> frameworkTypes = new HashMap<>();
+        Map<String, Class<? extends WorkspaceType>> workspaceTypes = new HashMap<>();
+        builder.registerTypeAdapter(FrameworkType.class, new TypeFieldDeserializer<>("framework", frameworkTypes));
+        builder.registerTypeAdapter(WorkspaceType.class, new TypeFieldDeserializer<>("workspace", workspaceTypes));
 
         Extension.ConfigTypeRegistry registry = new Extension.ConfigTypeRegistry() {
 
             @Override
-            public void registerFramework(String key, Class<? extends Framework> type) {
+            public void registerFrameworkType(String key, Class<? extends FrameworkType> type) {
                 if (frameworkTypes.put(key, type) != null) throw new IllegalArgumentException("Type " + key + " already exists.");
             }
 
             @Override
-            public void registerWorkspace(String key, Class<? extends Workspace> type) {
+            public void registerWorkspaceType(String key, Class<? extends WorkspaceType> type) {
                 if (workspaceTypes.put(key, type) != null) throw new IllegalArgumentException("Type " + key + " already exists.");
             }
         };

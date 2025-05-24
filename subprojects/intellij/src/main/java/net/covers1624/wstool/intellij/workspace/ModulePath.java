@@ -1,4 +1,4 @@
-package net.covers1624.wstool.intellij.module;
+package net.covers1624.wstool.intellij.workspace;
 
 import org.jetbrains.annotations.Nullable;
 

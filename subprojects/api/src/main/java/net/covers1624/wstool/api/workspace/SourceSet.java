@@ -1,4 +1,4 @@
-package net.covers1624.wstool.api.module;
+package net.covers1624.wstool.api.workspace;
 
 import java.nio.file.Path;
 import java.util.List;

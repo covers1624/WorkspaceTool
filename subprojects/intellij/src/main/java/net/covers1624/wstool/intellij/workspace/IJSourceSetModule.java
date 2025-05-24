@@ -1,8 +1,8 @@
-package net.covers1624.wstool.intellij.module;
+package net.covers1624.wstool.intellij.workspace;
 
-import net.covers1624.wstool.api.module.Dependency;
-import net.covers1624.wstool.api.module.Module;
-import net.covers1624.wstool.api.module.SourceSet;
+import net.covers1624.wstool.api.workspace.Dependency;
+import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.SourceSet;
 
 import java.nio.file.Path;
 import java.util.ArrayList;

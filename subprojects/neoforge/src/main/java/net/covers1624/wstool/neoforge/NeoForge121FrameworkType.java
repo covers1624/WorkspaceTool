@@ -7,12 +7,12 @@ import static java.util.Objects.requireNonNull;
 /**
  * Created by covers1624 on 21/10/24.
  */
-public record NeoForge121Framework(
+public record NeoForge121FrameworkType(
         @Nullable String path,
         @Nullable String url,
         @Nullable String branch,
         @Nullable String commit
-) implements NeoForgeFramework {
+) implements NeoForgeFrameworkType {
 
     // @formatter:off
     @Override public String path() { return path != null ? path : "NeoForge"; }

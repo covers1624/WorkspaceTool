@@ -1,8 +1,8 @@
-package net.covers1624.wstool.intellij.module;
+package net.covers1624.wstool.intellij.workspace;
 
 import net.covers1624.quack.collection.FastStream;
-import net.covers1624.wstool.api.module.Module;
-import net.covers1624.wstool.api.module.SourceSet;
+import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.SourceSet;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,15 +15,15 @@ import java.util.Map;
  */
 public class IJProjectModule extends IJModuleWithPath implements Module {
 
-    private final IJWorkspaceBuilder container;
+    private final IJWorkspace workspace;
     private final Map<ModulePath, IJProjectModule> subModules = new LinkedHashMap<>();
     private final Map<ModulePath, IJSourceSetModule> sourceSets = new LinkedHashMap<>();
 
     private @Nullable ProjectData gradleData;
 
-    public IJProjectModule(IJWorkspaceBuilder container, Path rootDir, ModulePath path) {
+    public IJProjectModule(IJWorkspace workspace, Path rootDir, ModulePath path) {
         super(rootDir, path);
-        this.container = container;
+        this.workspace = workspace;
     }
 
     @Override
@@ -42,8 +42,8 @@ public class IJProjectModule extends IJModuleWithPath implements Module {
     public Module newSubModule(Path rootDir, String name) {
         ModulePath path = this.path.with(name);
 
-        IJProjectModule module = new IJProjectModule(container, rootDir, path);
-        container.addModule(module);
+        IJProjectModule module = new IJProjectModule(workspace, rootDir, path);
+        workspace.addModule(module);
         subModules.put(path, module);
         return module;
     }
@@ -53,7 +53,7 @@ public class IJProjectModule extends IJModuleWithPath implements Module {
         ModulePath path = this.path.with(name);
 
         IJSourceSetModule module = new IJSourceSetModule(path, this);
-        container.addModule(module);
+        workspace.addModule(module);
         sourceSets.put(path, module);
         return module;
     }

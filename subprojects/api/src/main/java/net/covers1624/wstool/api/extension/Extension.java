@@ -14,9 +14,9 @@ public interface Extension {
 
     interface ConfigTypeRegistry {
 
-        void registerFramework(String key, Class<? extends Framework> type);
+        void registerFrameworkType(String key, Class<? extends FrameworkType> type);
 
-        void registerWorkspace(String key, Class<? extends Workspace> type);
+        void registerWorkspaceType(String key, Class<? extends WorkspaceType> type);
     }
 
     @Target (ElementType.TYPE)

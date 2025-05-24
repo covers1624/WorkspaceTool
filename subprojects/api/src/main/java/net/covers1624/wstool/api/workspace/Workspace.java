@@ -1,16 +1,14 @@
-package net.covers1624.wstool.api.module;
+package net.covers1624.wstool.api.workspace;
 
 import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * A builder for a workspace of a specific type.
- * <p>
- * A workspace may choose to implement modules in any way it chooses.
+ * Represents an abstract interface into a Workspace implementation.
  * <p>
  * Created by covers1624 on 5/3/25.
  */
-public interface WorkspaceBuilder {
+public interface Workspace {
 
     /**
      * @return All top-level modules that have been created.

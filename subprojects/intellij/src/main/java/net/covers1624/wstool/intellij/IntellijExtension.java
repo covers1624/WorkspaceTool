@@ -13,6 +13,6 @@ public class IntellijExtension implements Extension {
 
     @Override
     public void registerConfigTypes(ConfigTypeRegistry registry) {
-        registry.registerWorkspace("intellij", IntellijWorkspace.class);
+        registry.registerWorkspaceType("intellij", IntellijWorkspaceType.class);
     }
 }

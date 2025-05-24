@@ -1,10 +1,10 @@
-package net.covers1624.wstool.intellij.module;
+package net.covers1624.wstool.intellij.workspace;
 
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.Environment;
-import net.covers1624.wstool.api.module.Module;
-import net.covers1624.wstool.api.module.WorkspaceBuilder;
+import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import net.covers1624.wstool.util.DeletingFileVisitor;
 import org.jdom2.Document;
@@ -24,12 +24,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.covers1624.wstool.intellij.IJUtils.*;
+import static net.covers1624.wstool.intellij.IJUtils.fileUrl;
 
 /**
  * Created by covers1624 on 5/3/25.
  */
-public class IJWorkspaceBuilder implements WorkspaceBuilder {
+public class IJWorkspace implements Workspace {
 
     private final Environment env;
     private final ModulePath rootPath;
@@ -38,7 +38,7 @@ public class IJWorkspaceBuilder implements WorkspaceBuilder {
 
     private int javaVersion = 8;
 
-    public IJWorkspaceBuilder(Environment env) {
+    public IJWorkspace(Environment env) {
         this.env = env;
 
         rootPath = new ModulePath(List.of(env.projectRoot().getFileName().toString()));

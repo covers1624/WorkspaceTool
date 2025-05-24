@@ -1,9 +1,8 @@
-package net.covers1624.wstool.intellij.module;
+package net.covers1624.wstool.intellij.workspace;
 
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.Environment;
-import net.covers1624.wstool.api.module.Dependency;
-import net.covers1624.wstool.intellij.IJUtils;
+import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import org.apache.commons.lang3.StringUtils;
 import org.jdom2.Document;

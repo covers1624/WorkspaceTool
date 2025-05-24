@@ -1,4 +1,4 @@
-package net.covers1624.wstool.api.module;
+package net.covers1624.wstool.api.workspace;
 
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import org.jetbrains.annotations.Nullable;

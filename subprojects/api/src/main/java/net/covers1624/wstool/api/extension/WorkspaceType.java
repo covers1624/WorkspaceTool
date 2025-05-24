@@ -2,7 +2,7 @@ package net.covers1624.wstool.api.extension;
 
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.config.RunConfigTemplate;
-import net.covers1624.wstool.api.module.WorkspaceBuilder;
+import net.covers1624.wstool.api.workspace.Workspace;
 
 import java.util.List;
 
@@ -11,15 +11,15 @@ import java.util.List;
  * <p>
  * Created by covers1624 on 20/10/24.
  */
-public interface Workspace {
+public interface WorkspaceType {
 
     List<RunConfigTemplate> runs();
 
     /**
-     * Create a new {@link WorkspaceBuilder}.
+     * Create a new {@link Workspace}.
      *
      * @param env The environment.
      * @return The new builder.
      */
-    WorkspaceBuilder builder(Environment env);
+    Workspace newWorkspace(Environment env);
 }

@@ -3,11 +3,11 @@ package net.covers1624.wstool.neoforge;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.api.HashContainer;
-import net.covers1624.wstool.api.extension.Framework;
-import net.covers1624.wstool.api.module.Dependency;
-import net.covers1624.wstool.api.module.Module;
-import net.covers1624.wstool.api.module.SourceSet;
-import net.covers1624.wstool.api.module.WorkspaceBuilder;
+import net.covers1624.wstool.api.extension.FrameworkType;
+import net.covers1624.wstool.api.workspace.Dependency;
+import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.SourceSet;
+import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.gradle.api.data.JavaToolchainData;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SubProjectList;
@@ -22,7 +22,7 @@ import java.util.function.BiFunction;
 /**
  * Created by covers1624 on 5/19/25.
  */
-public interface NeoForgeFramework extends Framework {
+public interface NeoForgeFrameworkType extends FrameworkType {
 
     String path();
 
@@ -36,8 +36,8 @@ public interface NeoForgeFramework extends Framework {
     default void buildFrameworks(
             Environment env,
             BiFunction<Path, Set<String>, ProjectData> dataExtractor,
-            BiFunction<WorkspaceBuilder, ProjectData, Module> moduleFactory,
-            WorkspaceBuilder builder
+            BiFunction<Workspace, ProjectData, Module> moduleFactory,
+            Workspace workspace
     ) {
         Path rootDir = env.projectRoot().resolve(path());
 
@@ -57,14 +57,14 @@ public interface NeoForgeFramework extends Framework {
         }
 
         var projectData = dataExtractor.apply(rootDir, Set.of());
-        applyNeoForgeToolchain(projectData, builder);
+        applyNeoForgeToolchain(projectData, workspace);
 
-        var nfModule = moduleFactory.apply(builder, projectData);
+        var nfModule = moduleFactory.apply(workspace, projectData);
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
 
         // TODO we should be able to extract this data from Gradle in some way.
-        for (Module module : builder.modules().values()) {
+        for (Module module : workspace.modules().values()) {
             for (SourceSet ss : module.sourceSets().values()) {
                 if (isNeoForgeModPresent(ss)) {
                     nfMain.runtimeDependencies().add(new Dependency.SourceSetDependency(ss));
@@ -74,7 +74,7 @@ public interface NeoForgeFramework extends Framework {
         }
     }
 
-    private void applyNeoForgeToolchain(ProjectData projectData, WorkspaceBuilder builder) {
+    private void applyNeoForgeToolchain(ProjectData projectData, Workspace workspace) {
         var subProjectData = projectData.getData(SubProjectList.class);
         if (subProjectData == null) return;
 
@@ -84,7 +84,7 @@ public interface NeoForgeFramework extends Framework {
         JavaToolchainData toolchainData = nfSubProject.getData(JavaToolchainData.class);
         if (toolchainData == null) return;
 
-        builder.setJavaVersion(toolchainData.langVersion);
+        workspace.setJavaVersion(toolchainData.langVersion);
     }
 
     private static boolean isNeoForgeModPresent(SourceSet sourceSet) {
