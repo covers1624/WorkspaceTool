@@ -87,7 +87,7 @@ public abstract class TestBase {
             }
 
             // This makes the files stable, but, incompatible with Intellij :(
-            Set<Path> newFiles = listRelative(ideaDir);
+            Set<Path> newFiles = walkRelative(ideaDir);
             for (Path newFileRel : newFiles) {
                 Path newFile = ideaDir.resolve(newFileRel);
                 String fName = newFile.getFileName().toString();
@@ -100,7 +100,7 @@ public abstract class TestBase {
 
             if (!IS_UPDATE) {
                 try (AutoCloseableSoftAssertions softly = new AutoCloseableSoftAssertions()) {
-                    Set<Path> oldFiles = listRelative(outputDir);
+                    Set<Path> oldFiles = walkRelative(outputDir);
                     Set<Path> added = Sets.difference(newFiles, oldFiles);
                     Set<Path> removed = Sets.difference(oldFiles, newFiles);
                     Set<Path> common = Sets.intersection(newFiles, oldFiles);
@@ -130,8 +130,8 @@ public abstract class TestBase {
             Files.walkFileTree(projectDir, new DeletingFileVisitor());
         }
 
-        private static Set<Path> listRelative(Path dir) throws IOException {
-            try (Stream<Path> stream = Files.list(dir)) {
+        private static Set<Path> walkRelative(Path dir) throws IOException {
+            try (Stream<Path> stream = Files.walk(dir)) {
                 return FastStream.of(stream)
                         .filter(Files::isRegularFile)
                         .map(dir::relativize)
