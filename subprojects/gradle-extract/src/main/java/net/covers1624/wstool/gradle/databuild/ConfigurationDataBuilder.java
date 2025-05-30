@@ -162,7 +162,7 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
                         dep.getModuleName(),
                         dep.getModuleVersion(),
                         artifact != null ? artifact.getClassifier() : null,
-                        artifact != null ? artifact.getClassifier() != null ? artifact.getClassifier() : "jar" : "jar"
+                        artifact != null ? artifact.getExtension() != null ? artifact.getExtension() : "jar" : "jar"
                 );
                 MavenDependency dependency = new MavenDependency(notation);
                 if (artifact != null) {

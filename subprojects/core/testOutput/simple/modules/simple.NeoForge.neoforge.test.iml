@@ -43,8 +43,8 @@
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-native-unix-common:4.1.97.Final" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-classes-epoll:4.1.97.Final" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final@pom" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final:linux-aarch_64@linux-aarch_64" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final:linux-x86_64@linux-x86_64" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final:linux-aarch_64" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final:linux-x86_64" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.sf.jopt-simple:jopt-simple:5.0.4" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.commons:commons-compress:1.26.0" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.commons:commons-lang3:3.14.0" />
@@ -57,31 +57,31 @@
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.joml:joml:1.10.5" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3@pom" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3:natives-linux" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3@pom" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3:natives-linux" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3@pom" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3:natives-linux" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3@pom" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3:natives-linux" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3@pom" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3:natives-linux" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3@pom" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3:natives-linux" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3@pom" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3:natives-linux" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3@pom" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3:natives-linux" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lz4:lz4-java:1.8.0" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="ca.weblite:java-objc-bridge:1.1" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api@api" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.jetbrains:annotations:24.1.0" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged.fancymodloader:loader:4.0.34" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:JarJarSelector:0.4.1" />
@@ -148,8 +148,8 @@
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-unix-common:4.1.97.Final" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-classes-epoll:4.1.97.Final" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final@pom" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final:linux-aarch_64@linux-aarch_64" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final:linux-x86_64@linux-x86_64" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final:linux-aarch_64" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.97.Final:linux-x86_64" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.sf.jopt-simple:jopt-simple:5.0.4" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.commons:commons-compress:1.26.0" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.httpcomponents:httpclient:4.5.13" />
@@ -158,30 +158,30 @@
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.joml:joml:1.10.5" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3@pom" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3:natives-linux" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3@pom" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3:natives-linux" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3@pom" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3:natives-linux" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3@pom" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3:natives-linux" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3@pom" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3:natives-linux" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3@pom" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3:natives-linux" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3@pom" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3:natives-linux" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3@pom" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3:natives-linux@natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3:natives-linux" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lz4:lz4-java:1.8.0" />
-    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api@api" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.ow2.asm:asm-util:9.7" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.ow2.asm:asm-analysis:9.7" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.ow2.asm:asm-tree:9.7" />

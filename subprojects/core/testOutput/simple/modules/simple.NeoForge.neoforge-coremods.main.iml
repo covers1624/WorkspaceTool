@@ -30,7 +30,7 @@
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.ow2.asm:asm-commons:9.7" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.ow2.asm:asm-tree:9.7" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.ow2.asm:asm:9.7" />
-    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api@api" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.logging.log4j:log4j-api:2.22.1" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.electronwill.night-config:toml:3.8.0" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.electronwill.night-config:core:3.8.0" />
