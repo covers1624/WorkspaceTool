@@ -247,9 +247,9 @@ public class WorkspaceTool {
 
     private static void insertCrossModuleLinks(List<Dependency> dependencies, Map<MavenNotation, SourceSet> depLookup) {
         for (int i = 0; i < dependencies.size(); i++) {
-            if (dependencies.get(i) instanceof Dependency.MavenDependency mavenDep) {
+            if (dependencies.get(i) instanceof Dependency.MavenDependency(MavenNotation notation, Map<String, Path> files)) {
                 // TODO, ideally if we pull publishing metadata, we only need to nuke version.
-                var found = depLookup.get(mavenDep.notation().withVersion("").withClassifier("").withExtension("jar"));
+                var found = depLookup.get(notation.withVersion("").withClassifier("").withExtension("jar"));
                 if (found != null) {
                     dependencies.set(i, new Dependency.SourceSetDependency(found));
                 }

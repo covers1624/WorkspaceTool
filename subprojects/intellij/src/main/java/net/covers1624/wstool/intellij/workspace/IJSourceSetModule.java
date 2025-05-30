@@ -77,12 +77,9 @@ public class IJSourceSetModule extends IJModule implements SourceSet {
     // TODO, we don't actually want to always export everything. We should extract more Gradle data about what dependencies
     //       are publicly exported (api, vs implementation) and use that.
     private DependencyEntry collectDependency(Dependency dep, DependencyScope scope) {
-        if (dep instanceof Dependency.MavenDependency mavenDep) {
-            return new MavenDependencyEntry(mavenDep, scope, true);
-        }
-        if (dep instanceof Dependency.SourceSetDependency ssDep) {
-            return new ProjectDependencyEntry(((IJModule) ssDep.sourceSet()), scope, true);
-        }
-        throw new RuntimeException("Unexpected dependency type " + dep.getClass());
+        return switch (dep) {
+            case Dependency.MavenDependency mavenDep -> new MavenDependencyEntry(mavenDep, scope, true);
+            case Dependency.SourceSetDependency(SourceSet sourceSet) -> new ProjectDependencyEntry(((IJModule) sourceSet), scope, true);
+        };
     }
 }
