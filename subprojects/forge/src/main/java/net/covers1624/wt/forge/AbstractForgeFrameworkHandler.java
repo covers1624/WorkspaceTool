@@ -32,15 +32,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.GradleProject;
+import org.gradle.tooling.model.Task;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static java.text.MessageFormat.format;
 import static net.covers1624.quack.util.SneakyUtils.sneaky;
@@ -90,6 +94,31 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
             needsSetup = true;
             wasCloned = true;
             hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
+        }
+    }
+
+    protected Set<String> getAvailableTasks() {
+        String gradleVersion = context.gradleManager.getGradleVersionForProject(forgeDir);
+        GradleConnector connector = GradleConnector.newConnector()
+                .useGradleVersion(gradleVersion)
+                .forProjectDirectory(forgeDir.toFile());
+        Path javaHome;
+        try {
+            javaHome = context.getJavaInstall(context.gradleManager.getJavaVersionForGradle(gradleVersion)).javaHome;
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to get Java install.", e);
+        }
+        LOGGER.info("Extracting project information..");
+        try (ProjectConnection connection = connector.connect()) {
+            TailGroup tailGroup = context.console.newGroupFirst();
+            GradleProject project = connection.model(GradleProject.class)
+                    .setJavaHome(javaHome.toAbsolutePath().toFile())
+                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
+                    .setStandardError(new ConsumingOutputStream(LOGGER::error))
+                    .addProgressListener(new GradleProgressListener(context, tailGroup))
+                    .get();
+            context.console.removeGroup(tailGroup);
+            return project.getTasks().stream().map(Task::getName).collect(Collectors.toSet());
         }
     }
 

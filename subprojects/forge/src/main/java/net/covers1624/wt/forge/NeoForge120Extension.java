@@ -118,7 +118,7 @@ public class NeoForge120Extension extends Forge117Extension {
         if (!StringUtils.isEmpty(ignoreList)) {
             ignoreList += ',';
         }
-        ignoreList += "client-extra,forge-";
+        ignoreList += "client-extra,neoforge-";
 
         Path assetsDir = Objects.requireNonNull(context.blackboard.get(ASSETS_PATH));
         VersionInfoJson versionInfo = Objects.requireNonNull(context.blackboard.get(VERSION_INFO));

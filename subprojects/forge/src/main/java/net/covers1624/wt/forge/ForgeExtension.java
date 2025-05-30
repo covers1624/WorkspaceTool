@@ -43,6 +43,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -223,14 +224,22 @@ public class ForgeExtension implements Extension {
 
     static GradleBackedModule findForgeRootModule(WorkspaceToolContext context) {
         return (GradleBackedModule) context.frameworkModules.stream()
-                .filter(e -> e.getName().equals("Forge") || e.getName().equals("ForgeRoot") || e.getName().equals("NeoForge"))
+                .filter(e -> e.getName().equals("Forge") || e.getName().equals("ForgeRoot") || e.getName().equals("NeoForge") || e.getName().equals("NeoForge-Root"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing Forge module."));
     }
 
+    private static final Set<String> KNOWN_FORGE_NAMES = Set.of(
+            "Forge/forge",
+            "ForgeRoot/forge",
+            "NeoForge/forge",
+            "NeoForge/neoforge",
+            "NeoForge-Root/neoforge"
+    );
+
     static GradleBackedModule findForgeSubModule(WorkspaceToolContext context) {
         return (GradleBackedModule) context.frameworkModules.stream()
-                .filter(e -> e.getName().equals("Forge/forge") || e.getName().equals("ForgeRoot/forge") || e.getName().equals("NeoForge/forge") || e.getName().equals("NeoForge/neoforge"))
+                .filter(e -> KNOWN_FORGE_NAMES.contains(e.getName()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing Forge module."));
     }

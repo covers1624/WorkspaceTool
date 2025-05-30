@@ -98,12 +98,14 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
 
         // Run forge setup if required.
         if (needsSetup) {
-            String prefix = forgeSubModule.getName().replace("NeoForge/", "");
+            Set<String> availableTasks = getAvailableTasks();
             runForgeSetup(of(), "clean");
             runForgeSetup(of(), "setup");
-            if (isNeo202Plus) {
+            if (isNeo202Plus && availableTasks.contains("idePostSync")) {
                 runForgeSetup(of(), "idePostSync");
             }
+            int slashIdx = forgeSubModule.getName().indexOf('/');
+            String prefix = forgeSubModule.getName().substring(slashIdx + 1);
             runForgeSetup(of(), ":" + prefix + ":compileJava");
             hashContainer.remove(HASH_MARKER_SETUP);
         }

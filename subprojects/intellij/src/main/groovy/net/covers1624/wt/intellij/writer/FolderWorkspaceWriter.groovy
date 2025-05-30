@@ -140,7 +140,7 @@ class FolderWorkspaceWriter implements WorkspaceWriter<Intellij> {
                 }
             }
             //Always add module path as a content root. (Group modules)
-            if (contentRoots.isEmpty()) {
+            if (contentRoots.isEmpty() && module.path != null) {
                 ijModule.content << new IJModuleContent().with {
                     contentRoot = module.path
                     it
