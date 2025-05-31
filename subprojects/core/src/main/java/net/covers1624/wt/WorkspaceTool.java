@@ -339,6 +339,9 @@ public class WorkspaceTool {
         for (RunConfig value : context.workspaceScript.getWorkspace().getRunConfigContainer().getRunConfigs().values()) {
             Files.createDirectories(value.getRunDir());
         }
+
+        LOGGER.info("Done!");
+        System.exit(0);
     }
 
     private static Stream<Path> expandInclude(Path base, String include) {
