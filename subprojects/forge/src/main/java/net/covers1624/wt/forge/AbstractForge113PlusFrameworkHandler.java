@@ -25,6 +25,11 @@ import static net.covers1624.quack.util.SneakyUtils.sneaky;
  */
 public abstract class AbstractForge113PlusFrameworkHandler<T extends ForgeFramework> extends AbstractForgeFrameworkHandler<T> {
 
+    private static final List<String> INTERFACE_FILE_NAMES = List.of(
+            "interfaces.json",
+            "interface-injections.json"
+    );
+
     protected AbstractForge113PlusFrameworkHandler(WorkspaceToolContext context) {
         super(context);
     }
@@ -59,5 +64,29 @@ public abstract class AbstractForge113PlusFrameworkHandler<T extends ForgeFramew
             }
             sneaky(() -> Files.copy(mergedAt, forgeAt, StandardCopyOption.REPLACE_EXISTING));
         }
+    }
+
+    protected List<Path> collectInterfaces() {
+        List<Path> interfaceFiles = context.modules.parallelStream()
+                .flatMap(e -> e.getSourceSets().values().stream())
+                .flatMap(e -> e.getResources().stream())
+                .filter(Files::exists)
+                .flatMap(e -> sneaky(() -> Files.walk(e).filter(f -> INTERFACE_FILE_NAMES.contains(f.getFileName().toString()))))
+                .sorted()
+                .toList();
+        if (interfaceFiles.isEmpty()) return List.of();
+
+        interfaceFiles.forEach(e -> LOGGER.info("Found Interface Injections: {}", e));
+
+        Hasher interfaceHasher = SHA_256.newHasher();
+        interfaceFiles.forEach(e -> Utils.addToHasher(interfaceHasher, e));
+
+        var interfaceHash = interfaceHasher.hash();
+        if (hashContainer.check(IFACE_INJECTIONS, interfaceHash)) {
+            needsSetup = true;
+            hashContainer.set(HASH_MARKER_SETUP, MARKER_HASH);
+            hashContainer.set(IFACE_INJECTIONS, interfaceHash);
+        }
+        return interfaceFiles;
     }
 }

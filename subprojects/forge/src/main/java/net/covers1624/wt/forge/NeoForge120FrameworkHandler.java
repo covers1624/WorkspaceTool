@@ -2,6 +2,8 @@ package net.covers1624.wt.forge;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
+import net.covers1624.jdkutils.JavaInstall;
+import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.wt.api.WorkspaceToolContext;
 import net.covers1624.wt.api.dependency.Dependency;
 import net.covers1624.wt.api.gradle.data.ConfigurationData;
@@ -16,8 +18,13 @@ import net.covers1624.wt.api.module.Module;
 import net.covers1624.wt.forge.api.script.NeoForge120;
 import net.covers1624.wt.util.Utils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -40,6 +47,8 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
         super.constructFrameworkModules(frameworkImpl);
 
         handleAts();
+
+        var interfaceInjections = collectInterfaces();
 
         extractLaunchResources();
 
@@ -71,6 +80,8 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
         Configuration forgeRuntimeConfig = requireNonNull(forgeSubModule.getConfigurations().get("runtimeOnly"), "'runtimeOnly' Configuration is missing.");
         forgeRuntimeConfig.addDependency(getDevLoginDependency());
 
+        Configuration apiConfig = requireNonNull(forgeSubModule.getConfigurations().get("api"), "'api' Configuration is missing.");
+
         Dependency forgeDep = new SourceSetDependencyImpl(forgeSubModule, "main");
         context.modules.forEach(m -> {
             m.getSourceSets().values().forEach(ss -> {
@@ -78,7 +89,7 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
                 for (Path resourceDir : ss.getResources()) {
                     //If the SS has a mods.toml file, assume there is _some_ mod there
                     if (Files.exists(resourceDir.resolve("META-INF/mods.toml")) || Files.exists(resourceDir.resolve("META-INF/neoforge.mods.toml"))) {
-                        forgeRuntimeConfig.addDependency(new SourceSetDependencyImpl()
+                        apiConfig.addDependency(new SourceSetDependencyImpl()
                                 .setModule(m)
                                 .setSourceSet(ss.getName())
                                 .setExport(false)
@@ -107,6 +118,42 @@ public class NeoForge120FrameworkHandler extends AbstractForge113PlusFrameworkHa
             int slashIdx = forgeSubModule.getName().indexOf('/');
             String prefix = forgeSubModule.getName().substring(slashIdx + 1);
             runForgeSetup(of(), ":" + prefix + ":compileJava");
+
+            if (!interfaceInjections.isEmpty()) {
+                try {
+                    LOGGER.info("Running JST interface injections.");
+                    var jst = downloadJST();
+                    var java = context.getJavaInstall(JavaVersion.JAVA_17);
+
+                    List<String> args = new ArrayList<>();
+                    args.add(JavaInstall.getJavaExecutable(java.javaHome, false).toAbsolutePath().toString());
+                    args.add("-jar");
+                    args.add(jst.toAbsolutePath().toString());
+
+                    args.add("--enable-interface-injection");
+                    for (Path file : interfaceInjections) {
+                        args.add("--interface-injection-data");
+                        args.add(file.toAbsolutePath().toString());
+                    }
+
+                    args.add(forgeDir.resolve("projects/neoforge/src/main/java").toAbsolutePath().toString());
+                    args.add(forgeDir.resolve("projects/neoforge/src/main/java").toAbsolutePath().toString());
+
+                    var proc = new ProcessBuilder(args)
+                            .redirectErrorStream(true)
+                            .start();
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+                        reader.lines().forEach(LOGGER::info);
+                    }
+                    proc.waitFor();
+                    if (proc.exitValue() != 0) {
+                        throw new RuntimeException("Failed to JST transform sources. Exit code " + proc.exitValue());
+                    }
+                } catch (IOException | InterruptedException ex) {
+                    throw new RuntimeException("Failed to JST transform sources.", ex);
+                }
+            }
+
             hashContainer.remove(HASH_MARKER_SETUP);
         }
         downloadAssets(mcVersion);

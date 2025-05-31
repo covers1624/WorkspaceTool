@@ -9,6 +9,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import net.covers1624.quack.io.CopyingFileVisitor;
+import net.covers1624.quack.io.IOUtils;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.quack.net.download.DownloadAction;
 import net.covers1624.quack.net.download.DownloadProgressTail;
@@ -36,6 +38,7 @@ import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.Task;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -56,9 +59,12 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
 
     private static final String DEV_LOGIN_VERSION = "0.1.0.3";
 
+    private static final String JST_VERSION = "1.0.72";
+
     protected static final HashCode MARKER_HASH = HashCode.fromString("ff");
     protected static final Logger LOGGER = LogManager.getLogger("ForgeFrameworkHandler");
     protected static final String HASH_MERGED_AT = "merged-at";
+    protected static final String IFACE_INJECTIONS = "iface-injections";
     protected static final String HASH_MARKER_SETUP = "marker-setup";
     protected static final String HASH_GSTART_LOGIN = "gstart-login";
     protected static final HashFunction SHA_256 = Hashing.sha256();
@@ -176,6 +182,23 @@ public abstract class AbstractForgeFrameworkHandler<T extends ForgeFramework> im
                     .setExport(false);
         } catch (IOException ex) {
             throw new RuntimeException("Failed to download DevLogin.", ex);
+        }
+    }
+
+    protected Path downloadJST() {
+        try {
+            Path file = context.cacheDir.resolve("libs/jst-cli-bundle-" + JST_VERSION + ".jar");
+            DownloadAction action = new DownloadAction();
+            action.setSrc("https://proxy-maven.covers1624.net/releases/net/neoforged/jst/jst-cli-bundle/" + JST_VERSION + "/jst-cli-bundle-" + JST_VERSION + ".jar");
+            action.setDest(file);
+            action.setUseETag(true);
+            action.setOnlyIfModified(true);
+            action.setQuiet(false);
+            action.execute();
+
+            return file;
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to download JST");
         }
     }
 
