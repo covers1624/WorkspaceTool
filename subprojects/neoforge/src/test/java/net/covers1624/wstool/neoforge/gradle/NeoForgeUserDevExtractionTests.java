@@ -125,6 +125,56 @@ public class NeoForgeUserDevExtractionTests extends ExtractTestBase {
     }
 
     @Test
+    public void testNG_7_0_165() throws IOException {
+        GradleEmitter emitter = gradleEmitter("NG7Tests")
+                .rootProject()
+                .withGradleProperties("org.gradle.daemon=false")
+                .withSettingsGradle("""
+                        pluginManagement {
+                            repositories {
+                                gradlePluginPortal()
+                                maven { url 'https://maven.neoforged.net/releases' }
+                            }
+                        }
+                        
+                        plugins {
+                            id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+                        }
+                        """
+                )
+                .withBuildGradle("""
+                        plugins {
+                            id 'eclipse'
+                            id 'idea'
+                            id 'maven-publish'
+                            id 'net.neoforged.gradle.userdev' version '7.0.165'
+                        }
+                        
+                        dependencies {
+                            implementation "net.neoforged:neoforge:20.4.237"
+                        }
+                        """
+                )
+                .finish();
+
+        GradleModelExtractor extractor = extractor(emitter, false);
+        ProjectData data = extractor.extractProjectData(
+                emitter.getRootProjectDir(),
+                GradleVersion.version("8.10"),
+                Set.of()
+        );
+        NeoForgeGradleVersion version = data.pluginData().getData(NeoForgeGradleVersion.class);
+        assertNotNull(version);
+        assertEquals(NeoForgeGradleVersion.Variant.NEO_GRADLE, version.variant);
+        assertEquals("7.0.165", version.version);
+
+        ConfigurationList configurationData = data.getData(ConfigurationList.class);
+        assertNotNull(configurationData);
+        assertNoDependencies(configurationData, "compileClasspath");
+        assertNoDependencies(configurationData, "runtimeClasspath");
+    }
+
+    @Test
     public void testMDG_2_0() throws IOException {
         GradleEmitter emitter = gradleEmitter("MDG2Tests")
                 .rootProject()
