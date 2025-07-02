@@ -84,9 +84,9 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                 String.valueOf(project.getGroup()),
                 String.valueOf(project.findProperty("archivesBaseName"))
         );
-        projectData.putData(PluginData.class, buildPlugins(project, pluginBuilders));
+        projectData.putData(PluginData.class, buildPlugins(project, pluginBuilders, lookupCache));
 
-        if (lookupCache.projects.containsKey(project)) {
+        if (lookupCache.projects.containsKey(project.getPath())) {
             throw new IllegalStateException("Already visited project: " + project);
         }
         lookupCache.projects.put(project.getPath(), projectData);
@@ -101,7 +101,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
     }
 
     // Build all plugin specific data for the project.
-    private static PluginData buildPlugins(Project project, List<PluginBuilder> dataBuilders) {
+    private static PluginData buildPlugins(Project project, List<PluginBuilder> dataBuilders, LookupCache lookupCache) {
         PluginContainer plugins = project.getPlugins();
 
         Map<String, String> pluginMap = getPluginMap(plugins);
@@ -113,8 +113,9 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                     data.plugins.put(pluginMap.getOrDefault(cName, cName), cName);
                 });
 
+        List<String> additional = lookupCache.additionalConfigurations.computeIfAbsent(project, e -> new ArrayList<>());
         for (PluginBuilder builder : dataBuilders) {
-            builder.buildPluginData(project, data);
+            builder.buildPluginData(project, data, additional);
         }
         return data;
     }

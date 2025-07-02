@@ -4,6 +4,8 @@ import net.covers1624.wstool.gradle.api.data.PluginData;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import org.gradle.api.Project;
 
+import java.util.List;
+
 /**
  * Plugin builders are used to extract any plugin information, or static information
  * specific to the plugin, which may be used by transformers, project builders, or
@@ -23,5 +25,5 @@ public interface PluginBuilder {
      * @param project    The project to extract from.
      * @param pluginData The plugin data to store into.
      */
-    void buildPluginData(Project project, PluginData pluginData);
+    void buildPluginData(Project project, PluginData pluginData, List<String> additionalConfigurations);
 }

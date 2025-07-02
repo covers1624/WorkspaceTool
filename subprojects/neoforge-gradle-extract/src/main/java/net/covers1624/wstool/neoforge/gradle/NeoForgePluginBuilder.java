@@ -10,13 +10,15 @@ import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * Created by covers1624 on 1/11/25.
  */
 public class NeoForgePluginBuilder implements PluginBuilder {
 
     @Override
-    public void buildPluginData(Project project, PluginData pluginData) {
+    public void buildPluginData(Project project, PluginData pluginData, List<String> additionalConfigurations) {
         String ngVersion = findViaClasspath(project, "net.neoforged", "NeoGradle");
         if (ngVersion == null) {
             ngVersion = findViaClasspath(project, "net.neoforged.gradle", "userdev");

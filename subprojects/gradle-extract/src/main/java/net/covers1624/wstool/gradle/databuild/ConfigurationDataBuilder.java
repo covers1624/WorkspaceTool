@@ -1,6 +1,7 @@
 package net.covers1624.wstool.gradle.databuild;
 
 import net.covers1624.quack.collection.ColUtils;
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.gradle.LookupCache;
 import net.covers1624.wstool.gradle.ProjectBuilder;
@@ -55,11 +56,20 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         if (sourceSets == null) throw new RuntimeException("SourceSets not extracted prior to Configurations.");
 
         ConfigurationContainer configurations = project.getConfigurations();
+        List<Configuration> extraConfigurations = FastStream.of(lookupCache.additionalConfigurations.getOrDefault(project, Collections.emptyList()))
+                .map(configurations::findByName)
+                .filter(Objects::nonNull)
+                .toList();
+
         Map<Configuration, List<Dependency>> toRemove = new HashMap<>();
         sourceSets.asMap().values().forEach(e -> {
             extractProjectDependencies(toRemove, configurations.getAt(e.compileClasspathConfiguration), getOrCreate(e.compileClasspathConfiguration));
             extractProjectDependencies(toRemove, configurations.getAt(e.runtimeClasspathConfiguration), getOrCreate(e.runtimeClasspathConfiguration));
         });
+
+        for (Configuration extra : extraConfigurations) {
+            extractProjectDependencies(toRemove, extra, getOrCreate(extra.getName()));
+        }
 
         // We must first iterate, every source set, then remove after. As inherited dependencies will get nuked from their
         // original location otherwise.
@@ -80,6 +90,14 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
                     getOrCreate(e.runtimeClasspathConfiguration)
             );
         });
+
+        for (Configuration extra : extraConfigurations) {
+            extractDependencies(
+                    project.files(),
+                    extra,
+                    getOrCreate(extra.getName())
+            );
+        }
     }
 
     private void extractProjectDependencies(Map<Configuration, List<Dependency>> toRemove, Configuration configuration, ConfigurationData data) {
