@@ -259,21 +259,21 @@ public class WorkspaceTool {
     //       For example: in the case of CCL, we don't trim the transitive Quack dependency.
     private static void insertCrossModuleLinks(Workspace workspace) {
         Map<MavenNotation, SourceSet> moduleLookup = new HashMap<>();
-        for (Module value : workspace.modules().values()) {
-            var projData = value.projectData();
-            if (projData == null) continue;
+        workspace.allProjectModules().forEach(module -> {
+            var projData = module.projectData();
+            if (projData == null) return;
 
             // TODO, I'm not sure if we can properly trace which source set a jar is composed from in Gradle. It would be a lot
             //       of heuristics for tracing various Gradle objects around through task I/O. So for now we just pick main.
-            moduleLookup.put(MavenNotation.parse(projData.group + ":" + projData.archivesBaseName), value.sourceSets().get("main"));
-        }
+            moduleLookup.put(MavenNotation.parse(projData.group + ":" + projData.archivesBaseName), module.sourceSets().get("main"));
+        });
 
-        for (Module module : workspace.modules().values()) {
+        workspace.allProjectModules().forEach(module -> {
             for (SourceSet sourceSet : module.sourceSets().values()) {
                 insertCrossModuleLinks(sourceSet.compileDependencies(), moduleLookup);
                 insertCrossModuleLinks(sourceSet.runtimeDependencies(), moduleLookup);
             }
-        }
+        });
     }
 
     private static void insertCrossModuleLinks(List<Dependency> dependencies, Map<MavenNotation, SourceSet> depLookup) {

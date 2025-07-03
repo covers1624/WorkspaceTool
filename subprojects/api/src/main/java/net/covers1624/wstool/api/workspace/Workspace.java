@@ -1,5 +1,6 @@
 package net.covers1624.wstool.api.workspace;
 
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
 
 import java.nio.file.Path;
@@ -16,6 +17,20 @@ public interface Workspace {
      * @return All top-level modules that have been created.
      */
     Map<String, ? extends Module> modules();
+
+    /**
+     * @return A stream of all top level and sub modules.
+     */
+    default FastStream<Module> allProjectModules() {
+        return FastStream.of(modules().values()).flatMap(this::moduleHierarchy);
+    }
+
+    private FastStream<Module> moduleHierarchy(Module module) {
+        return FastStream.concat(
+                FastStream.of(module),
+                FastStream.of(module.subModules().values()).flatMap(this::moduleHierarchy)
+        );
+    }
 
     /**
      * Create a new top-level module.
