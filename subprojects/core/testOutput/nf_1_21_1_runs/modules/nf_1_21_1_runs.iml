@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <exclude-output />
+    <output url="file://$PROJECT_DIR$/out/nf_1_21_1_runs" />
+    <content url="file://$PROJECT_DIR$">
+      <excludeFolder url="file://$PROJECT_DIR$/.idea" />
+      <excludeFolder url="file://$PROJECT_DIR$/.wstool" />
+      <excludeFolder url="file://$PROJECT_DIR$/out" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

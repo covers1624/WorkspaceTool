@@ -140,7 +140,6 @@ public class WorkspaceTool {
 
     private static Module buildModule(Workspace workspace, ProjectData project) {
         Module module = workspace.newModule(project.projectDir.toPath(), project.name);
-        module.setProjectData(project);
         module.excludes().add(module.rootDir().resolve(".gradle"));
 
         // First build the tree of modules.
@@ -220,6 +219,7 @@ public class WorkspaceTool {
     }
 
     private static void buildModuleTree(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, ProjectData project, Module module) {
+        module.setProjectData(project);
         module.excludes().add(module.rootDir().resolve("build"));
         module.excludes().add(module.rootDir().resolve("out"));
 

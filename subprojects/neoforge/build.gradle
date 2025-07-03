@@ -10,6 +10,7 @@ archivesBaseName = 'neoforge'
 dependencies {
     api project(':api')
     api project(':neoforge-gradle-api')
+    api project(':minecraft')
 
     testImplementation project(':gradle')
 

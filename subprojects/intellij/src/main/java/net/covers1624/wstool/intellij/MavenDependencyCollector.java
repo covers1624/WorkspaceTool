@@ -44,6 +44,8 @@ public class MavenDependencyCollector {
     private final Map<MavenNotation, CollectedEntry> collectedDependencies = new HashMap<>();
     private final Map<Dependency.MavenDependency, CollectedEntry> depToEntry = new HashMap<>();
 
+    private boolean hardlinkFailed = false;
+
     public void collectFrom(Module module) {
         for (SourceSet ss : module.sourceSets().values()) {
             collectDeps(ss.runtimeDependencies());
@@ -112,18 +114,30 @@ public class MavenDependencyCollector {
         return Collections.unmodifiableCollection(collectedDependencies.values());
     }
 
-    private static @Nullable Path hardlinkIntoDir(Path dir, @Nullable Path originalFile) throws IOException {
+    private @Nullable Path linkIntoDir(Path dir, @Nullable Path originalFile) throws IOException {
         if (originalFile == null) return null;
 
-        Path hardlinkFile = dir.resolve(originalFile.getFileName());
+        Path linkedFile = dir.resolve(originalFile.getFileName());
         // The gradle file was deleted from gradle cache.
-        if (Files.exists(hardlinkFile) && Files.notExists(originalFile)) return hardlinkFile;
+        if (Files.exists(linkedFile) && Files.notExists(originalFile)) return linkedFile;
         // TODO, we should check if the inode of hardlinkFile and originalFile are identical and bail.
         //       We want to delete it here to restore the hardlink if gradle re-caches the file to de-dupe
         //       and reclaim disk space for the user.
-        Files.deleteIfExists(hardlinkFile);
-        Files.createLink(IOUtils.makeParents(hardlinkFile), originalFile);
-        return hardlinkFile;
+        Files.deleteIfExists(linkedFile);
+        if (!hardlinkFailed) {
+            try {
+                Files.createLink(IOUtils.makeParents(linkedFile), originalFile);
+                return linkedFile;
+            } catch (IOException ex) {
+                LOGGER.warn("Failed to hardlink dependencies into the workspace. You will be vulnerable to Gradle cache expiring in-use dependencies.", ex);
+                hardlinkFailed = true;
+            }
+        }
+        // Hard linking failed, lets fallback to a symlink.
+        // This mostly exists for the test framework, so we can make class paths and whatnot in run configs stable.
+        // TODO perhaps we can have some proper config driven property for this.
+        Files.createSymbolicLink(IOUtils.makeParents(linkedFile), originalFile);
+        return linkedFile;
     }
 
     public static class CollectedEntry {
