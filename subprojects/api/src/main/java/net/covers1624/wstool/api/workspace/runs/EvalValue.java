@@ -4,9 +4,9 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.workspace.Dependency;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -20,15 +20,22 @@ import java.util.function.Function;
  * Created by covers1624 on 5/28/25.
  */
 // TODO we may be able to un-seal this if we add a `Iterable<Dependency> getDependencies()` function.
-public sealed interface EvalValue permits EvalValue.StringValue, EvalValue.ClasspathValue {
+public interface EvalValue {
 
     String eval(Function<Dependency, @Nullable Path> depFunc);
+
+    Iterable<Dependency> collectDependencies();
 
     record StringValue(String str) implements EvalValue {
 
         @Override
         public String eval(Function<Dependency, @Nullable Path> depFunc) {
             return str;
+        }
+
+        @Override
+        public Iterable<Dependency> collectDependencies() {
+            return List.of();
         }
     }
 
@@ -41,6 +48,11 @@ public sealed interface EvalValue permits EvalValue.StringValue, EvalValue.Class
                     .filter(Objects::nonNull)
                     .map(e -> e.toAbsolutePath().toString())
                     .join(File.pathSeparator);
+        }
+
+        @Override
+        public Iterable<Dependency> collectDependencies() {
+            return dependencies;
         }
     }
 }

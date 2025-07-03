@@ -64,6 +64,8 @@ public interface NeoForgeFrameworkType extends FrameworkType {
 
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
+        var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
+        var nfCoreModsMain = nfCoreMods.sourceSets().get("main");
 
         var legacyClasspath = new HashSet<>(nfMain.runtimeDependencies());
 
@@ -92,6 +94,15 @@ public interface NeoForgeFrameworkType extends FrameworkType {
             if (run.mainClass() == null) {
                 run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
             }
+            // TODO all the mods go here too?
+            //      Apparently mods going here is only required in Older forge, or when they have split classes & resources?
+            run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(
+                    Map.of(
+                            "minecraft", new ModClassesEvalValue.ModClass(new Dependency.SourceSetDependency(nfMain)),
+                            "neoforge-coremods", new ModClassesEvalValue.ModClass(new Dependency.SourceSetDependency(nfCoreModsMain))
+                    )
+            ));
+
             run.vmArgs().addFirst(List.of(
                     "--add-modules", "ALL-MODULE-PATH",
                     "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
