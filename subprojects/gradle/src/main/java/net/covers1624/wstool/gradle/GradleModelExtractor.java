@@ -118,6 +118,27 @@ public class GradleModelExtractor {
         }
     }
 
+    // TODO this doesn't really belong here, we should refactor this out into a separate Gradle helper.
+    public void runGradleTask(Path projectDir, String task) {
+        var gradleVersion = computeProjectGradleVersion(projectDir);
+        var javaVersion = getJavaVersionForGradle(gradleVersion);
+        var javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
+        GradleConnector connector = GradleConnector.newConnector()
+                .useGradleVersion(gradleVersion.getVersion())
+                .forProjectDirectory(projectDir.toFile());
+        try (ProjectConnection connection = connector.connect()) {
+            LOGGER.info("Running Gradle task {} on {}", task, projectDir);
+            connection.newBuild()
+                    .forTasks(task)
+                    .setJavaHome(javaHome.toFile())
+                    .setJvmArguments(FastStream.of("-Xmx3G").concat(extraJvmArgs()))
+                    .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
+                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
+                    .setStandardError(new ConsumingOutputStream(LOGGER::info))
+                    .run();
+        }
+    }
+
     private void extractProjectData(Path javaHome, Path projectDir, Path cacheFile, GradleVersion gradleVersion, Set<String> extraTasks) {
         GradleConnector connector = GradleConnector.newConnector()
                 .useGradleVersion(gradleVersion.getVersion())
