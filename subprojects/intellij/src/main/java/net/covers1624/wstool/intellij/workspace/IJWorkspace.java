@@ -4,6 +4,7 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import net.covers1624.wstool.util.DeletingFileVisitor;
@@ -35,6 +36,9 @@ public class IJWorkspace implements Workspace {
     private final ModulePath rootPath;
     private final Map<ModulePath, IJModule> modules = new LinkedHashMap<>();
     private final Map<String, IJProjectModule> projectModules = new LinkedHashMap<>();
+
+
+    private final Map<String, IJRunConfig> runConfigs = new LinkedHashMap<>();
 
     private int javaVersion = 8;
 
@@ -78,6 +82,20 @@ public class IJWorkspace implements Workspace {
     }
 
     @Override
+    public Map<String, ? extends RunConfig> runConfigs() {
+        return runConfigs;
+    }
+
+    @Override
+    public RunConfig newRunConfig(String name) {
+        if (runConfigs.containsKey(name)) throw new RuntimeException("A run config with the name " + name + " already exists.");
+
+        IJRunConfig runConfig = new IJRunConfig(name);
+        runConfigs.put(name, runConfig);
+        return runConfig;
+    }
+
+    @Override
     public void setJavaVersion(int version) {
         javaVersion = version;
     }
@@ -94,6 +112,8 @@ public class IJWorkspace implements Workspace {
 
         MavenDependencyCollector collector = new MavenDependencyCollector();
         modules().values().forEach(collector::collectFrom);
+
+        runConfigs().values().forEach(collector::collectFrom);
 
         collector.hardlinkToCacheDir(env.projectCache());
 
@@ -121,6 +141,12 @@ public class IJWorkspace implements Workspace {
         writeDocument(buildModulesXml(moduleFiles), ideaDir.resolve("modules.xml"));
 
         emitJavaVersionIntoMisc(ideaDir.resolve("misc.xml"));
+
+        Path runsDir = ideaDir.resolve("runConfigurations");
+        for (IJRunConfig runConfig : runConfigs.values()) {
+            Path dest = runsDir.resolve(runConfig.name().replace("/", "_") + ".xml");
+            writeDocument(runConfig.writeDocument(env, collector), dest);
+        }
     }
 
     private Document buildModulesXml(List<Path> moduleFiles) {

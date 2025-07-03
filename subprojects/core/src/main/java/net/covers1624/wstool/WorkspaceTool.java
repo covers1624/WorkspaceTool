@@ -8,6 +8,7 @@ import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.ModuleProcessor;
 import net.covers1624.wstool.api.config.Config;
+import net.covers1624.wstool.api.config.RunConfigTemplate;
 import net.covers1624.wstool.api.extension.Extension;
 import net.covers1624.wstool.api.extension.FrameworkType;
 import net.covers1624.wstool.api.extension.WorkspaceType;
@@ -15,6 +16,7 @@ import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.api.workspace.Module;
 import net.covers1624.wstool.api.workspace.SourceSet;
 import net.covers1624.wstool.api.workspace.Workspace;
+import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.json.TypeFieldDeserializer;
@@ -31,6 +33,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
@@ -118,6 +121,9 @@ public class WorkspaceTool {
 
         LOGGER.info("Discovering cross-project links.");
         insertCrossModuleLinks(workspace);
+
+        LOGGER.info("Processing run templates.");
+        processRunConfigTemplates(env, workspaceType, workspace);
 
         LOGGER.info("Setting up frameworks.");
         frameworkType.buildFrameworks(
@@ -280,6 +286,46 @@ public class WorkspaceTool {
                 }
             }
         }
+    }
+
+    private static void processRunConfigTemplates(Environment env, WorkspaceType workspaceType, Workspace workspace) {
+        var runTemplates = workspaceType.runs();
+        Map<String, RunConfigTemplate> templates = FastStream.of(runTemplates)
+                .filter(e -> e.templateName() != null)
+                .toMap(RunConfigTemplate::templateName, Function.identity());
+        for (RunConfigTemplate config : runTemplates) {
+            if (config.name() == null) continue;
+
+            var runConfig = workspace.newRunConfig(config.name());
+            for (String from : config.from()) {
+                RunConfigTemplate template = templates.get(from);
+                if (template == null) {
+                    throw new RuntimeException("Failed to process run config " + config.name() + " template " + from + " does not exist.");
+                }
+
+                applyRun(env, template, runConfig);
+            }
+            applyRun(env, config, runConfig);
+        }
+    }
+
+    private static void applyRun(Environment env, RunConfigTemplate config, RunConfig run) {
+        run.config().putAll(config.config());
+
+        var runDir = config.runDir();
+        if (runDir != null) {
+            run.runDir(env.projectRoot().resolve(runDir));
+        }
+
+        var mainClass = config.mainClass();
+        if (mainClass != null) {
+            run.mainClass(mainClass);
+        }
+
+        run.args().addAll(config.args());
+        run.vmArgs().addAll(config.vmArgs());
+        run.sysProps().putAll(config.sysProps());
+        run.envVars().putAll(config.env());
     }
 
     private static List<Extension> loadExtensions() {

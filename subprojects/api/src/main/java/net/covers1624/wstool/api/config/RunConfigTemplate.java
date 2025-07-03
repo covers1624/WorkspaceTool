@@ -20,6 +20,8 @@ public record RunConfigTemplate(
         @SerializedName ("main_class")
         @Nullable String mainClass,
         @Nullable List<String> args,
+        @SerializedName ("vm_args")
+        @Nullable List<String> vmArgs,
         @SerializedName ("sys_props")
         @Nullable Map<String, String> sysProps,
         @Nullable Map<String, String> env
@@ -38,6 +40,11 @@ public record RunConfigTemplate(
     @Override
     public List<String> args() {
         return args != null ? args : List.of();
+    }
+
+    @Override
+    public List<String> vmArgs() {
+        return vmArgs != null ? vmArgs : List.of();
     }
 
     @Override

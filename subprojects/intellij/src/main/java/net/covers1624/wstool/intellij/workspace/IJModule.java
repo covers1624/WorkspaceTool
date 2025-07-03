@@ -31,6 +31,10 @@ public abstract class IJModule {
         return path.name();
     }
 
+    public Path outputDir(Environment env) {
+        return env.projectRoot().resolve("out").resolve(path.joinNames("_"));
+    }
+
     public List<Path> excludes() {
         return excludes;
     }
@@ -59,10 +63,9 @@ public abstract class IJModule {
         moduleRootManager.addContent(new Element("exclude-output"));
 
         Path projectRoot = env.projectRoot();
-        Path outDir = env.projectRoot().resolve("out").resolve(path.joinNames("_"));
         moduleRootManager.addContent(
                 new Element(isForTests() ? "output-test" : "output")
-                        .setAttribute("url", fileUrl(outDir))
+                        .setAttribute("url", fileUrl(outputDir(env)))
         );
 
         List<ContentRoot> roots = buildContentRoots(getContentPaths());

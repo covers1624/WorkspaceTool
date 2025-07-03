@@ -1,5 +1,7 @@
 package net.covers1624.wstool.api.workspace;
 
+import net.covers1624.wstool.api.workspace.runs.RunConfig;
+
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -23,6 +25,23 @@ public interface Workspace {
      * @return The module.
      */
     Module newModule(Path rootDir, String name);
+
+    /**
+     * @return All run configurations that have been created.
+     */
+    Map<String, ? extends RunConfig> runConfigs();
+
+    /**
+     * Create a new run configuration for this project.
+     *
+     * @param name The name. If denoted with slashes, may indicate folders
+     *             or grouping. This is workspace dependent. Some may only
+     *             support single levels of nesting, others may support more
+     *             or none. The key passed in here is used verbatim as its
+     *             identity/lookup key.
+     * @return The new run config.
+     */
+    RunConfig newRunConfig(String name);
 
     /**
      * Set the Java version for the workspace.

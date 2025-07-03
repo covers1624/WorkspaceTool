@@ -5,6 +5,8 @@ import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.api.workspace.Module;
 import net.covers1624.wstool.api.workspace.SourceSet;
+import net.covers1624.wstool.api.workspace.runs.EvalValue;
+import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -17,8 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -52,7 +54,24 @@ public class MavenDependencyCollector {
         }
     }
 
-    private void collectDeps(List<Dependency> deps) {
+    public void collectFrom(RunConfig runConfig) {
+        runConfig.vmArgs().toList().forEach(this::collectFrom);
+        runConfig.args().toList().forEach(this::collectFrom);
+        runConfig.sysProps().toMap().values().forEach(this::collectFrom);
+        runConfig.envVars().toMap().values().forEach(this::collectFrom);
+    }
+
+    private void collectFrom(EvalValue evalValue) {
+        if (evalValue instanceof EvalValue.StringValue) return;
+        if (evalValue instanceof EvalValue.ClasspathValue(Set<Dependency> dependencies)) {
+            collectDeps(dependencies);
+            return;
+        }
+
+        throw new RuntimeException("Unknown EvalValue type to collect dependencies from. " + evalValue.getClass().getName());
+    }
+
+    private void collectDeps(Iterable<Dependency> deps) {
         for (Dependency dep : deps) {
             if (dep instanceof Dependency.MavenDependency mavenDep) {
                 collectDep(mavenDep);
@@ -80,12 +99,12 @@ public class MavenDependencyCollector {
         try {
             for (CollectedEntry dep : collectedDependencies.values()) {
                 Path cacheLibDir = librariesDir.resolve(dep.notation.toModulePath()).resolve(requireNonNull(dep.currentVersion));
-                dep.classes = hardlinkIntoDir(cacheLibDir, dep.classes);
-                dep.javadoc = hardlinkIntoDir(cacheLibDir, dep.javadoc);
-                dep.sources = hardlinkIntoDir(cacheLibDir, dep.sources);
+                dep.classes = linkIntoDir(cacheLibDir, dep.classes);
+                dep.javadoc = linkIntoDir(cacheLibDir, dep.javadoc);
+                dep.sources = linkIntoDir(cacheLibDir, dep.sources);
             }
         } catch (IOException ex) {
-            LOGGER.warn("Failed to hardlink dependencies into the workspace. You will be vulnerable to Gradle cache expiring in-use dependencies.", ex);
+            LOGGER.error("Error whilst linking files.", ex);
         }
     }
 
@@ -150,6 +169,10 @@ public class MavenDependencyCollector {
 
         public String name() {
             return notation.withVersion(currentVersion).toString();
+        }
+
+        public @Nullable Path classes() {
+            return classes;
         }
 
         public Document buildDocument() {
