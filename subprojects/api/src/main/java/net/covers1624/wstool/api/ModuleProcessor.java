@@ -25,6 +25,8 @@ public interface ModuleProcessor {
      */
     Module buildModule(Workspace workspace, Path project, Set<String> extraTasks);
 
+    void runTask(Path projectDir, String task);
+
     /**
      * Process the given gradle configuration, producing a set of {@link Dependency Dependencies}.
      *

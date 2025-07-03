@@ -60,6 +60,13 @@ public interface NeoForgeFrameworkType extends FrameworkType {
         }
 
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
+
+        if (requiresSetupProp.getBoolean()) {
+            moduleProcessor.runTask(rootDir, "clean");
+            moduleProcessor.runTask(rootDir, "setup");
+            requiresSetupProp.setValue(false);
+        }
+
         applyNeoForgeToolchain(requireNonNull(nfModule.projectData()), workspace);
 
         var nfSubModule = nfModule.subModules().get("neoforge");

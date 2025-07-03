@@ -106,6 +106,11 @@ public class WorkspaceTool {
             }
 
             @Override
+            public void runTask(Path projectDir, String task) {
+                modelExtractor.runGradleTask(projectDir, task);
+            }
+
+            @Override
             public Set<Dependency> processConfiguration(Module rootModule, ConfigurationData configuration) {
                 // TODO, we should probably recover the ProjectData -> Module and SourceSetData -> SourceSet links for this
                 //       but it's not required for now.
