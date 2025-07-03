@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -64,13 +63,7 @@ public class MavenDependencyCollector {
     }
 
     private void collectFrom(EvalValue evalValue) {
-        if (evalValue instanceof EvalValue.StringValue) return;
-        if (evalValue instanceof EvalValue.ClasspathValue(Set<Dependency> dependencies)) {
-            collectDeps(dependencies);
-            return;
-        }
-
-        throw new RuntimeException("Unknown EvalValue type to collect dependencies from. " + evalValue.getClass().getName());
+        collectDeps(evalValue.collectDependencies());
     }
 
     private void collectDeps(Iterable<Dependency> deps) {
