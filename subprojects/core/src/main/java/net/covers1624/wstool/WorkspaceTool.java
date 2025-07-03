@@ -6,6 +6,7 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
+import net.covers1624.wstool.api.ModuleProcessor;
 import net.covers1624.wstool.api.config.Config;
 import net.covers1624.wstool.api.extension.Extension;
 import net.covers1624.wstool.api.extension.FrameworkType;
@@ -75,7 +76,7 @@ public class WorkspaceTool {
         if (config.frameworks().size() != 1) {
             throw new RuntimeException("Expected one framework, got: " + config.frameworks().size());
         }
-        FrameworkType frameworkType = config.frameworks().get(0);
+        FrameworkType frameworkType = config.frameworks().getFirst();
 
         List<Path> modulePaths = FastStream.of(config.modules())
                 .flatMap(e -> {
@@ -93,12 +94,26 @@ public class WorkspaceTool {
         JdkProvider jdkProvider = new JdkProvider(env);
         GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
 
-        LOGGER.info("Processing modules.");
         Workspace workspace = workspaceType.newWorkspace(env);
+        ModuleProcessor moduleProcessor = new ModuleProcessor() {
+            @Override
+            public Module buildModule(Workspace workspace, Path project, Set<String> extraTasks) {
+                var data = modelExtractor.extractProjectData(project, extraTasks);
+                return WorkspaceTool.buildModule(workspace, data);
+            }
+
+            @Override
+            public Set<Dependency> processConfiguration(Module rootModule, ConfigurationData configuration) {
+                // TODO, we should probably recover the ProjectData -> Module and SourceSetData -> SourceSet links for this
+                //       but it's not required for now.
+                return buildDependencies(Map.of(), Map.of(), configuration.dependencies);
+            }
+        };
+
+        LOGGER.info("Processing modules.");
         for (Path modulePath : modulePaths) {
             LOGGER.info("Processing module {}", env.projectRoot().relativize(modulePath));
-            ProjectData projectData = modelExtractor.extractProjectData(modulePath, Set.of());
-            buildModule(workspace, projectData);
+            moduleProcessor.buildModule(workspace, modulePath, Set.of());
         }
 
         LOGGER.info("Discovering cross-project links.");
@@ -107,8 +122,7 @@ public class WorkspaceTool {
         LOGGER.info("Setting up frameworks.");
         frameworkType.buildFrameworks(
                 env,
-                modelExtractor::extractProjectData,
-                WorkspaceTool::buildModule,
+                moduleProcessor,
                 workspace
         );
 
@@ -166,22 +180,33 @@ public class WorkspaceTool {
         // TODO this can likely be converted back to a List when/if we remove the recursive-ness of extracted Gradle dependencies.
         Set<Dependency> dependencies = new LinkedHashSet<>();
         for (ConfigurationData.Dependency dep : deps) {
-            if (dep instanceof ConfigurationData.MavenDependency maven) {
-                dependencies.add(new Dependency.MavenDependency(
-                        maven.mavenNotation,
-                        FastStream.of(maven.files.entrySet())
-                                .toMap(
-                                        Map.Entry::getKey,
-                                        e -> e.getValue().toPath()
-                                )
-                ));
-                dependencies.addAll(buildDependencies(moduleMap, sourceSetMap, maven.children));
-            } else if (dep instanceof ConfigurationData.SourceSetDependency ss) {
-                dependencies.add(new Dependency.SourceSetDependency(sourceSetMap.get(ss.sourceSet)));
-            } else if (dep instanceof ConfigurationData.ProjectDependency proj) {
-                dependencies.add(new Dependency.SourceSetDependency(moduleMap.get(proj.project).sourceSets().get("main")));
-            } else {
-                throw new RuntimeException("Unhandled dependency type: " + dep.getClass());
+            switch (dep) {
+                case ConfigurationData.MavenDependency maven -> {
+                    dependencies.add(new Dependency.MavenDependency(
+                            maven.mavenNotation,
+                            FastStream.of(maven.files.entrySet())
+                                    .toMap(
+                                            Map.Entry::getKey,
+                                            e -> e.getValue().toPath()
+                                    )
+                    ));
+                    dependencies.addAll(buildDependencies(moduleMap, sourceSetMap, maven.children));
+                }
+                case ConfigurationData.SourceSetDependency ss -> {
+                    var sourceSet = sourceSetMap.get(ss.sourceSet);
+                    if (sourceSet == null) {
+                        throw new RuntimeException("Unknown SourceSet whilst processing dependencies. " + ss.sourceSet.name);
+                    }
+                    dependencies.add(new Dependency.SourceSetDependency(sourceSet));
+                }
+                case ConfigurationData.ProjectDependency proj -> {
+                    var project = moduleMap.get(proj.project);
+                    if (project == null) {
+                        throw new RuntimeException("Unknown Project whilst processing dependencies. " + proj.project.name);
+                    }
+                    dependencies.add(new Dependency.SourceSetDependency(project.sourceSets().get("main")));
+                }
+                default -> throw new RuntimeException("Unhandled dependency type: " + dep.getClass());
             }
         }
 

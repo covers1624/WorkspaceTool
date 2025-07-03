@@ -3,6 +3,7 @@ package net.covers1624.wstool.neoforge;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.api.HashContainer;
+import net.covers1624.wstool.api.ModuleProcessor;
 import net.covers1624.wstool.api.extension.FrameworkType;
 import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.api.workspace.Module;
@@ -17,7 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiFunction;
+
 
 /**
  * Created by covers1624 on 5/19/25.
@@ -33,12 +34,7 @@ public interface NeoForgeFrameworkType extends FrameworkType {
     String commit();
 
     @Override
-    default void buildFrameworks(
-            Environment env,
-            BiFunction<Path, Set<String>, ProjectData> dataExtractor,
-            BiFunction<Workspace, ProjectData, Module> moduleFactory,
-            Workspace workspace
-    ) {
+    default void buildFrameworks(Environment env, ModuleProcessor moduleProcessor, Workspace workspace) {
         Path rootDir = env.projectRoot().resolve(path());
 
         HashContainer hashContainer = new HashContainer(env.projectCache(), "neoforge");
@@ -56,10 +52,9 @@ public interface NeoForgeFrameworkType extends FrameworkType {
             throw new RuntimeException("Failed to update NeoForge clone.", ex);
         }
 
-        var projectData = dataExtractor.apply(rootDir, Set.of());
+        var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
         applyNeoForgeToolchain(projectData, workspace);
 
-        var nfModule = moduleFactory.apply(workspace, projectData);
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
 
