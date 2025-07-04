@@ -77,7 +77,9 @@ public interface NeoForgeFrameworkType extends FrameworkType {
         var legacyClasspath = new HashSet<>(nfMain.runtimeDependencies());
 
         // TODO we should be able to detect which source sets are mods in Gradle.
-        for (Module module : workspace.modules().values()) {
+        for (Module module : workspace.allProjectModules()) {
+            // TODO this needs to be better, perhaps we can add an exclude param to allProjectModules.
+            if (module == nfModule || nfModule.subModules().containsValue(module)) continue;
             for (SourceSet ss : module.sourceSets().values()) {
                 if (isNeoForgeModPresent(ss)) {
                     nfMain.runtimeDependencies().add(new Dependency.SourceSetDependency(ss));
