@@ -92,9 +92,7 @@ public interface NeoForgeFrameworkType extends FrameworkType {
         legacyClasspath.removeAll(moduleClasspath);
 
         HttpEngine http = Java11HttpEngine.create();
-        var assetIndex = AssetDownloader.downloadAssets(env, http, getMcVersion(nfSubModule));
-        // TODO some form of blackboard on env?
-        var assetsDir = env.systemFolder().resolve("assets");
+        var downloadResult = AssetDownloader.downloadAssets(env, http, getMcVersion(nfSubModule));
 
         var cliProperties = buildCliProperties(nfSubModule);
         for (RunConfig run : workspace.runConfigs().values()) {
@@ -126,8 +124,8 @@ public interface NeoForgeFrameworkType extends FrameworkType {
 
             run.args().addAll(List.of(
                     "--gameDir", ".",
-                    "--assetsDir", assetsDir.toAbsolutePath().toString(),
-                    "--assetIndex", assetIndex.id()
+                    "--assetsDir", downloadResult.assetsDir().toAbsolutePath().toString(),
+                    "--assetIndex", downloadResult.assetIndex().id()
             ));
 
             var launchTarget = switch (run.config().get("type")) {
