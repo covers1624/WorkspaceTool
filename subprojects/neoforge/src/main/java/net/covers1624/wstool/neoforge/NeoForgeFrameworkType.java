@@ -42,6 +42,7 @@ public interface NeoForgeFrameworkType extends FrameworkType {
     @Override
     default void buildFrameworks(Environment env, Workspace workspace) {
         ModuleProcessor moduleProcessor = env.getService(ModuleProcessor.class);
+        GradleTaskExecutor taskExecutor = env.getService(GradleTaskExecutor.class);
         Path rootDir = env.projectRoot().resolve(path());
 
         HashContainer hashContainer = new HashContainer(env.projectCache(), "neoforge");
@@ -62,8 +63,8 @@ public interface NeoForgeFrameworkType extends FrameworkType {
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
 
         if (requiresSetupProp.getBoolean()) {
-            moduleProcessor.runTask(rootDir, "clean");
-            moduleProcessor.runTask(rootDir, "setup");
+            taskExecutor.runTask(rootDir, "clean");
+            taskExecutor.runTask(rootDir, "setup");
             requiresSetupProp.setValue(false);
         }
 

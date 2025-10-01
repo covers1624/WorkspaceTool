@@ -18,6 +18,7 @@ import net.covers1624.wstool.api.workspace.SourceSet;
 import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
+import net.covers1624.wstool.gradle.GradleTaskExecutor;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.json.TypeFieldDeserializer;
 import net.covers1624.wstool.module.ModuleUtils;
@@ -98,6 +99,9 @@ public class WorkspaceTool {
         env.putService(JdkProvider.class, jdkProvider);
 
         GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
+        GradleTaskExecutor gradleTaskExecutor = new GradleTaskExecutor(jdkProvider);
+
+        env.putService(GradleTaskExecutor.class, gradleTaskExecutor);
 
         Workspace workspace = workspaceType.newWorkspace(env);
         ModuleProcessor moduleProcessor = new ModuleProcessor() {
@@ -105,11 +109,6 @@ public class WorkspaceTool {
             public Module buildModule(Workspace workspace, Path project, Set<String> extraTasks) {
                 var data = modelExtractor.extractProjectData(project, extraTasks);
                 return WorkspaceTool.buildModule(workspace, data);
-            }
-
-            @Override
-            public void runTask(Path projectDir, String task) {
-                modelExtractor.runGradleTask(projectDir, task);
             }
 
             @Override
@@ -136,7 +135,6 @@ public class WorkspaceTool {
         LOGGER.info("Setting up frameworks.");
         frameworkType.buildFrameworks(
                 env,
-                moduleProcessor,
                 workspace
         );
 

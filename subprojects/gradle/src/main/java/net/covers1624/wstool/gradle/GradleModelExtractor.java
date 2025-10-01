@@ -26,7 +26,6 @@ import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.Task;
 import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -118,27 +117,6 @@ public class GradleModelExtractor {
         }
     }
 
-    // TODO this doesn't really belong here, we should refactor this out into a separate Gradle helper.
-    public void runGradleTask(Path projectDir, String task) {
-        var gradleVersion = computeProjectGradleVersion(projectDir);
-        var javaVersion = getJavaVersionForGradle(gradleVersion);
-        var javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
-        GradleConnector connector = GradleConnector.newConnector()
-                .useGradleVersion(gradleVersion.getVersion())
-                .forProjectDirectory(projectDir.toFile());
-        try (ProjectConnection connection = connector.connect()) {
-            LOGGER.info("Running Gradle task {} on {}", task, projectDir);
-            connection.newBuild()
-                    .forTasks(task)
-                    .setJavaHome(javaHome.toFile())
-                    .setJvmArguments(FastStream.of("-Xmx3G").concat(extraJvmArgs()))
-                    .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
-                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
-                    .setStandardError(new ConsumingOutputStream(LOGGER::info))
-                    .run();
-        }
-    }
-
     private void extractProjectData(Path javaHome, Path projectDir, Path cacheFile, GradleVersion gradleVersion, Set<String> extraTasks) {
         GradleConnector connector = GradleConnector.newConnector()
                 .useGradleVersion(gradleVersion.getVersion())
@@ -179,7 +157,7 @@ public class GradleModelExtractor {
         return FastStream.empty();
     }
 
-    private static GradleVersion computeProjectGradleVersion(Path project) {
+    static GradleVersion computeProjectGradleVersion(Path project) {
         GradleVersion gradleVersion = getGradleVersionFromWrapper(project);
         if (gradleVersion == null) {
             LOGGER.info("Could not determine Project gradle version. Using {}", MIN_GRADLE_VERSION);
@@ -223,7 +201,6 @@ public class GradleModelExtractor {
         return GradleVersion.version(matcher.group(1));
     }
 
-    @VisibleForTesting
     static JavaVersion getJavaVersionForGradle(GradleVersion gradleVersion) {
         if (gradleVersion.compareTo(MIN_GRADLE_USE_J17) >= 0) return JavaVersion.JAVA_17;
         if (gradleVersion.compareTo(MIN_GRADLE_USE_J16) >= 0) return JavaVersion.JAVA_16;
