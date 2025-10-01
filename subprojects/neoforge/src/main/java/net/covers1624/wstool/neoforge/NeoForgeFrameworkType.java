@@ -6,20 +6,23 @@ import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.api.HashContainer;
 import net.covers1624.wstool.api.ModuleProcessor;
-import net.covers1624.wstool.api.extension.FrameworkType;
 import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.api.workspace.Module;
 import net.covers1624.wstool.api.workspace.SourceSet;
 import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.api.workspace.runs.EvalValue.ClasspathValue;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
+import net.covers1624.wstool.gradle.GradleTaskExecutor;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.minecraft.AssetDownloader;
+import net.covers1624.wstool.minecraft.ForgeLikeFramework;
+import net.covers1624.wstool.minecraft.JSTExecutor;
 import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +32,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Created by covers1624 on 5/19/25.
  */
-public interface NeoForgeFrameworkType extends FrameworkType {
+public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
     String path();
 
@@ -43,6 +46,8 @@ public interface NeoForgeFrameworkType extends FrameworkType {
     default void buildFrameworks(Environment env, Workspace workspace) {
         ModuleProcessor moduleProcessor = env.getService(ModuleProcessor.class);
         GradleTaskExecutor taskExecutor = env.getService(GradleTaskExecutor.class);
+        JSTExecutor jstExecutor = env.getService(JSTExecutor.class);
+
         Path rootDir = env.projectRoot().resolve(path());
 
         HashContainer hashContainer = new HashContainer(env.projectCache(), "neoforge");
@@ -60,20 +65,37 @@ public interface NeoForgeFrameworkType extends FrameworkType {
             throw new RuntimeException("Failed to update NeoForge clone.", ex);
         }
 
+        var ifaceCache = hashContainer.getEntry("iface_injections");
+        var ifaceInjections = collectInterfaceInjections(workspace);
+        ifaceInjections.forEach(ifaceCache::putFile);
+
+        var atCache = hashContainer.getEntry("access_transformers");
+        var accessTransformers = collectAccessTransformers(workspace);
+        accessTransformers.forEach(atCache::putFile);
+
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
-
-        if (requiresSetupProp.getBoolean()) {
-            taskExecutor.runTask(rootDir, "clean");
-            taskExecutor.runTask(rootDir, "setup");
-            requiresSetupProp.setValue(false);
-        }
-
-        applyNeoForgeToolchain(requireNonNull(nfModule.projectData()), workspace);
-
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
         var nfCoreModsMain = nfCoreMods.sourceSets().get("main");
+
+        if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed()) {
+            taskExecutor.runTask(rootDir, "clean");
+            taskExecutor.runTask(rootDir, "setup");
+
+            jstExecutor.applyJST(
+                    nfMain,
+                    nfSubModule.rootDir().resolve("src/main/java"),
+                    ifaceInjections,
+                    accessTransformers
+            );
+
+            requiresSetupProp.setValue(false);
+            ifaceCache.pushChanges();
+            atCache.pushChanges();
+        }
+
+        applyNeoForgeToolchain(requireNonNull(nfModule.projectData()), workspace);
 
         var legacyClasspath = new LinkedHashSet<>(nfMain.runtimeDependencies());
 

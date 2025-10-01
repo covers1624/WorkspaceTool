@@ -120,6 +120,10 @@ public class WorkspaceTool {
         };
         env.putService(ModuleProcessor.class, moduleProcessor);
 
+        for (Extension extension : extensions) {
+            extension.prepareEnvironment(env);
+        }
+
         LOGGER.info("Processing modules.");
         for (Path modulePath : modulePaths) {
             LOGGER.info("Processing module {}", env.projectRoot().relativize(modulePath));

@@ -1,5 +1,7 @@
 package net.covers1624.wstool.api.extension;
 
+import net.covers1624.wstool.api.Environment;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,6 +13,8 @@ import java.lang.annotation.Target;
 public interface Extension {
 
     default void registerConfigTypes(ConfigTypeRegistry registry) { }
+
+    default void prepareEnvironment(Environment env) { }
 
     interface ConfigTypeRegistry {
 
