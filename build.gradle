@@ -1,4 +1,5 @@
 import groovy.json.JsonOutput
+import org.gradle.api.attributes.java.TargetJvmEnvironment
 import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner
 
 import java.nio.file.Files
@@ -10,7 +11,7 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath 'com.guardsquare:proguard-gradle:7.5.0'
+        classpath 'com.guardsquare:proguard-gradle:7.7.0'
     }
 }
 
@@ -121,8 +122,16 @@ subprojects { subProject ->
 }
 
 configurations {
-    packing
-    gradlePluginPath
+    packing {
+        attributes {
+            attribute(TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE, objects.named(TargetJvmEnvironment, TargetJvmEnvironment.STANDARD_JVM))
+        }
+    }
+    gradlePluginPath {
+        attributes {
+            attribute(TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE, objects.named(TargetJvmEnvironment, TargetJvmEnvironment.STANDARD_JVM))
+        }
+    }
 }
 
 dependencies {
@@ -136,23 +145,17 @@ tasks.register('genVersionManifest') {
     ext {
         output = file("build/libs/manifest-${version}.json")
     }
-    inputs.property('packing', configurations.packing)
     outputs.file output
+    outputs.upToDateWhen { false }
 
     doLast {
-        def dependencies = []
-        def gradlePluginDependencies = []
-        def manifest = [
-                'main_class'              : 'net.covers1624.wt.WorkspaceTool',
-                'java_version'            : 'JAVA_16',
-                'dependencies'            : dependencies,
-                'gradlePluginDependencies': gradlePluginDependencies
-        ]
+        def mainClasspath = []
+        def gradleClasspath = []
         long totalSize
         configurations.packing.resolvedConfiguration.resolvedArtifacts.each {
             def len = it.file.length()
             totalSize += len
-            dependencies.add([
+            mainClasspath.add([
                     "artifact": toCoords(it),
                     "sha256"  : Files.readAllBytes(it.file.toPath()).sha256(),
                     "size"    : len
@@ -161,13 +164,26 @@ tasks.register('genVersionManifest') {
         configurations.gradlePluginPath.resolvedConfiguration.resolvedArtifacts.each {
             def len = it.file.length()
             totalSize += len
-            dependencies.add([
+            gradleClasspath.add([
                     "artifact": toCoords(it),
                     "sha256"  : Files.readAllBytes(it.file.toPath()).sha256(),
                     "size"    : len
             ])
-            gradlePluginDependencies << toCoords(it)
         }
+        def manifest = [
+                'wrapperVersionFilter': '[0.5.0,)',
+                'javaVersion'      : 'JAVA_21',
+                'classPaths'       : [
+                        'main'  : mainClasspath,
+                        'gradle': gradleClasspath
+                ],
+                'javaArgs'         : [
+                        '-cp',
+                        '${classPaths.main}',
+                        '-Dnet.covers1624.wstool.gradle_classpath=${classPaths.gradle}',
+                        'net.covers1624.wstool.WorkspaceTool'
+                ]
+        ]
         def json = JsonOutput.prettyPrint(JsonOutput.toJson(manifest))
         Files.write(output.toPath(), json.getBytes("UTF-8"))
 //        logger.lifecycle("Total Size: ${(int) (totalSize / 1024)}kb")

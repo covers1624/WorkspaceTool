@@ -2,6 +2,11 @@
 #-dontobfuscate
 -allowaccessmodification
 -overloadaggressively
+-mergeinterfacesaggressively
+-optimizeaggressively
+
+# Go away random crap
+-dontnote **
 
 -keepattributes Signature, SourceFile, LineNumberTable, *Annotation*
 
@@ -9,21 +14,14 @@
 -dontwarn javax.annotation.**
 -dontwarn com.google.**
 -dontwarn org.apache.**
--dontwarn net.covers1624.tconsole.**
--dontwarn net.covers1624.quack.**
--dontwarn org.fusesource.jansi.**
--dontwarn org.gradle.**
--dontwarn org.objectweb.**
+-dontwarn net.covers1624.**
+-dontwarn org.bouncycastle.**
 
 # Don't obfuscate the following packages.
--keepnames class net.covers1624.wt.**
--keepnames class net.rubygrapefruit.**
--keepnames class org.apache.maven.model.**
--keepnames class org.apache.logging.**
--keepnames class org.apache.commons.logging.**
-
--keepnames class net.covers1624.jdkutils.AdoptiumProvisioner** {
+-keepnames class net.covers1624.**
+-keepnames class net.covers1624.wstool.** {
 	<fields>;
+	<methods>;
 }
 
 -keepnames class net.covers1624.jdkutils.** {
@@ -31,12 +29,8 @@
 }
 
 # Keep all wrapper classes.
--keep class net.covers1624.wt.** {
+-keep class net.covers1624.wstool.** {
 	public protected *;
-}
-
--keep class org.apache.commons.logging.** {
-	public protected private *;
 }
 
 # Keep enum special members.

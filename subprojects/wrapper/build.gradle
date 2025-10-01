@@ -1,6 +1,6 @@
 plugins {
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '8.3.8'
 }
 
 java {
@@ -14,12 +14,13 @@ archivesBaseName = 'wt-wrapper'
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'org.apache.commons:commons-compress:1.21'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
-    implementation 'net.covers1624:Quack:0.4.7.71'
-    implementation 'net.covers1624:JdkUtils:0.4.0.14'
-    implementation 'com.google.guava:guava:31.0.1-jre'
+    implementation 'net.covers1624:Quack:0.4.10.117'
+    implementation('net.covers1624:JdkUtils:0.6.0.24') {
+        // This is transitive and completely unused, just more crap in the jar.
+        exclude(group: 'commons-codec', module: 'commons-codec')
+    }
+    implementation 'org.bouncycastle:bcpg-jdk18on:1.81'
 
     implementation 'org.apache.maven:maven-artifact:3.8.1'
     implementation 'org.apache.maven:maven-repository-metadata:3.8.1'
@@ -33,6 +34,8 @@ shadowJar {
     exclude 'META-INF/maven/**'
     exclude 'META-INF/plexus/**'
     exclude 'META-INF/sisu/**'
+    exclude 'META-INF/services/java.security.Provider'
+    exclude 'org/bouncycastle/pqc/**'
     exclude 'module-info.class'
     exclude '**/Log4j2Plugins.dat'
     exclude '**/package.html'
@@ -40,7 +43,8 @@ shadowJar {
     exclude 'LICENSE.txt'
 }
 
-task shrink(type: proguard.gradle.ProGuardTask, dependsOn: shadowJar) {
+tasks.register("shrink", proguard.gradle.ProGuardTask) {
+    dependsOn shadowJar
     ext {
         inputJar = shadowJar.archiveFile.get().asFile
         outputDir = file("${buildDir}/proguard")
@@ -70,11 +74,18 @@ task shrink(type: proguard.gradle.ProGuardTask, dependsOn: shadowJar) {
 }
 
 jar.enabled = false
-task realJar(type: Jar) {
+def realJar = tasks.register('realJar', Jar) {
     dependsOn shrink
     from zipTree(shrink.outputJar)
     manifest {
-        attributes 'Main-Class': "net.covers1624.wt.wrapper.Main"
+        attributes 'Main-Class': "net.covers1624.wstool.wrapper.Main"
+        attributes 'Specification-Title': 'WorkspaceTool-Wrapper'
+        attributes 'Specification-Vendor': 'covers1624'
+        attributes 'Specification-Version': '1'
+        attributes 'Implementation-Title': 'WorkspaceTool-Wrapper'
+        attributes 'Implementation-Vendor': 'covers1624'
+        attributes 'Implementation-Version': version
+        attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
     }
     from 'LICENSE.txt'
 }

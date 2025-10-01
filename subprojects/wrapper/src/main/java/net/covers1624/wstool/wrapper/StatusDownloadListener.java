@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2018-2022 covers1624 <https://github.com/covers1624>
  */
-package net.covers1624.wt.wrapper;
+package net.covers1624.wstool.wrapper;
 
 import net.covers1624.quack.net.download.DownloadListener;
 import org.apache.commons.lang3.StringUtils;
@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Created by covers1624 on 9/11/21.
  */
-public class StatusDownloadListener implements DownloadListener {
+public final class StatusDownloadListener implements DownloadListener {
 
     int lastLen = 0;
     private long expected;
@@ -45,7 +45,7 @@ public class StatusDownloadListener implements DownloadListener {
         return complete + " B";
     }
 
-    protected long toKB(long bytes) {
+    private long toKB(long bytes) {
         return (bytes + 1023) / 1024;
     }
 }
