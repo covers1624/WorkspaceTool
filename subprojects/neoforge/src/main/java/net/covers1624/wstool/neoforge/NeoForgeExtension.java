@@ -13,7 +13,6 @@ public class NeoForgeExtension implements Extension {
 
     @Override
     public void registerConfigTypes(ConfigTypeRegistry registry) {
-        registry.registerFrameworkType("neoforge:1.20", NeoForge120FrameworkType.class);
         registry.registerFrameworkType("neoforge:1.21", NeoForge121FrameworkType.class);
     }
 }
