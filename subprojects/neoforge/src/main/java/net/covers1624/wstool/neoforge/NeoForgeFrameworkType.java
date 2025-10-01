@@ -20,9 +20,8 @@ import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
@@ -74,7 +73,7 @@ public interface NeoForgeFrameworkType extends FrameworkType {
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
         var nfCoreModsMain = nfCoreMods.sourceSets().get("main");
 
-        var legacyClasspath = new HashSet<>(nfMain.runtimeDependencies());
+        var legacyClasspath = new LinkedHashSet<>(nfMain.runtimeDependencies());
 
         // TODO we should be able to detect which source sets are mods in Gradle.
         for (Module module : workspace.allProjectModules()) {
@@ -105,13 +104,12 @@ public interface NeoForgeFrameworkType extends FrameworkType {
             }
             // TODO all the mods go here too?
             //      Apparently mods going here is only required in Older forge, or when they have split classes & resources?
-            run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(
-                    Map.of(
-                            "minecraft", new ModClassesEvalValue.ModClass(new Dependency.SourceSetDependency(nfMain)),
-                            "neoforge-coremods", new ModClassesEvalValue.ModClass(new Dependency.SourceSetDependency(nfCoreModsMain))
-                    )
-            ));
+            run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(List.of(
+                    new ModClassesEvalValue.ModClass("minecraft", new Dependency.SourceSetDependency(nfMain)),
+                    new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreModsMain))
+            )));
 
+            // Use addFirst so we are in front of any user-added args.
             run.vmArgs().addFirst(List.of(
                     "--add-modules", "ALL-MODULE-PATH",
                     "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
@@ -121,10 +119,8 @@ public interface NeoForgeFrameworkType extends FrameworkType {
             ));
             run.vmArgs().addFirstEval(new ClasspathValue(moduleClasspath));
             run.vmArgs().addFirst("-p");
-            run.sysProps().putAll(Map.of(
-                    "java.net.preferIPv6Addresses", "system",
-                    "ignoreList", "mixinextras-neoforge-,client-extra,neoforge-"
-            ));
+            run.sysProps().put("java.net.preferIPv6Addresses", "system");
+            run.sysProps().put("ignoreList", "mixinextras-neoforge-,client-extra,neoforge-");
             run.sysProps().putEval("legacyClassPath", new ClasspathValue(legacyClasspath));
 
             run.args().addAll(List.of(
