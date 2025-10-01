@@ -40,7 +40,8 @@ public interface NeoForgeFrameworkType extends FrameworkType {
     String commit();
 
     @Override
-    default void buildFrameworks(Environment env, ModuleProcessor moduleProcessor, Workspace workspace) {
+    default void buildFrameworks(Environment env, Workspace workspace) {
+        ModuleProcessor moduleProcessor = env.getService(ModuleProcessor.class);
         Path rootDir = env.projectRoot().resolve(path());
 
         HashContainer hashContainer = new HashContainer(env.projectCache(), "neoforge");

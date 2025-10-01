@@ -1,8 +1,11 @@
 package net.covers1624.wstool.api;
 
+import net.covers1624.quack.util.SneakyUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by covers1624 on 17/5/23.
@@ -30,6 +33,22 @@ public interface Environment {
      */
     Path projectCache();
 
+    /**
+     * Provide some typed service to the environment.
+     *
+     * @param clazz The type of the service.
+     * @param thing The service.
+     */
+    <T> void putService(Class<? extends T> clazz, T thing);
+
+    /**
+     * Get some typed service from the environment.
+     *
+     * @param clazz The service type.
+     * @return The service.
+     */
+    <T> T getService(Class<? extends T> clazz);
+
     static Environment of() {
         return of(
                 getPathProperty("wstool.manifest"),
@@ -43,14 +62,29 @@ public interface Environment {
     }
 
     static Environment of(@Nullable Path manifest, Path sysFolder, Path projectRoot, Path projectCache) {
-        // @formatter:off
+        Map<Class<?>, Object> serviceMap = new HashMap<>();
         return new Environment() {
+            // @formatter:off
             @Nullable @Override public Path manifestFile() { return manifest; }
             @Override public Path systemFolder() { return sysFolder; }
             @Override public Path projectRoot() { return projectRoot; }
             @Override public Path projectCache() { return projectCache; }
+            // @formatter:on
+
+            @Override
+            public <T> void putService(Class<? extends T> clazz, T thing) {
+                if (serviceMap.containsKey(clazz)) throw new IllegalArgumentException("Unable to replace a service.");
+                serviceMap.put(clazz, thing);
+            }
+
+            @Override
+            public <T> T getService(Class<? extends T> clazz) {
+                Object service = serviceMap.get(clazz);
+                if (service == null) throw new IllegalStateException("Service " + clazz.getName() + " is not available.");
+
+                return SneakyUtils.unsafeCast(service);
+            }
         };
-        // @formatter:on
     }
 
     @Nullable

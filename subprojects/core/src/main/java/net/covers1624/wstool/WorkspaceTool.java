@@ -95,6 +95,8 @@ public class WorkspaceTool {
         LOGGER.info("Found {} modules.", modulePaths.size());
 
         JdkProvider jdkProvider = new JdkProvider(env);
+        env.putService(JdkProvider.class, jdkProvider);
+
         GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
 
         Workspace workspace = workspaceType.newWorkspace(env);
@@ -117,6 +119,7 @@ public class WorkspaceTool {
                 return buildDependencies(Map.of(), Map.of(), configuration.dependencies);
             }
         };
+        env.putService(ModuleProcessor.class, moduleProcessor);
 
         LOGGER.info("Processing modules.");
         for (Path modulePath : modulePaths) {
