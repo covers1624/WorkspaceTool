@@ -10,6 +10,8 @@ import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.util.DeletingFileVisitor;
 import org.assertj.core.api.AutoCloseableSoftAssertions;
 import org.intellij.lang.annotations.Language;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +28,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public abstract class TestBase {
 
-    private static final boolean IS_UPDATE = Boolean.parseBoolean(System.getProperty("net.covers1624.covers1624.wstool.test_update", "true"));
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestBase.class);
+
+    private static final boolean CI = Boolean.parseBoolean(System.getenv("CI"));
+    private static final boolean IS_UPDATE = Boolean.getBoolean("net.covers1624.covers1624.wstool.test_update");
 
     protected TestInstance newTestInstance(String name) throws IOException {
         return new TestInstance(name);
@@ -127,7 +132,13 @@ public abstract class TestBase {
                 Files.walkFileTree(ideaDir, new CopyingFileVisitor(ideaDir, outputDir));
             }
 
-            Files.walkFileTree(projectDir, new DeletingFileVisitor());
+            try {
+                Files.walkFileTree(projectDir, new DeletingFileVisitor());
+            } catch (IOException ex) {
+                if (CI) return;
+
+                LOGGER.error("Failed to cleanup.", ex);
+            }
         }
 
         private static Set<Path> walkRelative(Path dir) throws IOException {
