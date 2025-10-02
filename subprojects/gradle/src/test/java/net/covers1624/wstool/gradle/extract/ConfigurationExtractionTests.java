@@ -9,7 +9,8 @@ import net.covers1624.wstool.gradle.api.data.ConfigurationData.MavenDependency;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.ProjectDependency;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.SourceSetDependency;
 import org.gradle.util.GradleVersion;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.util.Set;
@@ -23,13 +24,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 public class ConfigurationExtractionTests extends ExtractTestBase {
 
-    // @formatter:off
-    @Test public void testSimpleDependency_4_10_3() throws Throwable { testSimpleDependency("4.10.3"); }
-    @Test public void testSimpleDependency_7_3() throws Throwable { testSimpleDependency("7.3"); }
-    @Test public void testSimpleDependency_8_0() throws Throwable { testSimpleDependency("8.0"); }
-    // @formatter:on
-
-    private void testSimpleDependency(String gradleVersion) throws IOException {
+    @ValueSource (strings = {
+            "4.10.3",
+            "7.3",
+            "8.0",
+    })
+    @ParameterizedTest
+    public void testSimpleDependency(String gradleVersion) throws IOException {
         GradleEmitter emitter = gradleEmitter("SimpleDependency")
                 .rootProject()
                 // language=Groovy
@@ -73,13 +74,13 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
         guava.extracting(e -> e.files.get("javadoc")).isNotNull();
     }
 
-    // @formatter:off
-    @Test public void testSourceSetDependency_4_10_3() throws Throwable { testSourceSetDependency("4.10.3"); }
-    @Test public void testSourceSetDependency_7_3() throws Throwable { testSourceSetDependency("7.3"); }
-    @Test public void testSourceSetDependency_8_0() throws Throwable { testSourceSetDependency("8.0"); }
-    // @formatter:on
-
-    private void testSourceSetDependency(String gradleVersion) throws IOException {
+    @ValueSource (strings = {
+            "4.10.3",
+            "7.3",
+            "8.0",
+    })
+    @ParameterizedTest
+    public void testSourceSetDependency(String gradleVersion) throws IOException {
         GradleEmitter emitter = gradleEmitter("ProjectDependency")
                 .rootProject()
                 // language=Groovy
@@ -122,13 +123,13 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
                 .isEqualTo(core);
     }
 
-    // @formatter:off
-    @Test public void testProjectDependency_4_10_3() throws Throwable { testProjectDependency("4.10.3"); }
-    @Test public void testProjectDependency_7_3() throws Throwable { testProjectDependency("7.3"); }
-    @Test public void testProjectDependency_8_0() throws Throwable { testProjectDependency("8.0"); }
-    // @formatter:on
-
-    private void testProjectDependency(String gradleVersion) throws IOException {
+    @ValueSource (strings = {
+            "4.10.3",
+            "7.3",
+            "8.0",
+    })
+    @ParameterizedTest
+    public void testProjectDependency(String gradleVersion) throws IOException {
         GradleEmitter emitter = gradleEmitter("ProjectDependency")
                 .rootProject()
                 .withBuildGradle("")
