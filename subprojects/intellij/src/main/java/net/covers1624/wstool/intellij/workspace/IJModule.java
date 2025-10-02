@@ -4,7 +4,6 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
-import org.apache.commons.lang3.StringUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
@@ -12,12 +11,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.covers1624.wstool.intellij.IJUtils.*;
+import static net.covers1624.wstool.intellij.IJUtils.fileUrl;
 
 /**
  * Created by covers1624 on 5/4/25.
  */
-public abstract class IJModule {
+public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPath {
 
     protected final ModulePath path;
 
@@ -51,7 +50,7 @@ public abstract class IJModule {
         return List.of();
     }
 
-    public final Document buildDocument(Environment env, MavenDependencyCollector collector) {
+    public final Document buildDocument(Environment env, MavenDependencyCollector collector, ContentRootCollector crCollector) {
         Element module = new Element("module")
                 .setAttribute("type", "JAVA_MODULE")
                 .setAttribute("version", "4");
@@ -62,15 +61,14 @@ public abstract class IJModule {
 
         moduleRootManager.addContent(new Element("exclude-output"));
 
-        Path projectRoot = env.projectRoot();
         moduleRootManager.addContent(
                 new Element(isForTests() ? "output-test" : "output")
                         .setAttribute("url", fileUrl(outputDir(env)))
         );
 
-        List<ContentRoot> roots = buildContentRoots(getContentPaths());
+        List<ContentRoot> roots = crCollector.buildRoots(this);
         for (ContentRoot root : roots) {
-            moduleRootManager.addContent(buildContentRootElement(root, projectRoot));
+            moduleRootManager.addContent(buildContentRootElement(root));
         }
 
         moduleRootManager.addContent(new Element("orderEntry")
@@ -109,14 +107,14 @@ public abstract class IJModule {
         return new Document(module);
     }
 
-    private static Element buildContentRootElement(ContentRoot root, Path projectRoot) {
+    private static Element buildContentRootElement(ContentRoot root) {
         Element content = new Element("content");
-        content.setAttribute("url", fileUrl(root.root));
+        content.setAttribute("url", fileUrl(root.root()));
 
         for (ContentPath path : root.contentRootPaths()) {
-            Element element = new Element(path.type == PathType.EXCLUDE ? "excludeFolder" : "sourceFolder");
-            element.setAttribute("url", fileUrl(path.path));
-            switch (path.type) {
+            Element element = new Element(path.type() == ContentPath.PathType.EXCLUDE ? "excludeFolder" : "sourceFolder");
+            element.setAttribute("url", fileUrl(path.path()));
+            switch (path.type()) {
                 case CODE -> element.setAttribute("isTestSource", "false");
                 case TEST_CODE -> element.setAttribute("isTestSource", "true");
                 case RESOURCES -> element.setAttribute("type", "java-resource");
@@ -125,46 +123,6 @@ public abstract class IJModule {
             content.addContent(element);
         }
         return content;
-    }
-
-    private List<ContentRoot> buildContentRoots(List<ContentPath> paths) {
-        // TODO this is an INCREDIBLY basic content root algorithm, that is sure to collapse under complicated projects..
-        String commonParent = StringUtils.getCommonPrefix(FastStream.of(paths).map(e -> e.path.toString()).toArray(new String[0]));
-        // We need to get the path for the group.
-        if (commonParent.isEmpty()) {
-            if (!(this instanceof IJModuleWithPath moduleWithPath)) throw new RuntimeException("Unable to build content root for an empty common parent.");
-
-            return List.of(new ContentRoot(moduleWithPath.rootDir, List.of()));
-        }
-        if (!commonParent.endsWith("/")) {
-            throw new RuntimeException("Unable to build content root. Got partial path for content paths " + paths);
-        }
-        return List.of(new ContentRoot(Path.of(commonParent), paths));
-    }
-
-    public record ContentRoot(Path root, List<ContentPath> contentRootPaths) { }
-
-    public record ContentPath(Path path, PathType type) {
-
-        public static ContentPath exclude(Path path) {
-            return new ContentPath(path, PathType.EXCLUDE);
-        }
-
-        public static ContentPath code(Path path, boolean forTests) {
-            return new ContentPath(path, forTests ? PathType.TEST_CODE : PathType.CODE);
-        }
-
-        public static ContentPath resources(Path path, boolean forTests) {
-            return new ContentPath(path, forTests ? PathType.TEST_RESOURCES : PathType.RESOURCES);
-        }
-    }
-
-    public enum PathType {
-        EXCLUDE,
-        CODE,
-        RESOURCES,
-        TEST_CODE,
-        TEST_RESOURCES,
     }
 
     public enum DependencyScope {

@@ -5,9 +5,9 @@ import java.nio.file.Path;
 /**
  * Created by covers1624 on 5/7/25.
  */
-public abstract class IJModuleWithPath extends IJModule {
+public abstract sealed class IJModuleWithPath extends IJModule permits IJProjectModule, IJWorkspace.RootModule{
 
-    protected final Path rootDir;
+    private final Path rootDir;
 
     public IJModuleWithPath(Path rootDir, ModulePath path) {
         super(path);

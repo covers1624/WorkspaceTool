@@ -3,11 +3,15 @@
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <exclude-output />
     <output url="file://$PROJECT_DIR$/out/nf_1_21_1_runs_NeoForge_neoforge_main" />
-    <content url="file://$PROJECT_DIR$/NeoForge">
+    <content url="file://$PROJECT_DIR$/NeoForge/projects/neoforge/src/main">
       <sourceFolder url="file://$PROJECT_DIR$/NeoForge/projects/neoforge/src/main/java" isTestSource="false" />
-      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$PROJECT_DIR$/NeoForge/projects/neoforge/src/main/resources" type="java-resource" />
+    </content>
+    <content url="file://$PROJECT_DIR$/NeoForge/src/main">
+      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$PROJECT_DIR$/NeoForge/src/main/resources" type="java-resource" />
+    </content>
+    <content url="file://$PROJECT_DIR$/NeoForge/src/generated">
       <sourceFolder url="file://$PROJECT_DIR$/NeoForge/src/generated/resources" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />

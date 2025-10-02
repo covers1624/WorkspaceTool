@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Created by covers1624 on 5/5/25.
  */
-public class IJSourceSetModule extends IJModule implements SourceSet {
+public final class IJSourceSetModule extends IJModule implements SourceSet {
 
     private final Module module;
 

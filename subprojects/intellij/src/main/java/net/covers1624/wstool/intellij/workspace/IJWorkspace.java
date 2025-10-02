@@ -110,12 +110,12 @@ public class IJWorkspace implements Workspace {
             throw new RuntimeException("Failed to create directories.", ex);
         }
 
-        MavenDependencyCollector collector = new MavenDependencyCollector();
-        modules().values().forEach(collector::collectFrom);
+        MavenDependencyCollector depCollector = new MavenDependencyCollector();
+        modules().values().forEach(depCollector::collectFrom);
 
-        runConfigs().values().forEach(collector::collectFrom);
+        runConfigs().values().forEach(depCollector::collectFrom);
 
-        collector.hardlinkToCacheDir(env.projectCache());
+        depCollector.hardlinkToCacheDir(env.projectCache());
 
         Path librariesDir = ideaDir.resolve("libraries");
         try {
@@ -125,16 +125,21 @@ public class IJWorkspace implements Workspace {
         } catch (IOException ex) {
             throw new RuntimeException("Failed to clean libraries dir.", ex);
         }
-        for (MavenDependencyCollector.CollectedEntry entry : collector.collectedEntries()) {
+        for (MavenDependencyCollector.CollectedEntry entry : depCollector.collectedEntries()) {
             Path file = librariesDir.resolve(entry.name().replace(':', '.') + ".xml");
             writeDocument(entry.buildDocument(), file);
+        }
+
+        ContentRootCollector crCollector = new ContentRootCollector();
+        for (IJModule module : modules.values()) {
+            crCollector.processModule(module);
         }
 
         List<Path> moduleFiles = new ArrayList<>();
         for (IJModule module : modules.values()) {
             String name = module.path.joinNames(".");
             Path moduleFile = modulesDir.resolve(name + ".iml");
-            writeDocument(module.buildDocument(env, collector), moduleFile);
+            writeDocument(module.buildDocument(env, depCollector, crCollector), moduleFile);
             moduleFiles.add(moduleFile);
         }
 
@@ -145,7 +150,7 @@ public class IJWorkspace implements Workspace {
         Path runsDir = ideaDir.resolve("runConfigurations");
         for (IJRunConfig runConfig : runConfigs.values()) {
             Path dest = runsDir.resolve(runConfig.name().replace("/", "_") + ".xml");
-            writeDocument(runConfig.writeDocument(env, collector), dest);
+            writeDocument(runConfig.writeDocument(env, depCollector), dest);
         }
     }
 
@@ -236,7 +241,7 @@ public class IJWorkspace implements Workspace {
         }
     }
 
-    public static class RootModule extends IJModuleWithPath {
+    public static sealed class RootModule extends IJModuleWithPath permits IJWorkspace.GroupModule {
 
         public RootModule(Path rootDir, ModulePath path) {
             super(rootDir, path);
@@ -244,7 +249,7 @@ public class IJWorkspace implements Workspace {
     }
 
     // TODO we may be able to flatten this. Depends if the root module requires any direct and specific configuration.
-    public static class GroupModule extends RootModule {
+    public final static class GroupModule extends RootModule {
 
         public GroupModule(Path rootDir, ModulePath path) {
             super(rootDir, path);

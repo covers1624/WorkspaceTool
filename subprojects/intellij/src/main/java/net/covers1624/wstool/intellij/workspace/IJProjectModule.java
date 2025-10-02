@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Created by covers1624 on 5/5/25.
  */
-public class IJProjectModule extends IJModuleWithPath implements Module {
+public final class IJProjectModule extends IJModuleWithPath implements Module {
 
     private final IJWorkspace workspace;
     private final Map<ModulePath, IJProjectModule> subModules = new LinkedHashMap<>();
@@ -27,13 +27,13 @@ public class IJProjectModule extends IJModuleWithPath implements Module {
     }
 
     @Override
-    public Map<String, ? extends Module> subModules() {
+    public Map<String, ? extends IJProjectModule> subModules() {
         return FastStream.of(subModules.entrySet())
                 .toMap(e -> e.getKey().name(), Map.Entry::getValue);
     }
 
     @Override
-    public Map<String, ? extends SourceSet> sourceSets() {
+    public Map<String, ? extends IJSourceSetModule> sourceSets() {
         return FastStream.of(sourceSets.entrySet())
                 .toMap(e -> e.getKey().name(), Map.Entry::getValue);
     }
