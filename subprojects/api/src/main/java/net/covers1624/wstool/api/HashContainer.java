@@ -235,6 +235,7 @@ public class HashContainer {
          */
         public PropertyEntry setValue(boolean value) {
             this.value = Boolean.toString(value);
+            push();
             return this;
         }
 

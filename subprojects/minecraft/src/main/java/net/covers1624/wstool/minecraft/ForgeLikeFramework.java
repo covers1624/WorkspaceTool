@@ -30,6 +30,7 @@ public interface ForgeLikeFramework extends FrameworkType {
                         throw new RuntimeException("Failed to walk files.", ex);
                     }
                 })
+                .sorted()
                 .toList();
     }
 
@@ -51,6 +52,7 @@ public interface ForgeLikeFramework extends FrameworkType {
                         throw new RuntimeException("Failed to walk files.", ex);
                     }
                 })
+                .sorted()
                 .toList();
     }
 }
