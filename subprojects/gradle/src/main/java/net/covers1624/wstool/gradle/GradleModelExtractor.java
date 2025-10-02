@@ -16,6 +16,7 @@ import net.covers1624.wstool.api.HashContainer;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.gradle.api.WorkspaceToolModelAction;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
+import net.covers1624.wstool.gradle.api.data.SubProjectList;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,6 +73,8 @@ public class GradleModelExtractor {
     private final JdkProvider jdkProvider;
 
     private final List<String> hashableFiles = new ArrayList<>(List.of(
+            "buildSrc/build.gradle",
+            "buildSrc/settings.gradle",
             "build.gradle",
             "settings.gradle",
             "gradle.properties",
@@ -93,27 +96,66 @@ public class GradleModelExtractor {
         Path gradleCacheDir = env.projectCache().resolve("gradle");
         Path cacheFile = gradleCacheDir.resolve(env.projectRoot().relativize(project).toString().replaceAll("[/\\\\]", "_") + ".dat");
         HashContainer container = new HashContainer(gradleCacheDir, cacheFile.getFileName().toString());
-        HashContainer.Entry inputsEntry = container.getEntry("inputs");
-        inputsEntry.putString(gradleClassPathHash.get());
-        for (String hashableFile : hashableFiles) {
-            inputsEntry.putFile(project.resolve(hashableFile));
-        }
+        HashContainer.Entry gradle = container.getEntry("gradle");
+        gradle.putString(gradleClassPathHash.get());
 
         HashContainer.Entry outputEntry = container.getEntry("output");
         outputEntry.putFile(cacheFile);
 
-        if (Files.notExists(cacheFile) || inputsEntry.changed() || outputEntry.changed()) {
+        // Incorporate previous run data for which files to cache key against.
+        HashContainer.Entry hashablesCache = getGradleFilesCache(container, cacheFile);
+        if (Files.notExists(cacheFile) || gradle.changed() || hashablesCache == null || hashablesCache.changed() || outputEntry.changed()) {
             JavaVersion javaVersion = getJavaVersionForGradle(gradleVersion);
             Path javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
             extractProjectData(javaHome, project, cacheFile, gradleVersion, extraTasks);
-            inputsEntry.pushChanges();
+            gradle.pushChanges();
+            // Data is extracted, re-build the hashables list and save it.
+            Objects.requireNonNull(getGradleFilesCache(container, cacheFile)).pushChanges();
             outputEntry.pushChanges();
         }
 
-        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(cacheFile))) {
+        return parseProjectData(cacheFile);
+    }
+
+    private @Nullable HashContainer.Entry getGradleFilesCache(HashContainer container, Path oldCache) {
+        if (!Files.exists(oldCache)) return null;
+        List<Path> projectPaths = collectProjectPaths(oldCache);
+        if (projectPaths.isEmpty()) return null;
+
+        HashContainer.Entry entry = container.getEntry("hashables");
+        FastStream.of(projectPaths)
+                .flatMap(e -> FastStream.of(hashableFiles)
+                        .map(e::resolve)
+                        .filter(Files::exists)
+                )
+                .forEach(entry::putFile);
+        return entry;
+    }
+
+    private List<Path> collectProjectPaths(Path cache) {
+        try {
+            return collectProjectPaths(parseProjectData(cache));
+        } catch (Throwable ex) {
+            LOGGER.warn("Failed to collect project paths.", ex);
+            return List.of();
+        }
+    }
+
+    private List<Path> collectProjectPaths(ProjectData data) {
+        return FastStream.concat(
+                        FastStream.ofNullable(data.projectDir.toPath()),
+                        FastStream.ofNullable(data.getData(SubProjectList.class))
+                                .flatMap(e -> e.asMap().values())
+                                .flatMap(this::collectProjectPaths)
+                )
+                .toList();
+    }
+
+    private ProjectData parseProjectData(Path cache) {
+        try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(cache))) {
             return (ProjectData) in.readObject();
         } catch (IOException | ClassNotFoundException ex) {
-            throw new RuntimeException("Failed to read cache file after Gradle execution.", ex);
+            throw new RuntimeException("Failed to read project data.", ex);
         }
     }
 
