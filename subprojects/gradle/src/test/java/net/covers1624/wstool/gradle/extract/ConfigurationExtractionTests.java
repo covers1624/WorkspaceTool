@@ -28,6 +28,7 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
             "4.10.3",
             "7.3",
             "8.0",
+            "9.0.0",
     })
     @ParameterizedTest
     public void testSimpleDependency(String gradleVersion) throws IOException {
@@ -78,6 +79,7 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
             "4.10.3",
             "7.3",
             "8.0",
+            "9.0.0",
     })
     @ParameterizedTest
     public void testSourceSetDependency(String gradleVersion) throws IOException {
@@ -127,6 +129,7 @@ public class ConfigurationExtractionTests extends ExtractTestBase {
             "4.10.3",
             "7.3",
             "8.0",
+            "9.0.0",
     })
     @ParameterizedTest
     public void testProjectDependency(String gradleVersion) throws IOException {

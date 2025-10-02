@@ -7,6 +7,7 @@ import net.covers1624.wstool.gradle.LookupCache;
 import net.covers1624.wstool.gradle.ProjectBuilder;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.MavenDependency;
+import org.codehaus.groovy.runtime.InvokerHelper;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -22,6 +23,7 @@ import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.jvm.JvmLibrary;
 import org.gradle.language.base.artifact.SourcesArtifact;
 import org.gradle.language.java.artifact.JavadocArtifact;
+import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -63,12 +65,12 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
 
         Map<Configuration, List<Dependency>> toRemove = new HashMap<>();
         sourceSets.asMap().values().forEach(e -> {
-            extractProjectDependencies(toRemove, configurations.getAt(e.compileClasspathConfiguration), getOrCreate(e.compileClasspathConfiguration));
-            extractProjectDependencies(toRemove, configurations.getAt(e.runtimeClasspathConfiguration), getOrCreate(e.runtimeClasspathConfiguration));
+            extractProjectDependencies(project, toRemove, configurations.getAt(e.compileClasspathConfiguration), getOrCreate(e.compileClasspathConfiguration));
+            extractProjectDependencies(project, toRemove, configurations.getAt(e.runtimeClasspathConfiguration), getOrCreate(e.runtimeClasspathConfiguration));
         });
 
         for (Configuration extra : extraConfigurations) {
-            extractProjectDependencies(toRemove, extra, getOrCreate(extra.getName()));
+            extractProjectDependencies(project, toRemove, extra, getOrCreate(extra.getName()));
         }
 
         // We must first iterate, every source set, then remove after. As inherited dependencies will get nuked from their
@@ -100,10 +102,10 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         }
     }
 
-    private void extractProjectDependencies(Map<Configuration, List<Dependency>> toRemove, Configuration configuration, ConfigurationData data) {
+    private void extractProjectDependencies(Project project, Map<Configuration, List<Dependency>> toRemove, Configuration configuration, ConfigurationData data) {
         for (Configuration config : configuration.getHierarchy()) {
             for (Dependency dependency : config.getDependencies()) {
-                ConfigurationData.Dependency dep = consumeRawDependency(dependency);
+                ConfigurationData.Dependency dep = consumeRawDependency(project, dependency);
                 if (dep != null) {
                     data.dependencies.add(dep);
                     toRemove.computeIfAbsent(config, e -> new ArrayList<>())
@@ -133,9 +135,9 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         data.dependencies.addAll(buildMavenDependencies(resolved.getFirstLevelModuleDependencies()));
     }
 
-    private @Nullable ConfigurationData.Dependency consumeRawDependency(Dependency dep) {
+    private ConfigurationData.@Nullable Dependency consumeRawDependency(Project project, Dependency dep) {
         if (dep instanceof ProjectDependency) {
-            return processProjectDep((ProjectDependency) dep);
+            return processProjectDep(project, (ProjectDependency) dep);
         }
         if (dep instanceof FileCollectionDependency) {
             return processFileColDep((FileCollectionDependency) dep);
@@ -143,8 +145,8 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         return null;
     }
 
-    private ConfigurationData.ProjectDependency processProjectDep(ProjectDependency projectDep) {
-        Project project = projectDep.getDependencyProject();
+    private ConfigurationData.ProjectDependency processProjectDep(Project rootProject, ProjectDependency projectDep) {
+        Project project = getDependencyProject(rootProject, projectDep);
         ProjectData projectData = requireNonNull(lookupCache.projects.get(project.getPath()), "Project missing from lookup! " + project);
         return new ConfigurationData.ProjectDependency(projectData);
     }
@@ -234,5 +236,14 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
 
     private ConfigurationData getOrCreate(String name) {
         return configurationsData.computeIfAbsent(name, ConfigurationData::new);
+    }
+
+    private Project getDependencyProject(Project rootProject, ProjectDependency dep) {
+        if (GradleVersion.current().compareTo(GradleVersion.version("8.11")) >= 0) {
+            // Was added in Gradle 8.11 as a replacement for getDependencyProject.
+            return rootProject.project(dep.getPath());
+        }
+        // ProjectDependency.getDependencyProject was removed in Gradle 9.
+        return (Project) InvokerHelper.getProperty(dep, "dependencyProject");
     }
 }

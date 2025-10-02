@@ -24,6 +24,7 @@ public class SimpleProjectExtractionTest extends ExtractTestBase {
             "4.10.3",
             "7.3",
             "8.0",
+            "9.0.0",
     })
     @ParameterizedTest
     public void testBlank(String gradleVersion) throws IOException {
@@ -47,6 +48,7 @@ public class SimpleProjectExtractionTest extends ExtractTestBase {
             "4.10.3",
             "7.3",
             "8.0",
+            "9.0.0",
     })
     @ParameterizedTest
     public void testJavaPlugin(String gradleVersion) throws IOException {
@@ -116,6 +118,7 @@ public class SimpleProjectExtractionTest extends ExtractTestBase {
             "7.3",
             "8.0",
             "8.14",
+            "9.0.0",
     })
     @ParameterizedTest
     public void testExtractJavaToolchainVersion(String version) throws IOException {
