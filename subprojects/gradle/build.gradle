@@ -17,9 +17,6 @@ dependencies {
 
     api libs.quack
 
-    api libs.lang3
-    api libs.gson
-
     api gradlelibs.tooling
 
     testImplementation project(':gradle-test-api')

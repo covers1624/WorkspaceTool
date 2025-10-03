@@ -15,6 +15,7 @@ dependencies {
     api libs.quack
     api libs.guava
     api libs.jdkutils
+    api libs.gson // Explicitly upgrade Gson transitive from jdkutils.
     api libs.jgit
 }
 
