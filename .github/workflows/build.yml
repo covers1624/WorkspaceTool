@@ -1,0 +1,29 @@
+name: build.yml
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+      - name: Publish
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+          GPG_PRIVATE_KEY_FILE: ${{ secrets.GPG_PRIVATE_KEY_FILE }}
+          GPG_PRIVATE_KEY_PASS: ${{ secrets.GPG_PRIVATE_KEY_PASS }}
+        run: ./gradlew build check publish -si
