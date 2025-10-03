@@ -18,7 +18,7 @@ dependencyResolutionManagement {
             library('log4j2-jul', 'org.apache.logging.log4j:log4j-jul:2.20.0')
         }
         libs {
-            library('quack', 'net.covers1624:Quack:0.4.10.111')
+            library('quack', 'net.covers1624:Quack:0.4.10.117')
             library('guava', 'com.google.guava:guava:33.3.0-jre')
             library('lang3', 'org.apache.commons:commons-lang3:3.12.0')
             library('gson', 'com.google.code.gson:gson:2.10.1')
