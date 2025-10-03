@@ -315,7 +315,7 @@ public final class RuntimeResolver {
         String vFilter = unbounded ? versionFilter.substring(0, versionFilter.length() - 1) : versionFilter;
         return FastStream.of(metadata.getVersioning().getVersions())
                 .filter(e -> unbounded ? e.startsWith(vFilter) : e.equals(vFilter))
-                .sorted(Comparator.comparing(ComparableVersion::new))
+                .sorted(Comparator.comparing(ComparableVersion::new).reversed())
                 .firstOrDefault();
     }
 
