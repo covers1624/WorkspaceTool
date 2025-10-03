@@ -143,6 +143,11 @@ public class WorkspaceTool {
                 workspace
         );
 
+        LOGGER.info("Post processing..");
+        for (Extension extension : extensions) {
+            extension.processWorkspace(env, workspace);
+        }
+
         LOGGER.info("Writing workspace..");
         workspace.writeWorkspace();
 

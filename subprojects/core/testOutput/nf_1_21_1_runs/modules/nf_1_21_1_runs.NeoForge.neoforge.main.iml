@@ -221,5 +221,6 @@
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.fabricmc:sponge-mixin:0.15.2+mixin.0.8.7" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="ng_dummy_ng.net.minecraft:client:1.21.1:client-extra" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="cpw.mods:bootstraplauncher:2.0.2" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.covers1624:DevLogin:0.1.0.5" />
   </component>
 </module>

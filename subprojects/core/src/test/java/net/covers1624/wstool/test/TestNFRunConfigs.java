@@ -30,8 +30,14 @@ public class TestNFRunConfigs extends TestBase {
                       type: "intellij"
                       runs:
                       - name: Client
-                        main_class: "cpw.mods.bootstraplauncher.BootstrapLauncher"
                         run_dir: ./run
+                        config:
+                          type: 'client'
+                      - name: Client Login
+                        run_dir: "./run"
+                        config:
+                          type: 'client'
+                          dev_login: 'default'
                     """);
             test.run();
         }

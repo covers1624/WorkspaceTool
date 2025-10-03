@@ -15,10 +15,18 @@ import java.util.function.Function;
  */
 public class EvalMap {
 
-    private final Map<String, EvalValue> values = new LinkedHashMap<>();
+    private final LinkedHashMap<String, EvalValue> values = new LinkedHashMap<>();
+
+    public void putFirst(String key, String value) {
+        putEvalFirst(key, new EvalValue.StringValue(value));
+    }
 
     public void put(String key, String value) {
         putEval(key, new EvalValue.StringValue(value));
+    }
+
+    public void putEvalFirst(String key, EvalValue value) {
+        values.putFirst(key, value);
     }
 
     public void putEval(String key, EvalValue value) {
