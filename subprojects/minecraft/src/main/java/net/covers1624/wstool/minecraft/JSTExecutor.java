@@ -4,7 +4,7 @@ import net.covers1624.jdkutils.JavaInstall;
 import net.covers1624.jdkutils.JavaVersion;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.quack.net.HttpEngineDownloadAction;
-import net.covers1624.quack.net.httpapi.java11.Java11HttpEngine;
+import net.covers1624.quack.net.httpapi.HttpEngine;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.workspace.Dependency;
@@ -34,14 +34,16 @@ public class JSTExecutor {
 
     private static final MavenNotation JST_NOTATION = MavenNotation.parse("net.neoforged.jst:jst-cli-bundle:2.0.3");
 
-    private final Environment env;
+    private final HttpEngine http;
     private final JdkProvider provider;
+    private final Path librariesDir;
 
     private @Nullable Path jstBundlePath;
 
     public JSTExecutor(Environment env) {
-        this.env = env;
+        http = env.getService(HttpEngine.class);
         provider = env.getService(JdkProvider.class);
+        librariesDir = env.systemFolder().resolve("libraries");
     }
 
     public void applyJST(SourceSet classpath, Path mcSources, List<Path> ifaceInjections, List<Path> accessTransformers) {
@@ -146,14 +148,14 @@ public class JSTExecutor {
     }
 
     private Path downloadJst() {
-        Path dest = JST_NOTATION.toPath(env.systemFolder().resolve("libraries"));
+        Path dest = JST_NOTATION.toPath(librariesDir);
         try {
             new HttpEngineDownloadAction()
                     .setUrl(JST_NOTATION.toURL("https://proxy-maven.covers1624.net").toString())
                     .setDest(dest)
                     .setUseETag(true)
                     .setQuiet(false)
-                    .setEngine(Java11HttpEngine.create())
+                    .setEngine(http)
                     .execute();
         } catch (IOException ex) {
             throw new RuntimeException("Failed to download JavaSourceTransformer.", ex);

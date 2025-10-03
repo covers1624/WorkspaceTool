@@ -26,15 +26,17 @@ public class AssetDownloader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AssetDownloader.class);
 
+    private final HttpEngine http;
     public final Path assetsDir;
     public final Path versionsDir;
 
     public AssetDownloader(Environment env) {
+        http = env.getService(HttpEngine.class);
         versionsDir = env.systemFolder().resolve("versions");
         assetsDir = env.systemFolder().resolve("assets");
     }
 
-    public VersionManifest.AssetIndex downloadAssets(HttpEngine http, String mcVersion) {
+    public VersionManifest.AssetIndex downloadAssets(String mcVersion) {
         LOGGER.info("Updating assets for Minecraft {}", mcVersion);
         try {
             var versionList = VersionListManifest.update(http, versionsDir);

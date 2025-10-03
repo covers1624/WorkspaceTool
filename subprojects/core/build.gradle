@@ -17,6 +17,7 @@ dependencies {
 
     api libs.quack
     api libs.snakeyaml
+    api libs.okhttp
 
     runtimeOnly project(':intellij')
     runtimeOnly project(':mcforge')

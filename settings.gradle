@@ -25,6 +25,8 @@ dependencyResolutionManagement {
 
             library('jdkutils', 'net.covers1624:JdkUtils:0.6.0.24')
 
+            library('okhttp', 'com.squareup.okhttp3:okhttp:5.1.0')
+
             library('snakeyaml', 'org.yaml:snakeyaml:2.3')
             library('jdom2', 'org.jdom:jdom2:2.0.6.1')
 

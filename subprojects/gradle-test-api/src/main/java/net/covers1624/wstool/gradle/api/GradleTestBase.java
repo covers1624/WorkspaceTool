@@ -1,5 +1,6 @@
 package net.covers1624.wstool.gradle.api;
 
+import net.covers1624.quack.net.httpapi.okhttp.OkHttpEngine;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 
@@ -12,7 +13,7 @@ import java.nio.file.Path;
  */
 public class GradleTestBase {
 
-    public static final JdkProvider JDK_PROVIDER = new JdkProvider(Environment.of());
+    public static final JdkProvider JDK_PROVIDER = new JdkProvider(Environment.of(), OkHttpEngine.create());
 
     protected static GradleEmitter gradleEmitter(String name) throws IOException {
         Path tempDir = Files.createTempDirectory("wstool-gradle-test-project");

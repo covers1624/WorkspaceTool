@@ -1,7 +1,5 @@
 package net.covers1624.wstool.neoforge;
 
-import net.covers1624.quack.net.httpapi.HttpEngine;
-import net.covers1624.quack.net.httpapi.java11.Java11HttpEngine;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.api.HashContainer;
@@ -22,7 +20,6 @@ import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -115,8 +112,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var moduleClasspath = buildModuleClasspath(nfModule, nfSubModule, moduleProcessor);
         legacyClasspath.removeAll(moduleClasspath);
 
-        HttpEngine http = Java11HttpEngine.create();
-        var assetIndex = assetDownloader.downloadAssets(http, getMcVersion(nfSubModule));
+        var assetIndex = assetDownloader.downloadAssets(getMcVersion(nfSubModule));
 
         var cliProperties = buildCliProperties(nfSubModule);
         for (RunConfig run : workspace.runConfigs().values()) {

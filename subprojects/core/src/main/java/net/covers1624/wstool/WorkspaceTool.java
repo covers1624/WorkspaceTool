@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.maven.MavenNotation;
+import net.covers1624.quack.net.httpapi.HttpEngine;
+import net.covers1624.quack.net.httpapi.okhttp.OkHttpEngine;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.ModuleProcessor;
@@ -95,7 +97,9 @@ public class WorkspaceTool {
                 .toList();
         LOGGER.info("Found {} modules.", modulePaths.size());
 
-        JdkProvider jdkProvider = new JdkProvider(env);
+        var http = OkHttpEngine.create();
+        env.putService(HttpEngine.class, http);
+        JdkProvider jdkProvider = new JdkProvider(env, http);
         env.putService(JdkProvider.class, jdkProvider);
 
         GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
