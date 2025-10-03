@@ -22,8 +22,8 @@ dependencies {
     }
     implementation 'org.bouncycastle:bcpg-jdk18on:1.81'
 
-    implementation 'org.apache.maven:maven-artifact:3.8.1'
-    implementation 'org.apache.maven:maven-repository-metadata:3.8.1'
+    implementation libs.mavenartifact
+    implementation libs.mavenmetadata
 }
 
 shadowJar {
