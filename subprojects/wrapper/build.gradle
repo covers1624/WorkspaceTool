@@ -20,7 +20,7 @@ dependencies {
         // This is transitive and completely unused, just more crap in the jar.
         exclude(group: 'commons-codec', module: 'commons-codec')
     }
-    implementation 'org.bouncycastle:bcpg-jdk18on:1.81'
+    implementation libs.bcpg
 
     implementation libs.mavenartifact
     implementation libs.mavenmetadata
