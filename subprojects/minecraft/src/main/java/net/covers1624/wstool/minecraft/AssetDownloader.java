@@ -26,13 +26,17 @@ public class AssetDownloader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AssetDownloader.class);
 
-    public static AssetDownloadResult downloadAssets(Environment env, HttpEngine http, String mcVersion) {
+    public final Path assetsDir;
+    public final Path versionsDir;
+
+    public AssetDownloader(Environment env) {
+        versionsDir = env.systemFolder().resolve("versions");
+        assetsDir = env.systemFolder().resolve("assets");
+    }
+
+    public VersionManifest.AssetIndex downloadAssets(HttpEngine http, String mcVersion) {
         LOGGER.info("Updating assets for Minecraft {}", mcVersion);
         try {
-
-            var versionsDir = env.systemFolder().resolve("versions");
-            var assetsDir = env.systemFolder().resolve("assets");
-
             var versionList = VersionListManifest.update(http, versionsDir);
             var versionInList = versionList.versionsMap().get(mcVersion);
             if (versionInList == null) {
@@ -52,7 +56,7 @@ public class AssetDownloader {
                         .join();
             }
 
-            return new AssetDownloadResult(assetsDir, versionManifest.assetIndex());
+            return versionManifest.assetIndex();
         } catch (IOException ex) {
             throw new RuntimeException("Failed to update assets.", ex);
         }
@@ -194,6 +198,4 @@ public class AssetDownloader {
                     .toImmutableList();
         }
     }
-
-    public record AssetDownloadResult(Path assetsDir, VersionManifest.AssetIndex assetIndex) { }
 }

@@ -47,6 +47,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         ModuleProcessor moduleProcessor = env.getService(ModuleProcessor.class);
         GradleTaskExecutor taskExecutor = env.getService(GradleTaskExecutor.class);
         JSTExecutor jstExecutor = env.getService(JSTExecutor.class);
+        AssetDownloader assetDownloader = env.getService(AssetDownloader.class);
 
         Path rootDir = env.projectRoot().resolve(path());
 
@@ -115,7 +116,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         legacyClasspath.removeAll(moduleClasspath);
 
         HttpEngine http = Java11HttpEngine.create();
-        var downloadResult = AssetDownloader.downloadAssets(env, http, getMcVersion(nfSubModule));
+        var assetIndex = assetDownloader.downloadAssets(http, getMcVersion(nfSubModule));
 
         var cliProperties = buildCliProperties(nfSubModule);
         for (RunConfig run : workspace.runConfigs().values()) {
@@ -147,8 +148,8 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
             run.args().addAll(List.of(
                     "--gameDir", ".",
-                    "--assetsDir", downloadResult.assetsDir().toAbsolutePath().toString(),
-                    "--assetIndex", downloadResult.assetIndex().id()
+                    "--assetsDir", assetDownloader.assetsDir.toAbsolutePath().toString(),
+                    "--assetIndex", assetIndex.id()
             ));
 
             var launchTarget = switch (run.config().get("type")) {

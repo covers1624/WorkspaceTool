@@ -14,6 +14,7 @@ public class MinecraftExtension implements Extension {
 
     @Override
     public void prepareEnvironment(Environment env) {
+        env.putService(AssetDownloader.class, new AssetDownloader(env));
         env.putService(JSTExecutor.class, new JSTExecutor(env));
     }
 }
