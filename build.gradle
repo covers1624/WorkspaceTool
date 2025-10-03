@@ -21,7 +21,13 @@ plugins {
 group 'net.covers1624.WorkspaceTool'
 version '0.4.0'
 
-version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
+def computeBuildNumber() {
+    def num = System.getenv("BUILD_NUMBER")
+    if (num == null) return null
+    return Integer.parseInt(num) + 67
+}
+
+version = "$version." + (computeBuildNumber() ?: "1")
 println "Starting build of WorkspaceTool, Version: ${version}"
 
 def repos = {

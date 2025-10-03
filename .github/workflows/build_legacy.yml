@@ -1,0 +1,27 @@
+name: Build
+on:
+  push:
+    branches:
+      - 0.4.x
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - name: Setup Java 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: 8
+          distribution: 'temurin'
+      - name: Publish
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+        run: ./gradlew build publish -si

@@ -6,6 +6,7 @@
 
 # Include important git files.
 !.gitignore
+!.github/
 
 # Include other important files.
 !README.md
