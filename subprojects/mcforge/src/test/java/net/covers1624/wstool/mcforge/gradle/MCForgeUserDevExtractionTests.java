@@ -1,7 +1,7 @@
 package net.covers1624.wstool.mcforge.gradle;
 
 import net.covers1624.wstool.gradle.GradleModelExtractor;
-import net.covers1624.wstool.gradle.api.ExtractTestBase;
+import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.mcforge.gradle.api.MCForgeGradleVersion;
@@ -9,7 +9,6 @@ import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Created by covers1624 on 1/11/25.
  */
-public class MCForgeUserDevExtractionTests extends ExtractTestBase {
+public class MCForgeUserDevExtractionTests extends GradleTestBase {
 
     @Test
     public void testFG_2_3() throws IOException {

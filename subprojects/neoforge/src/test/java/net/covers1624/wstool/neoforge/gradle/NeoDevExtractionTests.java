@@ -2,7 +2,7 @@ package net.covers1624.wstool.neoforge.gradle;
 
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.GitRepoManager;
-import net.covers1624.wstool.gradle.api.ExtractTestBase;
+import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData;
 import net.covers1624.wstool.gradle.api.data.ConfigurationList;
 import net.covers1624.wstool.gradle.api.data.PluginData;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Created by covers1624 on 1/29/25.
  */
-public class NeoDevExtractionTests extends ExtractTestBase {
+public class NeoDevExtractionTests extends GradleTestBase {
 
     @Test
     public void test_Neo_1_21_1(@TempDir Path tempDir) throws Throwable {

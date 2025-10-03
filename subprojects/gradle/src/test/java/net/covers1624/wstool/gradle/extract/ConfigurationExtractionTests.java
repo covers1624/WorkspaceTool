@@ -2,7 +2,7 @@ package net.covers1624.wstool.gradle.extract;
 
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
-import net.covers1624.wstool.gradle.api.ExtractTestBase;
+import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.MavenDependency;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Created by covers1624 on 9/9/23.
  */
-public class ConfigurationExtractionTests extends ExtractTestBase {
+public class ConfigurationExtractionTests extends GradleTestBase {
 
     @ValueSource (strings = {
             "4.10.3",

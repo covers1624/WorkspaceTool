@@ -22,14 +22,14 @@ public final class JdkProvider {
 
     private final LazyValue<List<JavaInstall>> installs;
 
-    public JdkProvider(Environment env, HttpEngine http) {
+    public JdkProvider(Environment env) {
         locator = JavaLocator.builder()
                 .useJavaw()
                 .findGradleJdks()
                 .findIntellijJdks()
                 .ignoreOpenJ9()
                 .build();
-        installer = new JdkInstallationManager(env.systemFolder().resolve("jdks/"), new AdoptiumProvisioner(http));
+        installer = new JdkInstallationManager(env.systemFolder().resolve("jdks/"), new AdoptiumProvisioner(env.getService(HttpEngine.class)));
 
         installs = new LazyValue<>(() -> {
             try {

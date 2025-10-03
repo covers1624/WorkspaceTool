@@ -1,7 +1,7 @@
 package net.covers1624.wstool.gradle;
 
-import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.ConsumingOutputStream;
+import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 import org.gradle.internal.impldep.com.google.common.collect.ImmutableMap;
 import org.gradle.tooling.GradleConnector;
@@ -20,8 +20,8 @@ public class GradleTaskExecutor {
 
     private final JdkProvider jdkProvider;
 
-    public GradleTaskExecutor(JdkProvider jdkProvider) {
-        this.jdkProvider = jdkProvider;
+    public GradleTaskExecutor(Environment env) {
+        jdkProvider = env.getService(JdkProvider.class);
     }
 
     public void runTask(Path projectDir, String task) {

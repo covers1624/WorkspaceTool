@@ -1,7 +1,7 @@
 package net.covers1624.wstool.gradle.extract;
 
 import net.covers1624.wstool.gradle.GradleModelExtractor;
-import net.covers1624.wstool.gradle.api.ExtractTestBase;
+import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.gradle.api.data.*;
 import org.gradle.util.GradleVersion;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Created by covers1624 on 1/9/23.
  */
-public class SimpleProjectExtractionTest extends ExtractTestBase {
+public class SimpleProjectExtractionTest extends GradleTestBase {
 
     @ValueSource (strings = {
             "4.10.3",

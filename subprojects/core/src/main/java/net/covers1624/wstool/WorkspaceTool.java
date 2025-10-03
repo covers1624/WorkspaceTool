@@ -97,17 +97,13 @@ public class WorkspaceTool {
                 .toList();
         LOGGER.info("Found {} modules.", modulePaths.size());
 
-        var http = OkHttpEngine.create();
-        env.putService(HttpEngine.class, http);
-        JdkProvider jdkProvider = new JdkProvider(env, http);
-        env.putService(JdkProvider.class, jdkProvider);
+        env.putService(HttpEngine.class, OkHttpEngine.create());
+        env.putService(JdkProvider.class, new JdkProvider(env));
+        env.putService(GradleTaskExecutor.class, new GradleTaskExecutor(env));
 
-        GradleModelExtractor modelExtractor = new GradleModelExtractor(env, jdkProvider, config.gradleHashables());
-        GradleTaskExecutor gradleTaskExecutor = new GradleTaskExecutor(jdkProvider);
+        GradleModelExtractor modelExtractor = new GradleModelExtractor(env, config.gradleHashables());
+        env.putService(GradleModelExtractor.class, modelExtractor);
 
-        env.putService(GradleTaskExecutor.class, gradleTaskExecutor);
-
-        Workspace workspace = workspaceType.newWorkspace(env);
         ModuleProcessor moduleProcessor = new ModuleProcessor() {
             @Override
             public Module buildModule(Workspace workspace, Path project, Set<String> extraTasks) {
@@ -129,6 +125,7 @@ public class WorkspaceTool {
         }
 
         LOGGER.info("Processing modules.");
+        Workspace workspace = workspaceType.newWorkspace(env);
         for (Path modulePath : modulePaths) {
             LOGGER.info("Processing module {}", env.projectRoot().relativize(modulePath));
             moduleProcessor.buildModule(workspace, modulePath, Set.of());

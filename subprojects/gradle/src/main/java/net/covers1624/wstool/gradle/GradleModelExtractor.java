@@ -68,8 +68,9 @@ public class GradleModelExtractor {
     private final Supplier<String> gradleClassPathHash = Suppliers.memoize(this::hashGradleClassPath);
     private final Supplier<Path> initScriptPath = Suppliers.memoize(this::buildInitScript);
 
-    private final Environment env;
     private final JdkProvider jdkProvider;
+    private final Path gradleCacheDir;
+    private final Path projectRootDir;
 
     private final List<String> hashableFiles = new ArrayList<>(List.of(
             "buildSrc/build.gradle",
@@ -81,10 +82,12 @@ public class GradleModelExtractor {
             "gradle/wrapper/gradle-wrapper.properties"
     ));
 
-    public GradleModelExtractor(Environment env, JdkProvider jdkProvider, List<String> hashableFiles) {
-        this.env = env;
-        this.jdkProvider = jdkProvider;
+    public GradleModelExtractor(Environment env, List<String> hashableFiles) {
+        jdkProvider = env.getService(JdkProvider.class);
         this.hashableFiles.addAll(hashableFiles);
+
+        gradleCacheDir = env.projectCache().resolve("gradle");
+        projectRootDir = env.projectRoot();
     }
 
     public ProjectData extractProjectData(Path project, Set<String> extraTasks) {
@@ -92,8 +95,7 @@ public class GradleModelExtractor {
     }
 
     public ProjectData extractProjectData(Path project, GradleVersion gradleVersion, Set<String> extraTasks) {
-        Path gradleCacheDir = env.projectCache().resolve("gradle");
-        Path cacheFile = gradleCacheDir.resolve(env.projectRoot().relativize(project).toString().replaceAll("[/\\\\]", "_") + ".dat");
+        Path cacheFile = gradleCacheDir.resolve(projectRootDir.relativize(project).toString().replaceAll("[/\\\\]", "_") + ".dat");
         HashContainer container = new HashContainer(gradleCacheDir, cacheFile.getFileName().toString());
         HashContainer.Entry gradle = container.getEntry("gradle");
         gradle.putString(gradleClassPathHash.get());
