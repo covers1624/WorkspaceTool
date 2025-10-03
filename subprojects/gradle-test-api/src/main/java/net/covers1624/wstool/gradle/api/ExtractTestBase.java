@@ -13,7 +13,7 @@ import java.util.List;
 public class ExtractTestBase extends GradleTestBase {
 
     protected static Environment testEnvironment(Path projectDir) {
-        return Environment.of(null, projectDir.resolve(".wstool_sys/"), projectDir);
+        return Environment.of(projectDir.resolve(".wstool_sys/"), projectDir);
     }
 
     protected static GradleModelExtractor extractor(GradleEmitter emitter, boolean jvmAttach) {

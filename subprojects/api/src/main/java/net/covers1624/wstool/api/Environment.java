@@ -1,7 +1,6 @@
 package net.covers1624.wstool.api;
 
 import net.covers1624.quack.util.SneakyUtils;
-import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -11,12 +10,6 @@ import java.util.Map;
  * Created by covers1624 on 17/5/23.
  */
 public interface Environment {
-
-    /**
-     * @return The manifest file the wrapper launched.
-     */
-    @Nullable
-    Path manifestFile();
 
     /**
      * @return The global system directory for Workspace Tool.
@@ -51,21 +44,19 @@ public interface Environment {
 
     static Environment of() {
         return of(
-                getPathProperty("wstool.manifest"),
                 Path.of(System.getProperty("user.home"), ".workspace_tool"),
                 Path.of(".").toAbsolutePath().normalize()
         );
     }
 
-    static Environment of(@Nullable Path manifest, Path sysFolder, Path projectRoot) {
-        return of(manifest, sysFolder, projectRoot, projectRoot.resolve(".wstool/"));
+    static Environment of(Path sysFolder, Path projectRoot) {
+        return of(sysFolder, projectRoot, projectRoot.resolve(".wstool/"));
     }
 
-    static Environment of(@Nullable Path manifest, Path sysFolder, Path projectRoot, Path projectCache) {
+    static Environment of(Path sysFolder, Path projectRoot, Path projectCache) {
         Map<Class<?>, Object> serviceMap = new HashMap<>();
         return new Environment() {
             // @formatter:off
-            @Nullable @Override public Path manifestFile() { return manifest; }
             @Override public Path systemFolder() { return sysFolder; }
             @Override public Path projectRoot() { return projectRoot; }
             @Override public Path projectCache() { return projectCache; }
@@ -85,13 +76,5 @@ public interface Environment {
                 return SneakyUtils.unsafeCast(service);
             }
         };
-    }
-
-    @Nullable
-    private static Path getPathProperty(String sysProp) {
-        String val = System.getProperty(sysProp);
-        if (val == null) return null;
-
-        return Path.of(val);
     }
 }

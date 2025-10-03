@@ -74,7 +74,6 @@ public abstract class TestBase {
 
         public void run() throws IOException {
             Environment env = Environment.of(
-                    null,
                     projectDir.resolve(".wstool_sys"),
                     projectDir
             );

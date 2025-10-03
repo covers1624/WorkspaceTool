@@ -17,7 +17,6 @@ import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.gradle.api.WorkspaceToolModelAction;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SubProjectList;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gradle.internal.impldep.com.google.common.collect.ImmutableMap;
@@ -28,6 +27,7 @@ import org.gradle.tooling.model.Task;
 import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -273,12 +273,15 @@ public class GradleModelExtractor {
     }
 
     private List<Path> buildClassPath() {
-        if (env.manifestFile() != null) {
-            throw new NotImplementedException("Not runnable out-of-dev yet.");
-        } else {
+        String classpath = System.getProperty("net.covers1624.wstool.gradle_classpath");
+        if (classpath == null) {
             LOGGER.info(" Using dev metadata for gradle plugin dependencies..");
             return buildClassPathDev();
         }
+
+        return FastStream.of(classpath.split(File.pathSeparator))
+                .map(Path::of)
+                .toList();
     }
 
     /**
