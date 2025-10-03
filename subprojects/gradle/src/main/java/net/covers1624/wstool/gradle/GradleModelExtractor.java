@@ -6,7 +6,6 @@ import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.covers1624.jdkutils.JavaVersion;
-import net.covers1624.quack.collection.ColUtils;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.gson.JsonUtils;
 import net.covers1624.quack.io.ConsumingOutputStream;
@@ -302,6 +301,7 @@ public class GradleModelExtractor {
                         var sorted = FastStream.of(files)
                                 .filter(Files::isRegularFile)
                                 .filter(e -> e.toString().endsWith(".class"))
+                                .sorted(Comparator.comparing(e -> path.relativize(e).toString()))
                                 .toList();
                         for (Path clazzFile : sorted) {
                             HashUtils.addToHasher(hasher, clazzFile);
@@ -309,9 +309,11 @@ public class GradleModelExtractor {
                     }
                 } else if (path.toString().endsWith(".jar")) {
                     try (ZipFile zip = new ZipFile(path.toFile())) {
-                        for (ZipEntry entry : ColUtils.iterable(zip.entries())) {
-                            if (!entry.getName().endsWith(".class")) continue;
-
+                        var sorted = FastStream.of(zip.stream())
+                                .filter(e -> e.getName().endsWith(".class"))
+                                .sorted(Comparator.comparing(ZipEntry::getName))
+                                .toList();
+                        for (ZipEntry entry : sorted) {
                             try (InputStream is = zip.getInputStream(entry)) {
                                 HashUtils.addToHasher(hasher, is);
                             }
