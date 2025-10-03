@@ -116,6 +116,7 @@
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.jline:jline-terminal:3.20.0" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.fabricmc:sponge-mixin:0.15.2+mixin.0.8.7" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.openjdk.nashorn:nashorn-core:15.4" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="nf_1_21_1_runs.CodeChicken.CodeChickenLib.main" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.github.oshi:oshi-core:6.4.10" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.java.dev.jna:jna-platform:5.14.0" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.java.dev.jna:jna:5.14.0" />
@@ -220,6 +221,5 @@
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.fabricmc:sponge-mixin:0.15.2+mixin.0.8.7" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="ng_dummy_ng.net.minecraft:client:1.21.1:client-extra" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="cpw.mods:bootstraplauncher:2.0.2" />
-    <orderEntry scope="RUNTIME" exported="" type="module" module-name="nf_1_21_1_runs.CodeChicken.CodeChickenLib.main" />
   </component>
 </module>

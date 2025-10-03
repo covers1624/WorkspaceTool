@@ -105,7 +105,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             if (module == nfModule || nfModule.subModules().containsValue(module)) continue;
             for (SourceSet ss : module.sourceSets().values()) {
                 if (isNeoForgeModPresent(ss)) {
-                    nfMain.runtimeDependencies().add(new Dependency.SourceSetDependency(ss));
+                    nfMain.compileDependencies().add(new Dependency.SourceSetDependency(ss));
                     ss.compileDependencies().add(new Dependency.SourceSetDependency(nfMain));
                 }
             }
