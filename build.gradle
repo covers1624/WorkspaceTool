@@ -44,6 +44,7 @@ subprojects { subProject ->
     apply plugin: 'java-library'
     if (!isTestApi) {
         apply plugin: 'maven-publish'
+        apply plugin: 'signing'
     }
 
     group rootProject.group
@@ -120,6 +121,28 @@ subprojects { subProject ->
                 }
             }
         }
+    }
+
+    signing {
+        if (System.getenv('GPG_PRIVATE_KEY')) {
+            useInMemoryPgpKeys(
+                    new File(System.getenv('GPG_PRIVATE_KEY')).text,
+                    System.getenv('GPG_PRIVATE_KEY_PASS')
+            )
+        } else if (System.getenv("GPG_PRIVATE_KEY_FILE")) {
+            useInMemoryPgpKeys(
+                    new String(System.getenv('GPG_PRIVATE_KEY_FILE').decodeBase64(), java.nio.charset.StandardCharsets.UTF_8),
+                    System.getenv('GPG_PRIVATE_KEY_PASS')
+            )
+        } else if (project.hasProperty('gpgPrivateKey')) {
+            useInMemoryPgpKeys(
+                    new File(project.getProperty('gpgPrivateKey')).text,
+                    project.getProperty('gpgPrivateKeyPass')
+            )
+        } else {
+            return
+        }
+        sign publishing.publications.publication
     }
 }
 
