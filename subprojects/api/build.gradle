@@ -14,7 +14,7 @@ dependencies {
 
     api libs.quack
     api libs.guava
-    api 'net.covers1624:JdkUtils:0.5.0.15'
+    api libs.jdkutils
     api libs.jgit
 }
 

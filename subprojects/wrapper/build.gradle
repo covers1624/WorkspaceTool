@@ -16,7 +16,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
     implementation 'net.covers1624:Quack:0.4.10.117'
-    implementation('net.covers1624:JdkUtils:0.6.0.24') {
+    implementation(libs.jdkutils) {
         // This is transitive and completely unused, just more crap in the jar.
         exclude(group: 'commons-codec', module: 'commons-codec')
     }

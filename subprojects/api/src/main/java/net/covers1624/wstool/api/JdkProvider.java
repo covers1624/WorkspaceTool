@@ -1,7 +1,11 @@
 package net.covers1624.wstool.api;
 
-import net.covers1624.jdkutils.*;
-import net.covers1624.quack.net.java.JavaDownloadAction;
+import net.covers1624.jdkutils.JavaInstall;
+import net.covers1624.jdkutils.JavaVersion;
+import net.covers1624.jdkutils.JdkInstallationManager;
+import net.covers1624.jdkutils.locator.JavaLocator;
+import net.covers1624.jdkutils.provisioning.adoptium.AdoptiumProvisioner;
+import net.covers1624.quack.net.httpapi.java11.Java11HttpEngine;
 import net.covers1624.quack.util.LazyValue;
 
 import java.io.IOException;
@@ -25,7 +29,7 @@ public final class JdkProvider {
                 .findIntellijJdks()
                 .ignoreOpenJ9()
                 .build();
-        installer = new JdkInstallationManager(env.systemFolder().resolve("jdks/"), new AdoptiumProvisioner(JavaDownloadAction::new));
+        installer = new JdkInstallationManager(env.systemFolder().resolve("jdks/"), new AdoptiumProvisioner(Java11HttpEngine.create()));
 
         installs = new LazyValue<>(() -> {
             try {

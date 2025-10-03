@@ -23,6 +23,8 @@ dependencyResolutionManagement {
             library('lang3', 'org.apache.commons:commons-lang3:3.12.0')
             library('gson', 'com.google.code.gson:gson:2.10.1')
 
+            library('jdkutils', 'net.covers1624:JdkUtils:0.6.0.24')
+
             library('snakeyaml', 'org.yaml:snakeyaml:2.3')
             library('jdom2', 'org.jdom:jdom2:2.0.6.1')
 
