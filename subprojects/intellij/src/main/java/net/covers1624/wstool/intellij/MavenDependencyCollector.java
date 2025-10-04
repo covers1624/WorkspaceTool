@@ -117,10 +117,16 @@ public class MavenDependencyCollector {
         //       We want to delete it here to restore the hardlink if gradle re-caches the file to de-dupe
         //       and reclaim disk space for the user.
         Files.deleteIfExists(linkedFile);
+        IOUtils.makeParents(linkedFile);
         if (!hardlinkFailed) {
             try {
-                Files.createLink(IOUtils.makeParents(linkedFile), originalFile);
-                return linkedFile;
+                var dstStore = Files.getFileStore(linkedFile.getParent());
+                var srcStore = Files.getFileStore(originalFile.getParent());
+                if (dstStore.name().equals(srcStore.name())) {
+                    Files.createLink(linkedFile, originalFile);
+                    return linkedFile;
+                }
+                LOGGER.debug("Refusing to hardlink files across stores {} {}", dstStore, srcStore);
             } catch (IOException ex) {
                 LOGGER.warn("Failed to hardlink dependencies into the workspace. You will be vulnerable to Gradle cache expiring in-use dependencies.", ex);
                 hardlinkFailed = true;
