@@ -66,9 +66,9 @@ public class ContentRootCollector {
 
         // If there are no roots we have found a group or root module with no excludes, etc.
         // Intellij still requires these modules get a content root otherwise they disappear in the project view.
-        // If they aren't backed by a path, we can't do anything (current this means we have a broken source set).
+        // If they aren't backed by a path, we can't do anything.
         if (roots.isEmpty()) {
-            if (!(module instanceof IJModuleWithPath moduleWithPath)) throw new RuntimeException("Unable to build content root for an empty common parent.");
+            if (!(module instanceof IJModuleWithPath moduleWithPath)) return List.of();
 
             return List.of(new ContentRoot(moduleWithPath.rootDir(), List.of()));
         }
