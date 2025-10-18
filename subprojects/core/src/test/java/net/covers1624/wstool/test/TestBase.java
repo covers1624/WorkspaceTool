@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -43,6 +44,7 @@ public abstract class TestBase {
         private final Path projectDir;
 
         private boolean includeLibraries = false;
+        private final Set<String> ignoredFiles = new HashSet<>();
 
         public TestInstance(String name) throws IOException {
             outputDir = Path.of("./testOutput/" + name);
@@ -51,6 +53,11 @@ public abstract class TestBase {
 
         public TestInstance includeLibraries() {
             includeLibraries = true;
+            return this;
+        }
+
+        public TestInstance ignoreFile(String file) {
+            ignoredFiles.add(file);
             return this;
         }
 
@@ -118,6 +125,8 @@ public abstract class TestBase {
                             .isEmpty();
 
                     for (Path path : common) {
+                        if (ignoredFiles.contains(path.toString())) continue;
+
                         Path newFile = ideaDir.resolve(path);
                         Path oldFile = outputDir.resolve(path);
                         softly.assertThat(newFile)
