@@ -1,3 +1,5 @@
+import org.gradle.api.attributes.java.TargetJvmEnvironment
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -13,8 +15,22 @@ dependencies {
     api project(":gradle-api")
 
     api libs.quack
-    api libs.guava
-    api libs.jdkutils
+    api(libs.guava) {
+        attributes {
+            attribute(
+                    TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
+                    objects.named(TargetJvmEnvironment, TargetJvmEnvironment.STANDARD_JVM)
+            )
+        }
+    }
+    api(libs.jdkutils) {
+        attributes {
+            attribute(
+                    Bundling.BUNDLING_ATTRIBUTE,
+                    objects.named(Bundling, Bundling.EXTERNAL)
+            )
+        }
+    }
     api libs.gson // Explicitly upgrade Gson transitive from jdkutils.
     api libs.jgit
 }

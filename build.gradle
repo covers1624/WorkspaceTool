@@ -32,7 +32,6 @@ allprojects {
         mavenLocal()
         mavenCentral()
         maven { url 'https://maven.covers1624.net/' }
-        maven { url 'https://files.minecraftforge.net/maven/' }
         maven { url 'https://repo.gradle.org/gradle/libs-releases/' }
     }
 }
@@ -147,16 +146,8 @@ subprojects { subProject ->
 }
 
 configurations {
-    packing {
-        attributes {
-            attribute(TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE, objects.named(TargetJvmEnvironment, TargetJvmEnvironment.STANDARD_JVM))
-        }
-    }
-    gradlePluginPath {
-        attributes {
-            attribute(TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE, objects.named(TargetJvmEnvironment, TargetJvmEnvironment.STANDARD_JVM))
-        }
-    }
+    packing
+    gradlePluginPath
 }
 
 dependencies {
