@@ -42,4 +42,33 @@ public class TestNeoForge extends TestBase {
             test.run();
         }
     }
+
+    @Test
+    public void testNF_1_21_1_buildSrc() throws IOException {
+        try (var test = newTestInstance("nf_1_21_1_buildSrc")) {
+            test.cloneRepo(
+                    "CodeChicken/CodeChickenLib", "https://github.com/TheCBProject/CodeChickenLib", "master", "d6667cb693b2b28fb784a2d42987917b06f5114e"
+            );
+            test.emitWorkspaceFile("""
+                    frameworks:
+                      - type: 'neoforge:1.21'
+                        path: "NeoForge"
+                        url: "https://github.com/neoforged/NeoForge.git"
+                        branch: "1.21.x"
+                        commit: "a9a8f46c05f70bdf85f5ba587af83d2b507de449"
+                    
+                    modules:
+                      - "CodeChicken/**"
+                    
+                    workspace:
+                      type: "intellij"
+                      runs:
+                      - name: Client
+                        run_dir: ./run
+                        config:
+                          type: 'client'
+                    """);
+            test.run();
+        }
+    }
 }

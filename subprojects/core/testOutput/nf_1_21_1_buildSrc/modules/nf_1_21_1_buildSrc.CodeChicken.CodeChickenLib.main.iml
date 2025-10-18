@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <exclude-output />
+    <output url="file://$PROJECT_DIR$/out/nf_1_21_1_buildSrc_CodeChicken_CodeChickenLib_main" />
+    <content url="file://$PROJECT_DIR$/CodeChicken/CodeChickenLib/src/main">
+      <sourceFolder url="file://$PROJECT_DIR$/CodeChicken/CodeChickenLib/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/CodeChicken/CodeChickenLib/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$PROJECT_DIR$/CodeChicken/CodeChickenLib/src/main/generated" type="java-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.covers1624:Quack:0.4.10.105" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="maven.modrinth:embeddium:1.0.15+mc1.21.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="mezz.jei:jei-1.21.1-neoforge:19.21.0.246" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="nf_1_21_1_buildSrc.NeoForge-Root.neoforge.main" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.covers1624:Quack:0.4.10.105" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged:DevLaunch:1.0.2" />
+  </component>
+</module>

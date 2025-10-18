@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <exclude-output />
+    <output url="file://$PROJECT_DIR$/out/nf_1_21_1_buildSrc_NeoForge-Root_neoforge-coremods_main" />
+    <content url="file://$PROJECT_DIR$/NeoForge/coremods/src/main">
+      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/coremods/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/coremods/src/main/resources" type="java-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:minecraft-dependencies:1.21.1@pom" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.jetbrains:annotations:24.1.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged.fancymodloader:loader:4.0.42" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:JarJarSelector:0.4.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:JarJarMetadata:0.4.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.machinezoo.noexception:noexception:1.7.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.slf4j:slf4j-api:2.0.9" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.code.gson:gson:2.10.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.guava:guava:32.1.2-jre" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.guava:failureaccess:1.0.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.code.findbugs:jsr305:3.0.2" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.checkerframework:checker-qual:3.33.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.errorprone:error_prone_annotations:2.18.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.j2objc:j2objc-annotations:2.8" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.maven:maven-artifact:3.8.5" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.commons:commons-lang3:3.14.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.codehaus.plexus:plexus-utils:3.3.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:logging:1.2.7" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.logging.log4j:log4j-api:2.22.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="cpw.mods:modlauncher:11.0.5" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.ow2.asm:asm-commons:9.8" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.ow2.asm:asm-tree:9.8" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.ow2.asm:asm:9.8" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.electronwill.night-config:toml:3.8.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.electronwill.night-config:core:3.8.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:coremods:7.0.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:bus:8.0.5" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.jodah:typetools:0.6.3" />
+  </component>
+</module>
