@@ -104,6 +104,9 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
 
     private void extractProjectDependencies(Project project, Map<Configuration, List<Dependency>> toRemove, Configuration configuration, ConfigurationData data) {
         for (Configuration config : configuration.getHierarchy()) {
+            // TODO HACK, NeoGradle has apparently already triggered this configuration to resolve..
+            if (config.getName().startsWith("neoGradleDependencyReplacement")) continue;
+
             for (Dependency dependency : config.getDependencies()) {
                 ConfigurationData.Dependency dep = consumeRawDependency(project, dependency);
                 if (dep != null) {
@@ -156,6 +159,12 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         if (fileCol instanceof SourceSetOutput) {
             return processSourceSetDep((SourceSetOutput) fileCol);
         }
+
+        Set<File> files = fileCol.getFiles();
+        // TODO HACK: Required for NeoGradle 7. This can likely be moved to a transformer with some effort.
+        files.removeIf(e-> e.getPath().contains("ng_dummy_ng"));
+
+        if (!files.isEmpty()) return new ConfigurationData.FilesDependency(files);
 
         return null;
     }

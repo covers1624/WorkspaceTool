@@ -71,8 +71,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
 
         ConfigurationList configurationData = data.getData(ConfigurationList.class);
         assertNotNull(configurationData);
-        assertDependenciesEquals(configurationData, "compileClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
-        assertDependenciesEquals(configurationData, "runtimeClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
+        assertDependenciesContain(configurationData, "compileClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
+        assertDependenciesContain(configurationData, "runtimeClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
     }
 
     @Test
@@ -267,6 +267,14 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
                 .isNotNull();
         assertThat(configuration.dependencies)
                 .isEmpty();
+    }
+
+    private void assertDependenciesContain(ConfigurationList configurations, String name, Set<ConfigurationData.Dependency> deps) {
+        var configuration = configurations.get(name);
+        assertThat(configuration)
+                .isNotNull();
+        assertThat(configuration.dependencies)
+                .containsAll(deps);
     }
 
     private void assertDependenciesEquals(ConfigurationList configurations, String name, Set<ConfigurationData.Dependency> deps) {

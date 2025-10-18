@@ -2,8 +2,8 @@ package net.covers1624.wstool.gradle.extract;
 
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
-import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
+import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.MavenDependency;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.ProjectDependency;
@@ -13,7 +13,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Set;
+import java.util.zip.ZipOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -188,5 +190,52 @@ public class ConfigurationExtractionTests extends GradleTestBase {
                 .isInstanceOf(ProjectDependency.class)
                 .extracting(e -> ((ProjectDependency) e).project)
                 .isEqualTo(projectA);
+    }
+
+    @ValueSource (strings = {
+            "4.10.3",
+            "7.3",
+            "8.0",
+            "9.0.0",
+    })
+    @ParameterizedTest
+    public void testRawFileDependency(String gradleVersion) throws IOException {
+        GradleEmitter emitter = gradleEmitter("SimpleDependency")
+                .rootProject()
+                // language=Groovy
+                .withBuildGradle("""
+                        plugins {
+                            id 'java'
+                        }
+                        repositories {
+                            mavenCentral()
+                        }
+                        dependencies {
+                            implementation files('./test.jar')
+                        }
+                        """)
+                .finish();
+        var testJar = emitter.getRootProjectDir().resolve("test.jar");
+        try (var ignored = new ZipOutputStream(Files.newOutputStream(testJar))) {
+            // Make an empty jar here.
+        }
+
+        GradleModelExtractor extractor = extractor(emitter, false);
+        ProjectData data = extractor.extractProjectData(
+                emitter.getRootProjectDir(),
+                GradleVersion.version(gradleVersion),
+                Set.of()
+        );
+        ConfigurationList configurations = data.getData(ConfigurationList.class);
+        assertNotNull(configurations);
+
+        ConfigurationData compileClasspath = configurations.get("compileClasspath");
+        assertThat(compileClasspath)
+                .isNotNull();
+
+        assertThat(compileClasspath.dependencies)
+                .hasSize(1)
+                .first()
+                .isInstanceOf(ConfigurationData.FilesDependency.class);
     }
 }

@@ -86,19 +86,34 @@ public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPat
             if (depEntry.exported()) {
                 orderEntry.setAttribute("exported", "");
             }
-            if (depEntry instanceof MavenDependencyEntry ent) {
-                orderEntry.setAttribute("type", "library");
-                orderEntry.setAttribute("level", "project");
-                var library = collector.lookup(ent.dep);
-                if (library == null) {
-                    throw new RuntimeException("Unable to find dependency " + ent.dep + " in the library collector.");
+            switch (depEntry) {
+                case MavenDependencyEntry ent -> {
+                    orderEntry.setAttribute("type", "library");
+                    orderEntry.setAttribute("level", "project");
+                    var library = collector.lookup(ent.dep);
+                    if (library == null) {
+                        throw new RuntimeException("Unable to find dependency " + ent.dep + " in the library collector.");
+                    }
+                    orderEntry.setAttribute("name", library.name());
                 }
-                orderEntry.setAttribute("name", library.name());
-            } else if (depEntry instanceof ProjectDependencyEntry ent) {
-                orderEntry.setAttribute("type", "module");
-                orderEntry.setAttribute("module-name", ent.module.path.toString());
-            } else {
-                throw new RuntimeException("Unhandled type " + depEntry.getClass());
+                case ProjectDependencyEntry ent -> {
+                    orderEntry.setAttribute("type", "module");
+                    orderEntry.setAttribute("module-name", ent.module.path.toString());
+                }
+                case FileDependencyEntry ent -> {
+                    orderEntry.setAttribute("type", "module-library");
+                    Element library = new Element("library")
+                            .setAttribute("name", ent.file.getFileName().toString());
+                    library.addContent(new Element("CLASSES")
+                            .addContent(new Element("root")
+                                    .setAttribute("url", fileUrl(ent.file))
+                            ));
+                    library.addContent(new Element("JAVADOC"));
+                    library.addContent(new Element("SOURCES"));
+
+                    orderEntry.addContent(library);
+                }
+                default -> throw new RuntimeException("Unhandled type " + depEntry.getClass());
             }
             moduleRootManager.addContent(orderEntry);
         }
@@ -132,7 +147,7 @@ public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPat
         TEST
     }
 
-    public sealed interface DependencyEntry permits MavenDependencyEntry, ProjectDependencyEntry {
+    public sealed interface DependencyEntry permits FileDependencyEntry, MavenDependencyEntry, ProjectDependencyEntry {
 
         DependencyScope scope();
 
@@ -148,6 +163,12 @@ public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPat
 
     public record ProjectDependencyEntry(
             IJModule module,
+            DependencyScope scope,
+            boolean exported
+    ) implements DependencyEntry { }
+
+    public record FileDependencyEntry(
+            Path file,
             DependencyScope scope,
             boolean exported
     ) implements DependencyEntry { }

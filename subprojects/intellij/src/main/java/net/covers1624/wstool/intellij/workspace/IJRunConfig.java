@@ -145,6 +145,7 @@ public class IJRunConfig implements RunConfig {
                 yield found.classes();
             }
             case Dependency.SourceSetDependency(SourceSet sourceSet) -> ((IJSourceSetModule) sourceSet).outputDir(env);
+            case Dependency.FileDependency(Path file) -> file;
         };
 
         configuration.addContent(new Element("option")

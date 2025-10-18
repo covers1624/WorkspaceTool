@@ -49,7 +49,7 @@ public class ConfigurationData extends Data {
 
         @Override
         public String toString() {
-            return "MavenDependency(" + mavenNotation+ ", files: " + files.size() + ", children: " + children.size() + ")";
+            return "MavenDependency(" + mavenNotation + ", files: " + files.size() + ", children: " + children.size() + ")";
         }
     }
 
@@ -104,6 +104,33 @@ public class ConfigurationData extends Data {
         @Override
         public String toString() {
             return "ProjectDependency(" + project.name + ")";
+        }
+    }
+
+    public static class FilesDependency extends Dependency {
+
+        public final List<File> files = new ArrayList<>();
+
+        public FilesDependency(Iterable<File> files) {
+            files.forEach(this.files::add);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FilesDependency that = (FilesDependency) o;
+            return files.equals(that.files);
+        }
+
+        @Override
+        public int hashCode() {
+            return files.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return "FilesDependency(files: " + files.size() + ")";
         }
     }
 }

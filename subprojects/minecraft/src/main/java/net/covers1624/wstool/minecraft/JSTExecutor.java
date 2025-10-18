@@ -135,6 +135,7 @@ public class JSTExecutor {
                     }
                 }
                 case Dependency.SourceSetDependency sDep -> classpath.addAll(collectClasspath(sDep.sourceSet()));
+                case Dependency.FileDependency fDep -> classpath.add(fDep.file());
             }
         }
         return classpath;

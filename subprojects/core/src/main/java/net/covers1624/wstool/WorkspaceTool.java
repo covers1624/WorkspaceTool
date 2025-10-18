@@ -227,6 +227,11 @@ public class WorkspaceTool {
                     }
                     dependencies.add(new Dependency.SourceSetDependency(project.sourceSets().get("main")));
                 }
+                case ConfigurationData.FilesDependency filesDep -> {
+                    for (File file : filesDep.files) {
+                        dependencies.add(new Dependency.FileDependency(file.toPath()));
+                    }
+                }
                 default -> throw new RuntimeException("Unhandled dependency type: " + dep.getClass());
             }
         }

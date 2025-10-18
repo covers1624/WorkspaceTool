@@ -80,6 +80,7 @@ public final class IJSourceSetModule extends IJModule implements SourceSet {
         return switch (dep) {
             case Dependency.MavenDependency mavenDep -> new MavenDependencyEntry(mavenDep, scope, true);
             case Dependency.SourceSetDependency(SourceSet sourceSet) -> new ProjectDependencyEntry(((IJModule) sourceSet), scope, true);
+            case Dependency.FileDependency(Path file) -> new FileDependencyEntry(file, scope, true);
         };
     }
 }
