@@ -15,5 +15,6 @@ public class NeoForgeExtension implements Extension {
     public void registerConfigTypes(ConfigTypeRegistry registry) {
         registry.registerFrameworkType("neoforge:1.21", NeoForge_1_21_1_FrameworkType.class);
         registry.registerFrameworkType("neoforge:1.21.1", NeoForge_1_21_1_FrameworkType.class);
+        registry.registerFrameworkType("neoforge:1.21.4", NeoForge_1_21_4_FrameworkType.class);
     }
 }

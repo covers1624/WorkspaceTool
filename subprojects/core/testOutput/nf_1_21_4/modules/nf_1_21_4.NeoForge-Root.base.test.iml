@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <exclude-output />
+    <output-test url="file://$PROJECT_DIR$/out/nf_1_21_4_NeoForge-Root_base_test" />
+    <content url="file://$PROJECT_DIR$/NeoForge/projects/base/src/test">
+      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/projects/base/src/test/java" isTestSource="true" />
+      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/projects/base/src/test/resources" type="java-test-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="nf_1_21_4.NeoForge-Root.base.main" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:neoform:1.21.4-20241203.161809@pom" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.code.findbugs:jsr305:3.0.2" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.jetbrains:annotations:26.0.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:minecraft-dependencies:1.21.4@pom" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="ca.weblite:java-objc-bridge:1.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.fasterxml.jackson.core:jackson-annotations:2.13.4" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.fasterxml.jackson.core:jackson-core:2.13.4" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.fasterxml.jackson.core:jackson-databind:2.13.4.2" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.github.oshi:oshi-core:6.6.5" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.github.stephenc.jcip:jcip-annotations:1.0-1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.code.gson:gson:2.11.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.guava:failureaccess:1.0.2" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.google.guava:guava:33.3.1-jre" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.ibm.icu:icu4j:76.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.microsoft.azure:msal4j:1.17.2" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:authlib:6.0.57" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:blocklist:1.0.10" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:brigadier:1.3.10" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:datafixerupper:8.0.16" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:jtracy:1.0.29" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:logging:1.5.10" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:patchy:2.2.10" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.mojang:text2speech:1.17.9" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.nimbusds:content-type:2.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.nimbusds:lang-tag:1.7" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.nimbusds:nimbus-jose-jwt:9.40" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="com.nimbusds:oauth2-oidc-sdk:11.18" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="commons-codec:commons-codec:1.17.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="commons-io:commons-io:2.17.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="commons-logging:commons-logging:1.3.4" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-buffer:4.1.115.Final" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-codec:4.1.115.Final" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-common:4.1.115.Final" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-handler:4.1.115.Final" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-resolver:4.1.115.Final" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-classes-epoll:4.1.115.Final" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport-native-unix-common:4.1.115.Final" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.netty:netty-transport:4.1.115.Final" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="it.unimi.dsi:fastutil:8.5.15" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.java.dev.jna:jna-platform:5.15.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.java.dev.jna:jna:5.15.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.minidev:accessors-smart:2.5.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.minidev:json-smart:2.5.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.sf.jopt-simple:jopt-simple:5.0.4" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.commons:commons-compress:1.27.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.commons:commons-lang3:3.17.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.httpcomponents:httpclient:4.5.14" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.httpcomponents:httpcore:4.4.16" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.logging.log4j:log4j-api:2.24.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.logging.log4j:log4j-core:2.24.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.apache.logging.log4j:log4j-slf4j2-impl:2.24.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.jcraft:jorbis:0.0.17" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.joml:joml:1.10.8" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.lz4:lz4-java:1.8.0" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.ow2.asm:asm:9.8" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.slf4j:slf4j-api:2.0.16" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:mergetool:2.0.3:api" />
+    <orderEntry scope="RUNTIME" exported="" type="module-library">
+      <library name="minecraft-resources.jar">
+        <CLASSES>
+          <root url="jar://$PROJECT_DIR$/NeoForge/projects/base/build/neodev/artifacts/minecraft-resources.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="nf_1_21_4.NeoForge-Root.base.main" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged:neoform:1.21.4-20241203.161809@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged:minecraft-dependencies:1.21.4@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:jtracy:1.0.29@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:jtracy:1.0.29" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:jtracy:1.0.29:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-freetype:3.3.3:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-glfw:3.3.3:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-jemalloc:3.3.3:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-openal:3.3.3:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-opengl:3.3.3:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-stb:3.3.3:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl-tinyfd:3.3.3:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lwjgl:lwjgl:3.3.3:natives-linux" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.115.Final@pom" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.115.Final:linux-aarch_64" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-epoll:4.1.115.Final:linux-x86_64" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.fasterxml.jackson.core:jackson-annotations:2.13.4" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.fasterxml.jackson.core:jackson-core:2.13.4" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.fasterxml.jackson.core:jackson-databind:2.13.4.2" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.github.oshi:oshi-core:6.6.5" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.github.stephenc.jcip:jcip-annotations:1.0-1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.google.code.gson:gson:2.11.0" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.google.guava:failureaccess:1.0.2" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.google.guava:guava:33.3.1-jre" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.ibm.icu:icu4j:76.1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.microsoft.azure:msal4j:1.17.2" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:authlib:6.0.57" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:blocklist:1.0.10" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:brigadier:1.3.10" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:datafixerupper:8.0.16" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:logging:1.5.10" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:patchy:2.2.10" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.mojang:text2speech:1.17.9" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.nimbusds:content-type:2.3" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.nimbusds:lang-tag:1.7" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.nimbusds:nimbus-jose-jwt:9.40" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="com.nimbusds:oauth2-oidc-sdk:11.18" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="commons-codec:commons-codec:1.17.1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="commons-io:commons-io:2.17.0" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="commons-logging:commons-logging:1.3.4" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-buffer:4.1.115.Final" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-codec:4.1.115.Final" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-common:4.1.115.Final" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-handler:4.1.115.Final" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-resolver:4.1.115.Final" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-classes-epoll:4.1.115.Final" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport-native-unix-common:4.1.115.Final" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.netty:netty-transport:4.1.115.Final" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="it.unimi.dsi:fastutil:8.5.15" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.java.dev.jna:jna-platform:5.15.0" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.java.dev.jna:jna:5.15.0" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.minidev:accessors-smart:2.5.1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.minidev:json-smart:2.5.1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.sf.jopt-simple:jopt-simple:5.0.4" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.commons:commons-compress:1.27.1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.commons:commons-lang3:3.17.0" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.httpcomponents:httpclient:4.5.14" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.httpcomponents:httpcore:4.4.16" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.logging.log4j:log4j-api:2.24.1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.logging.log4j:log4j-core:2.24.1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.apache.logging.log4j:log4j-slf4j2-impl:2.24.1" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.jcraft:jorbis:0.0.17" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.joml:joml:1.10.8" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.lz4:lz4-java:1.8.0" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.ow2.asm:asm:9.8" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="org.slf4j:slf4j-api:2.0.16" />
+  </component>
+</module>

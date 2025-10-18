@@ -16,6 +16,7 @@ import net.covers1624.wstool.minecraft.AssetDownloader;
 import net.covers1624.wstool.minecraft.ForgeLikeFramework;
 import net.covers1624.wstool.minecraft.JSTExecutor;
 import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -148,17 +149,21 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                     "--assetIndex", assetIndex.id()
             ));
 
-            var launchTarget = switch (run.config().get("type")) {
-                case "client" -> "forgeclientdev";
-                case "data" -> "forgedatadev";
-                case "server" -> "forgeserverdev";
-                case null, default -> null;
-            };
+            var launchTarget = pickLaunchTargetForRunType(run.config().get("type"));
             if (launchTarget != null) {
                 run.args().addAll(List.of("--launchTarget", launchTarget));
             }
             run.args().addAll(cliProperties);
         }
+    }
+
+    default @Nullable String pickLaunchTargetForRunType(@Nullable String type) {
+        return switch (type) {
+            case "client" -> "forgeclientdev";
+            case "data" -> "forgedatadev";
+            case "server" -> "forgeserverdev";
+            case null, default -> null;
+        };
     }
 
     private void applyNeoForgeToolchain(ProjectData projectData, Workspace workspace) {

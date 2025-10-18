@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.CodeChicken.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.CodeChicken.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.CodeChicken.CodeChickenLib.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.CodeChicken.CodeChickenLib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.CodeChicken.CodeChickenLib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.CodeChicken.CodeChickenLib.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.CodeChicken.CodeChickenLib.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.CodeChicken.CodeChickenLib.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.base.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.base.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.base.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.base.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.base.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.base.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge-coremods.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge-coremods.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge-coremods.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge-coremods.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge-coremods.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.neoforge-coremods.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.testframework.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.testframework.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.testframework.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.testframework.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.testframework.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.testframework.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.tests.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.tests.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.tests.junit.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.tests.junit.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.tests.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.tests.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.tests.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_4.NeoForge-Root.tests.test.iml" />
+    </modules>
+  </component>
+</project>
