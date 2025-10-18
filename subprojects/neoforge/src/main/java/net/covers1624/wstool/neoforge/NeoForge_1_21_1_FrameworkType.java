@@ -7,7 +7,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Created by covers1624 on 21/10/24.
  */
-public record NeoForge121FrameworkType(
+public record NeoForge_1_21_1_FrameworkType(
         @Nullable String path,
         @Nullable String url,
         @Nullable String branch,
