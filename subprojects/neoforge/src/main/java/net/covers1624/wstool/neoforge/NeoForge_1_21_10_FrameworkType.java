@@ -10,7 +10,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Created by covers1624 on 21/10/24.
  */
-public record NeoForge_1_21_4_FrameworkType(
+public record NeoForge_1_21_10_FrameworkType(
         @Nullable String path,
         @Nullable String url,
         @Nullable String branch,
@@ -27,17 +27,22 @@ public record NeoForge_1_21_4_FrameworkType(
     @Override
     public void addLaunchTarget(RunConfig run, String type) {
         if (run.mainClass() == null) {
-            run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
+            run.mainClass(switch (type) {
+                case "client" -> "net.neoforged.fml.startup.Client";
+                case "client_data" -> "net.neoforged.fml.startup.DataClient";
+                case "server" -> "net.neoforged.fml.startup.Server";
+                case "server_data" -> "net.neoforged.fml.startup.DataServer";
+                case "game_test_server" -> "net.neoforged.fml.startup.GameTestServer";
+                default -> throw new RuntimeException("Unknown type. Expecting 'client', 'client_data', 'server', 'server_data'. Got: " + type);
+            });
         }
-        var launchTarget = switch (type) {
-            case "client" -> "neoforgeclientdev";
-            case "client_data" -> "neoforgeclientdatadev";
-            case "server" -> "neoforgeserverdev";
-            case "server_data" -> "neoforgeserverdatadev";
-            default -> throw new RuntimeException("Unknown type. Expecting 'client', 'client_data', 'server', 'server_data'. Got: " + type);
-        };
-        if (launchTarget != null) {
-            run.args().addAll(List.of("--launchTarget", launchTarget));
-        }
+    }
+
+    @Override
+    public List<String> getVMArgs() {
+        return List.of(
+                "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
+        );
     }
 }

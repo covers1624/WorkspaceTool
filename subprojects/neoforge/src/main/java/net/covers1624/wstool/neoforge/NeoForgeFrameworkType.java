@@ -73,7 +73,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var accessTransformers = collectAccessTransformers(workspace);
         accessTransformers.forEach(atCache::putFile);
 
-        var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
+        var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of("generateModMetadata"));
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
         var nfClient = nfSubModule.sourceSets().get("client");
@@ -117,18 +117,19 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         }
 
         var moduleClasspath = buildModuleClasspath(nfModule, nfSubModule, moduleProcessor);
-        legacyClasspath.removeAll(moduleClasspath);
+        if (moduleClasspath != null) {
+            legacyClasspath.removeAll(moduleClasspath);
+        }
 
         var assetIndex = assetDownloader.downloadAssets(getMcVersion(nfSubModule));
 
         var cliProperties = buildCliProperties(nfSubModule);
         for (RunConfig run : workspace.runConfigs().values()) {
-            var launchTarget = pickLaunchTargetForRunType(run.config().get("type"));
-            var isSplitSourcesClient = nfClient != null && launchTarget != null && launchTarget.contains("client");
+            var type = run.config().get("type");
+            if (type == null) throw new RuntimeException("Expected run config " + run.name() + " to contain 'type' config option.");
 
-            if (run.mainClass() == null) {
-                run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
-            }
+            var isSplitSourcesClient = nfClient != null && type.contains("client");
+
             // TODO all the mods go here too?
             //      Apparently mods going here is only required in Older forge, or when they have split classes & resources?
             List<Dependency> modClassesMcDependencies = new ArrayList<>();
@@ -144,15 +145,11 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             )));
 
             // Use addFirst so we are in front of any user-added args.
-            run.vmArgs().addFirst(List.of(
-                    "--add-modules", "ALL-MODULE-PATH",
-                    "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
-                    "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
-                    "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
-                    "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
-            ));
-            run.vmArgs().addFirstEval(new ClasspathValue(moduleClasspath));
-            run.vmArgs().addFirst("-p");
+            run.vmArgs().addFirst(getVMArgs());
+            if (moduleClasspath != null) {
+                run.vmArgs().addFirstEval(new ClasspathValue(moduleClasspath));
+                run.vmArgs().addFirst("-p");
+            }
             run.sysProps().put("java.net.preferIPv6Addresses", "system");
             run.sysProps().put("ignoreList", "mixinextras-neoforge-,client-extra,neoforge-");
             run.sysProps().putEval("legacyClassPath", new ClasspathValue(legacyClasspath));
@@ -163,9 +160,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                     "--assetIndex", assetIndex.id()
             ));
 
-            if (launchTarget != null) {
-                run.args().addAll(List.of("--launchTarget", launchTarget));
-            }
+            addLaunchTarget(run, type);
 
             if (isSplitSourcesClient) {
                 run.classpath(nfClient);
@@ -177,13 +172,29 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         }
     }
 
-    default @Nullable String pickLaunchTargetForRunType(@Nullable String type) {
-        return switch (type) {
+    default void addLaunchTarget(RunConfig run, String type) {
+        if (run.mainClass() == null) {
+            run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
+        }
+        var launchTarget = switch (type) {
             case "client" -> "forgeclientdev";
             case "data" -> "forgedatadev";
             case "server" -> "forgeserverdev";
-            case null, default -> null;
+            default -> throw new RuntimeException("Unknown type. Expecting 'client', 'server', 'data'. Got: " + type);
         };
+        if (launchTarget != null) {
+            run.args().addAll(List.of("--launchTarget", launchTarget));
+        }
+    }
+
+    default List<String> getVMArgs() {
+        return List.of(
+                "--add-modules", "ALL-MODULE-PATH",
+                "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
+                "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
+                "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
+                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
+        );
     }
 
     private void applyNeoForgeToolchain(ProjectData projectData, Workspace workspace) {
@@ -199,7 +210,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         workspace.setJavaVersion(toolchainData.langVersion);
     }
 
-    private static Set<Dependency> buildModuleClasspath(Module rootModule, Module module, ModuleProcessor processor) {
+    private static @Nullable Set<Dependency> buildModuleClasspath(Module rootModule, Module module, ModuleProcessor processor) {
         var projectData = requireNonNull(module.projectData());
         var pluginData = projectData.getData(PluginData.class);
         if (pluginData == null) {
@@ -209,6 +220,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         if (neoDevData == null) {
             throw new RuntimeException("Expected NeoDevData to be extracted. Unable to setup NeoDev workspace.");
         }
+        if (neoDevData.moduleClasspathConfiguration == null) return null;
 
         var configurations = requireNonNull(projectData.getData(ConfigurationList.class));
         var moduleClasspathConfiguration = configurations.get(neoDevData.moduleClasspathConfiguration);
