@@ -97,8 +97,6 @@ public class TestNeoForge extends TestBase {
                         config:
                           type: 'client'
                     """);
-            // TODO, for some unknown reason the coremods project is flaky in CI, i have no idea why.
-            test.ignoreFile("modules/nf_1_21_4.NeoForge-Root.neoforge-coremods.main.iml");
             test.run();
         }
     }
