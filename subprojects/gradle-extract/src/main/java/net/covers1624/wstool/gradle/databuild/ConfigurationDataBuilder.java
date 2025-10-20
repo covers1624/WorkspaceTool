@@ -17,14 +17,19 @@ import org.gradle.api.artifacts.result.ComponentArtifactsResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.component.Artifact;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.internal.artifacts.capability.FeatureCapabilitySelector;
+import org.gradle.api.plugins.jvm.internal.JvmFeatureInternal;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.jvm.JvmLibrary;
+import org.gradle.jvm.component.internal.JvmSoftwareComponentInternal;
 import org.gradle.language.base.artifact.SourcesArtifact;
 import org.gradle.language.java.artifact.JavadocArtifact;
 import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
@@ -36,6 +41,8 @@ import static java.util.Objects.requireNonNull;
  */
 @SuppressWarnings ("NotNullFieldNotInitialized") // See comment bellow above fields.
 public class ConfigurationDataBuilder implements ProjectBuilder {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationDataBuilder.class);
 
     // Mutable state used during this execution
     // Guaranteed to be set prior to all other functions.
@@ -148,9 +155,24 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         return null;
     }
 
-    private ConfigurationData.ProjectDependency processProjectDep(Project rootProject, ProjectDependency projectDep) {
+    private ConfigurationData.Dependency processProjectDep(Project rootProject, ProjectDependency projectDep) {
         Project project = getDependencyProject(rootProject, projectDep);
         ProjectData projectData = requireNonNull(lookupCache.projects.get(project.getPath()), "Project missing from lookup! " + project);
+
+        SourceSet sourceSet = null;
+        try {
+            sourceSet = pickSourceSetForFeatures(projectDep, project);
+        } catch (Throwable ex) {
+            LOGGER.error("Failed to pick ProjectDependency feature.", ex);
+        }
+
+        if (sourceSet != null) {
+            SourceSetList sourceSets = requireNonNull(projectData.getData(SourceSetList.class));
+            return new ConfigurationData.SourceSetDependency(
+                    requireNonNull(sourceSets.get(sourceSet.getName()), "Source Set missing for picked variant?")
+            );
+        }
+
         return new ConfigurationData.ProjectDependency(projectData);
     }
 
@@ -162,7 +184,7 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
 
         Set<File> files = fileCol.getFiles();
         // TODO HACK: Required for NeoGradle 7. This can likely be moved to a transformer with some effort.
-        files.removeIf(e-> e.getPath().contains("ng_dummy_ng"));
+        files.removeIf(e -> e.getPath().contains("ng_dummy_ng"));
 
         if (!files.isEmpty()) return new ConfigurationData.FilesDependency(files);
 
@@ -254,5 +276,27 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         }
         // ProjectDependency.getDependencyProject was removed in Gradle 9.
         return (Project) InvokerHelper.getProperty(dep, "dependencyProject");
+    }
+
+    private static @Nullable SourceSet pickSourceSetForFeatures(ProjectDependency pDep, Project project) {
+        if (pDep.getCapabilitySelectors().isEmpty()) return null;
+
+        FeatureCapabilitySelector cap = (FeatureCapabilitySelector) FastStream.of(pDep.getCapabilitySelectors())
+                .filter(e -> e instanceof FeatureCapabilitySelector)
+                .firstOrDefault();
+        // TODO perhaps we choose the 'main'/'default' feature?
+        if (cap == null) return null;
+        String featureName = cap.getFeatureName();
+
+        JvmSoftwareComponentInternal component = ColUtils.headOrDefault(project.getComponents().withType(JvmSoftwareComponentInternal.class));
+        if (component == null) return null;
+
+        JvmFeatureInternal feature = FastStream.of(component.getFeatures())
+                .filter(e -> e.getName().equals(featureName))
+                .firstOrDefault();
+
+        if (feature == null) return null;
+
+        return feature.getSourceSet();
     }
 }

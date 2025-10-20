@@ -238,4 +238,85 @@ public class ConfigurationExtractionTests extends GradleTestBase {
                 .first()
                 .isInstanceOf(ConfigurationData.FilesDependency.class);
     }
+
+    @ValueSource (strings = {
+            "9.0.0",
+    })
+    @ParameterizedTest
+    public void testProjectDependencyWithFeatures(String gradleVersion) throws IOException {
+        GradleEmitter emitter = gradleEmitter("ProjectDependency")
+                .rootProject()
+                .withBuildGradle("")
+                // language=Groovy
+                .withSettingsGradle("""
+                        include 'project_a'
+                        include 'project_b'
+                        """)
+                // language=Groovy
+                .withFile("project_a/build.gradle", """
+                        plugins {
+                            id 'java'
+                        }
+                        
+                        sourceSets {
+                            client {
+                                java {
+                                    srcDirs file('src/client/java')
+                                }
+                            }
+                        }
+                        
+                        java {
+                            registerFeature('client') {
+                                usingSourceSet(sourceSets.client)
+                                disablePublication()
+                            }
+                        }
+                        """
+                )
+                // language=Groovy
+                .withFile("project_b/build.gradle", """
+                        plugins {
+                            id 'java'
+                        }
+                        dependencies {
+                            implementation(project(':project_a')) {
+                                capabilities {
+                                    requireFeature('client')
+                                }
+                            }
+                        }
+                        """
+                )
+                .finish();
+
+        GradleModelExtractor extractor = extractor(emitter, false);
+        ProjectData data = extractor.extractProjectData(
+                emitter.getRootProjectDir(),
+                GradleVersion.version(gradleVersion),
+                Set.of()
+        );
+        SubProjectList subProjects = data.getData(SubProjectList.class);
+        assertNotNull(subProjects);
+
+        assertEquals(2, subProjects.asMap().size());
+
+        ProjectData projectA = subProjects.get("project_a");
+        ProjectData projectB = subProjects.get("project_b");
+        assertNotNull(projectA);
+        assertNotNull(projectB);
+
+        ConfigurationList configurations = projectB.getData(ConfigurationList.class);
+        assertNotNull(configurations);
+
+        ConfigurationData compileClasspath = configurations.get("compileClasspath");
+        assertNotNull(compileClasspath);
+
+        assertThat(compileClasspath.dependencies)
+                .hasSize(1)
+                .first()
+                .isInstanceOf(SourceSetDependency.class)
+                .extracting(e -> ((SourceSetDependency) e).sourceSet)
+                .isEqualTo(projectA.getData(SourceSetList.class).get("client"));
+    }
 }
