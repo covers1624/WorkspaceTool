@@ -186,7 +186,7 @@ public class GradleModelExtractor {
                         .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
                         .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                         .setStandardError(new ConsumingOutputStream(LOGGER::info))
-                        .withArguments("-si", "-I", initScriptPath.get().toAbsolutePath().toString())
+                        .withArguments("--no-parallel", "-si", "-I", initScriptPath.get().toAbsolutePath().toString())
                         .forTasks(tasksToExecute)
                         .run();
             } finally {
