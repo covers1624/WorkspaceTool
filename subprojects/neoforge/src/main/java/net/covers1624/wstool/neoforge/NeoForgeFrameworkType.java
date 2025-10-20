@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -75,6 +76,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
+        var nfClient = nfSubModule.sourceSets().get("client");
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
         var nfCoreModsMain = nfCoreMods.sourceSets().get("main");
 
@@ -106,6 +108,10 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                 if (isNeoForgeModPresent(ss)) {
                     nfMain.compileDependencies().add(new Dependency.SourceSetDependency(ss));
                     ss.compileDependencies().add(new Dependency.SourceSetDependency(nfMain));
+                    // TODO split source set mods will need some work here.
+                    if (nfClient != null) {
+                        ss.compileDependencies().add(new Dependency.SourceSetDependency(nfClient));
+                    }
                 }
             }
         }
@@ -117,15 +123,23 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
         var cliProperties = buildCliProperties(nfSubModule);
         for (RunConfig run : workspace.runConfigs().values()) {
-            run.classpath(nfMain);
+            var launchTarget = pickLaunchTargetForRunType(run.config().get("type"));
+            var isSplitSourcesClient = nfClient != null && launchTarget != null && launchTarget.contains("client");
 
             if (run.mainClass() == null) {
                 run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
             }
             // TODO all the mods go here too?
             //      Apparently mods going here is only required in Older forge, or when they have split classes & resources?
+            List<Dependency> modClassesMcDependencies = new ArrayList<>();
+            modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain));
+            modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain));
+            if (isSplitSourcesClient) {
+                modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient));
+                modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient));
+            }
             run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(List.of(
-                    new ModClassesEvalValue.ModClass("minecraft", new Dependency.SourceSetDependency(nfMain)),
+                    new ModClassesEvalValue.ModClass("minecraft", modClassesMcDependencies),
                     new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreModsMain))
             )));
 
@@ -149,10 +163,16 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                     "--assetIndex", assetIndex.id()
             ));
 
-            var launchTarget = pickLaunchTargetForRunType(run.config().get("type"));
             if (launchTarget != null) {
                 run.args().addAll(List.of("--launchTarget", launchTarget));
             }
+
+            if (isSplitSourcesClient) {
+                run.classpath(nfClient);
+            } else {
+                run.classpath(nfMain);
+            }
+
             run.args().addAll(cliProperties);
         }
     }

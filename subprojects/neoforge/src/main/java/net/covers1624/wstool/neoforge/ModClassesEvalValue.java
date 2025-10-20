@@ -18,22 +18,21 @@ public record ModClassesEvalValue(List<ModClass> entries) implements EvalValue {
     @Override
     public String eval(Function<Dependency, @Nullable Path> depFunc) {
         return FastStream.of(entries)
-                .flatMap(e -> FastStream.of(
-                        e.name + "%%" + depFunc.apply(e.classes).toAbsolutePath(),
-                        e.name + "%%" + depFunc.apply(e.resources).toAbsolutePath()
-                ))
+                .flatMap(e -> FastStream.of(e.dependencies)
+                        .map(d -> e.name + "%%" +depFunc.apply(d).toAbsolutePath())
+                )
                 .join(":");
     }
 
     @Override
     public Iterable<Dependency> collectDependencies() {
-        return FastStream.of(entries).flatMap(e -> FastStream.of(e.classes, e.resources));
+        return FastStream.of(entries).flatMap(e -> e.dependencies);
     }
 
-    public record ModClass(String name, Dependency classes, Dependency resources) {
+    public record ModClass(String name, List<Dependency> dependencies) {
 
         public ModClass(String name, Dependency classesAndResources) {
-            this(name, classesAndResources, classesAndResources);
+            this(name, List.of(classesAndResources, classesAndResources));
         }
     }
 }

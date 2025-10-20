@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <exclude-output />
+    <output url="file://$PROJECT_DIR$/out/nf_1_21_5_NeoForge-Root_tests_main" />
+    <content url="file://$PROJECT_DIR$/NeoForge/tests/src/main">
+      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/tests/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/tests/src/main/resources" type="java-resource" />
+    </content>
+    <content url="file://$PROJECT_DIR$/NeoForge/tests/src/generated">
+      <sourceFolder url="file://$PROJECT_DIR$/NeoForge/tests/src/generated/resources" type="java-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="nf_1_21_5.NeoForge-Root.neoforge.client" />
+    <orderEntry scope="COMPILE" exported="" type="module" module-name="nf_1_21_5.NeoForge-Root.testframework.main" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.jetbrains:annotations:26.0.2" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="nf_1_21_5.NeoForge-Root.neoforge.client" />
+    <orderEntry scope="RUNTIME" exported="" type="module" module-name="nf_1_21_5.NeoForge-Root.testframework.main" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged:DevLaunch:1.0.1" />
+  </component>
+</module>
