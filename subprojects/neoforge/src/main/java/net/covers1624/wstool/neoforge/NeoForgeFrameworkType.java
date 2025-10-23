@@ -82,7 +82,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             parchmentCache.putString(parchmentVersion);
         }
 
-        var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of("generateModMetadata"));
+        var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
         var nfClient = nfSubModule.sourceSets().get("client");
@@ -92,6 +92,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed() || parchmentCache.changed()) {
             taskExecutor.runTask(rootDir, "clean");
             taskExecutor.runTask(rootDir, "setup");
+            taskExecutor.tryRunTasks(rootDir, ":neoforge:generateModMetadata");
 
             List<Path> mcSources = new ArrayList<>(
                     nfMain.sourcePaths().getOrDefault("java", List.of())

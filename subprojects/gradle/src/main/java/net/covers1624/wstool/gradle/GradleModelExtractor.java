@@ -178,23 +178,21 @@ public class GradleModelExtractor {
                     .filter(extraTasks::contains)
                     .toSet();
             LOGGER.info("Extracting WorkspaceTool project data..");
-            try {
-                connection
-                        .action(new WorkspaceToolModelAction(cacheFile.toFile()))
-                        .setJavaHome(javaHome.toFile())
-                        .setJvmArguments(FastStream.of("-Xmx3G").concat(extraJvmArgs()))
-                        .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
-                        .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
-                        .setStandardError(new ConsumingOutputStream(LOGGER::info))
-                        .withArguments("--no-parallel", "-si", "-I", initScriptPath.get().toAbsolutePath().toString())
-                        .forTasks(tasksToExecute)
-                        .run();
-            } finally {
-                // TODO only do this when unit testing? Makes attaching debugger easier.
-                // Tell the Daemon to shut down after this build.
-                //noinspection UnstableApiUsage
-                connector.disconnect();
-            }
+            connection
+                    .action(new WorkspaceToolModelAction(cacheFile.toFile()))
+                    .setJavaHome(javaHome.toFile())
+                    .setJvmArguments(FastStream.of("-Xmx3G").concat(extraJvmArgs()))
+                    .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
+                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
+                    .setStandardError(new ConsumingOutputStream(LOGGER::info))
+                    .withArguments("--no-parallel", "-si", "-I", initScriptPath.get().toAbsolutePath().toString())
+                    .forTasks(tasksToExecute)
+                    .run();
+        } finally {
+            // TODO only do this when unit testing? Makes attaching debugger easier.
+            // Tell the Daemon to shut down after this build.
+            //noinspection UnstableApiUsage
+            connector.disconnect();
         }
     }
 

@@ -1,11 +1,14 @@
 package net.covers1624.wstool.gradle;
 
+import net.covers1624.quack.collection.ColUtils;
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.ConsumingOutputStream;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 import org.gradle.internal.impldep.com.google.common.collect.ImmutableMap;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.GradleProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +44,51 @@ public class GradleTaskExecutor {
                     .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
                     .setStandardError(new ConsumingOutputStream(LOGGER::info))
                     .run();
+        } finally {
+            connector.disconnect();
         }
+    }
+
+    public void tryRunTasks(Path projectDir, String... tasks) {
+        var gradleVersion = GradleModelExtractor.computeProjectGradleVersion(projectDir);
+        var javaVersion = GradleModelExtractor.getJavaVersionForGradle(gradleVersion);
+        var javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
+        GradleConnector connector = GradleConnector.newConnector()
+                .useGradleVersion(gradleVersion.getVersion())
+                .forProjectDirectory(projectDir.toFile());
+        try (ProjectConnection connection = connector.connect()) {
+            LOGGER.info("Running Gradle tasks {} on {}", tasks, projectDir);
+            GradleProject project = connection.model(GradleProject.class)
+                    .setJavaHome(javaHome.toFile())
+                    .setJvmArguments("-Xmx3G")
+                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
+                    .setStandardError(new ConsumingOutputStream(LOGGER::info))
+                    .get();
+
+            var toExec = FastStream.of(tasks)
+                    .filter(e -> doesTaskExist(project, e))
+                    .toArray(String[]::new);
+
+            connection.newBuild()
+                    .forTasks(toExec)
+                    .setJavaHome(javaHome.toFile())
+                    .setJvmArguments("-Xmx3G")
+                    .setEnvironmentVariables(ImmutableMap.copyOf(System.getenv()))
+                    .setStandardOutput(new ConsumingOutputStream(LOGGER::info))
+                    .setStandardError(new ConsumingOutputStream(LOGGER::info))
+                    .run();
+        } finally {
+            connector.disconnect();
+        }
+    }
+
+    private boolean doesTaskExist(GradleProject project, String taskPath) {
+        if (ColUtils.anyMatch(project.getTasks(), e -> e.getPath().equals(taskPath))) return true;
+
+        for (GradleProject child : project.getChildren()) {
+            if (doesTaskExist(child, taskPath)) return true;
+        }
+
+        return false;
     }
 }
