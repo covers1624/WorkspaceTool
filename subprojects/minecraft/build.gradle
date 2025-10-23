@@ -9,6 +9,8 @@ archivesBaseName = 'minecraft'
 
 dependencies {
     api project(':api')
+
+    api libs.tomlj
 }
 
 publishing {

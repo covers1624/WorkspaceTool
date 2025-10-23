@@ -82,6 +82,8 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             parchmentCache.putString(parchmentVersion);
         }
 
+        var possibleMods = findPossibleMods(workspace);
+
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
@@ -149,8 +151,6 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
             var isSplitSourcesClient = nfClient != null && type.contains("client");
 
-            // TODO all the mods go here too?
-            //      Apparently mods going here is only required in Older forge, or when they have split classes & resources?
             List<Dependency> modClassesMcDependencies = new ArrayList<>();
             modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain));
             modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain));
@@ -158,10 +158,12 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                 modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient));
                 modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient));
             }
-            run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(List.of(
-                    new ModClassesEvalValue.ModClass("minecraft", modClassesMcDependencies),
-                    new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreModsMain))
-            )));
+
+            List<ModClassesEvalValue.ModClass> modClasses = new ArrayList<>();
+            modClasses.add(new ModClassesEvalValue.ModClass("minecraft", modClassesMcDependencies));
+            modClasses.add(new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreModsMain)));
+            possibleMods.forEach(mod -> modClasses.add(new ModClassesEvalValue.ModClass(mod.modId(), new Dependency.SourceSetDependency(mod.ss()))));
+            run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(modClasses));
 
             // Use addFirst so we are in front of any user-added args.
             run.vmArgs().addFirst(getVMArgs());

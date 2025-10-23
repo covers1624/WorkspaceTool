@@ -29,6 +29,7 @@ dependencyResolutionManagement {
 
             library('snakeyaml', 'org.yaml:snakeyaml:2.3')
             library('jdom2', 'org.jdom:jdom2:2.0.6.1')
+            library('tomlj', 'org.tomlj:tomlj:1.1.1')
 
             library('mavenartifact', 'org.apache.maven:maven-artifact:3.8.1')
             library('mavenmetadata', 'org.apache.maven:maven-repository-metadata:3.8.1')
