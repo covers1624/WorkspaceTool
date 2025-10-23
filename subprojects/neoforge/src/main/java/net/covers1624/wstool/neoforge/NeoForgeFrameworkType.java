@@ -41,6 +41,9 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
     String commit();
 
+    @Nullable
+    String parchment();
+
     @Override
     default void buildFrameworks(Environment env, Workspace workspace) {
         ModuleProcessor moduleProcessor = env.getService(ModuleProcessor.class);
@@ -73,6 +76,12 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var accessTransformers = collectAccessTransformers(workspace);
         accessTransformers.forEach(atCache::putFile);
 
+        var parchmentCache = hashContainer.getEntry("parchment");
+        var parchmentVersion = parchment();
+        if (parchmentVersion != null) {
+            parchmentCache.putString(parchmentVersion);
+        }
+
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of("generateModMetadata"));
         var nfSubModule = nfModule.subModules().get("neoforge");
         var nfMain = nfSubModule.sourceSets().get("main");
@@ -80,7 +89,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
         var nfCoreModsMain = nfCoreMods.sourceSets().get("main");
 
-        if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed()) {
+        if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed() || parchmentCache.changed()) {
             taskExecutor.runTask(rootDir, "clean");
             taskExecutor.runTask(rootDir, "setup");
 
@@ -95,12 +104,14 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                     nfMain,
                     mcSources,
                     ifaceInjections,
-                    accessTransformers
+                    accessTransformers,
+                    parchmentVersion
             );
 
             requiresSetupProp.setValue(false);
             ifaceCache.pushChanges();
             atCache.pushChanges();
+            parchmentCache.pushChanges();
         }
 
         applyNeoForgeToolchain(requireNonNull(nfModule.projectData()), workspace);

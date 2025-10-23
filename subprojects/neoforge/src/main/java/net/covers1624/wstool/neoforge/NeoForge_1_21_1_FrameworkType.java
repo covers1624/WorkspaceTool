@@ -11,7 +11,8 @@ public record NeoForge_1_21_1_FrameworkType(
         @Nullable String path,
         @Nullable String url,
         @Nullable String branch,
-        @Nullable String commit
+        @Nullable String commit,
+        @Nullable String parchment
 ) implements NeoForgeFrameworkType {
 
     // @formatter:off

@@ -49,8 +49,8 @@ public class JSTExecutor {
         librariesDir = env.systemFolder().resolve("libraries");
     }
 
-    public void applyJST(SourceSet classpath, List<Path> mcSources, List<Path> ifaceInjections, List<Path> accessTransformers) {
-        if (ifaceInjections.isEmpty() && accessTransformers.isEmpty()) return;
+    public void applyJST(SourceSet classpath, List<Path> mcSources, List<Path> ifaceInjections, List<Path> accessTransformers, @Nullable String parchmentVersion) {
+        if (ifaceInjections.isEmpty() && accessTransformers.isEmpty() && parchmentVersion == null) return;
 
         var jst = getJstBundle();
         var javaHome = provider.findOrProvisionJdk(JavaVersion.JAVA_21);
@@ -78,6 +78,14 @@ public class JSTExecutor {
                 args.add("--access-transformer");
                 args.add(file.toAbsolutePath().toString());
             }
+        }
+
+        if (parchmentVersion != null) {
+            args.add("--enable-parchment");
+            args.add("--parchment-conflict-prefix");
+            args.add("p_");
+            args.add("--parchment-mappings");
+            args.add(downloadParchment(parchmentVersion).toAbsolutePath().toString());
         }
 
         Path inputZip = null;
@@ -219,16 +227,30 @@ public class JSTExecutor {
 
     private Path getJstBundle() {
         if (jstBundlePath == null) {
-            jstBundlePath = downloadJst();
+            jstBundlePath = downloadMaven(JST_NOTATION);
         }
         return jstBundlePath;
     }
 
-    private Path downloadJst() {
-        Path dest = JST_NOTATION.toPath(librariesDir);
+    private Path downloadParchment(String versionStr) {
+        var split = versionStr.split("-");
+        if (split.length != 2) throw new RuntimeException("Expected parchment version to be <mc>-<parchment> got: " + versionStr);
+
+        return downloadMaven(new MavenNotation(
+                "org.parchmentmc.data",
+                "parchment-" + split[0],
+                split[1],
+                null,
+                "zip"
+        ));
+    }
+
+
+    private Path downloadMaven(MavenNotation notation) {
+        Path dest = notation.toPath(librariesDir);
         try {
             new HttpEngineDownloadAction()
-                    .setUrl(JST_NOTATION.toURL("https://proxy-maven.covers1624.net").toString())
+                    .setUrl(notation.toURL("https://proxy-maven.covers1624.net").toString())
                     .setDest(dest)
                     .setUseETag(true)
                     .setQuiet(false)
