@@ -63,7 +63,6 @@ public interface ForgeLikeFramework extends FrameworkType {
         return workspace.allProjectModules()
                 .flatMap(e -> e.sourceSets().values())
                 .flatMap(e -> FastStream.of(e.sourcePaths().getOrDefault("resources", List.of())).flatMap(f -> parseMods(e, f)))
-                .sorted()
                 .toList(FastStream.infer());
     }
 
