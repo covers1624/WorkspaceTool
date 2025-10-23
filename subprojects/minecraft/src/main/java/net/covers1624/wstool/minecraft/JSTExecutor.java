@@ -18,12 +18,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Created by covers1624 on 10/1/25.
@@ -46,7 +49,7 @@ public class JSTExecutor {
         librariesDir = env.systemFolder().resolve("libraries");
     }
 
-    public void applyJST(SourceSet classpath, Path mcSources, List<Path> ifaceInjections, List<Path> accessTransformers) {
+    public void applyJST(SourceSet classpath, List<Path> mcSources, List<Path> ifaceInjections, List<Path> accessTransformers) {
         if (ifaceInjections.isEmpty() && accessTransformers.isEmpty()) return;
 
         var jst = getJstBundle();
@@ -77,9 +80,28 @@ public class JSTExecutor {
             }
         }
 
-        // Input and output are identical.
-        args.add(mcSources.toAbsolutePath().toString());
-        args.add(mcSources.toAbsolutePath().toString());
+        Path inputZip = null;
+        Path outputZip = null;
+        // Fast path, we don't need to zip things.
+        if (mcSources.size() == 1) {
+            // Input and output are identical.
+            args.add(mcSources.getFirst().toAbsolutePath().toString());
+            args.add(mcSources.getFirst().toAbsolutePath().toString());
+        } else {
+            try {
+                inputZip = makeSourceZip(mcSources);
+                outputZip = Files.createTempFile("jst-output", "zip");
+            } catch (IOException ex) {
+                throw new RuntimeException("Failed to create jst input/output zips.", ex);
+            }
+
+            args.add("--in-format");
+            args.add("ARCHIVE");
+            args.add("--out-format");
+            args.add("ARCHIVE");
+            args.add(inputZip.toAbsolutePath().toString());
+            args.add(outputZip.toAbsolutePath().toString());
+        }
 
         LOGGER.info("Running JST for {} iface injections and {} at's.", ifaceInjections.size(), accessTransformers.size());
 
@@ -94,19 +116,29 @@ public class JSTExecutor {
             if (proc.exitValue() != 0) {
                 throw new RuntimeException("Failed to run JST. Exit code: " + proc.exitValue());
             }
+
+            if (outputZip != null) {
+                extractSourceZip(outputZip, mcSources);
+            }
         } catch (IOException | InterruptedException ex) {
             throw new RuntimeException("Failed to run JST.", ex);
         } finally {
             try {
                 Files.deleteIfExists(librariesList);
-            } catch (IOException ignored) {
-            }
+            } catch (IOException ignored) { }
+            try {
+                if (inputZip != null) Files.deleteIfExists(inputZip);
+            } catch (IOException ignored) { }
+            try {
+                if (outputZip != null) Files.deleteIfExists(outputZip);
+            } catch (IOException ignored) { }
         }
     }
 
-    private static Path createLibrariesList(SourceSet sourceSet, Path mcSources) {
+    private static Path createLibrariesList(SourceSet sourceSet, List<Path> mcSources) {
         var classpath = collectClasspath(sourceSet);
-        classpath.remove(mcSources);
+        mcSources.forEach(classpath::remove);
+
         try {
             Path file = Files.createTempFile("jst-libs", "txt");
             file.toFile().deleteOnExit();
@@ -139,6 +171,50 @@ public class JSTExecutor {
             }
         }
         return classpath;
+    }
+
+    private static Path makeSourceZip(List<Path> inputs) throws IOException {
+        Path zip = Files.createTempFile("jst-input", "zip");
+        zip.toFile().deleteOnExit();
+
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            for (Path input : inputs) {
+                Files.walkFileTree(input, new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        zos.putNextEntry(new ZipEntry(input.relativize(file).toString()));
+                        Files.copy(file, zos);
+                        zos.closeEntry();
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
+        }
+        return zip;
+    }
+
+    // Assumes JST will never create new files.
+    private static void extractSourceZip(Path jstOutputZip, List<Path> inputs) throws IOException {
+        try (ZipFile zipFile = new ZipFile(jstOutputZip.toFile())) {
+            for (Path input : inputs) {
+                Files.walkFileTree(input, new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        var rel = input.relativize(file).toString();
+                        var entry = zipFile.getEntry(rel);
+                        if (entry == null) {
+                            LOGGER.error("JST deleted input file {}", rel);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        try (var is = zipFile.getInputStream(entry)) {
+                            Files.copy(is, file, StandardCopyOption.REPLACE_EXISTING);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
+        }
     }
 
     private Path getJstBundle() {

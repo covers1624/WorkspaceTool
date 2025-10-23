@@ -84,9 +84,16 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             taskExecutor.runTask(rootDir, "clean");
             taskExecutor.runTask(rootDir, "setup");
 
+            List<Path> mcSources = new ArrayList<>(
+                    nfMain.sourcePaths().getOrDefault("java", List.of())
+            );
+            if (nfClient != null) {
+                mcSources.addAll(nfClient.sourcePaths().getOrDefault("java", List.of()));
+            }
+
             jstExecutor.applyJST(
                     nfMain,
-                    nfSubModule.rootDir().resolve("src/main/java"),
+                    mcSources,
                     ifaceInjections,
                     accessTransformers
             );
