@@ -94,7 +94,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed() || parchmentCache.changed()) {
             taskExecutor.runTask(rootDir, "clean");
             taskExecutor.runTask(rootDir, "setup");
-            taskExecutor.tryRunTasks(rootDir, ":neoforge:generateModMetadata");
+            taskExecutor.tryRunTasks(rootDir, ":neoforge:neoForgeIdeSync");
 
             List<Path> mcSources = new ArrayList<>(
                     nfMain.sourcePaths().getOrDefault("java", List.of())
