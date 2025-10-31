@@ -187,6 +187,8 @@ public class JSTExecutor {
 
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
             for (Path input : inputs) {
+                if (Files.notExists(input)) continue;
+
                 Files.walkFileTree(input, new SimpleFileVisitor<>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -205,6 +207,8 @@ public class JSTExecutor {
     private static void extractSourceZip(Path jstOutputZip, List<Path> inputs) throws IOException {
         try (ZipFile zipFile = new ZipFile(jstOutputZip.toFile())) {
             for (Path input : inputs) {
+                if (Files.notExists(input)) continue;
+
                 Files.walkFileTree(input, new SimpleFileVisitor<>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
