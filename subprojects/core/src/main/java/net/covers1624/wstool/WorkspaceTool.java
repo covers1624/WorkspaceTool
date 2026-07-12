@@ -283,6 +283,10 @@ public class WorkspaceTool {
         workspace.allProjectModules().forEach(module -> {
             var projData = module.projectData();
             if (projData == null) return;
+            if (projData.archivesBaseName == null) {
+                LOGGER.error("Project at {} does not provide an archivesBaseName or base.archivesName property. Unable to link modules to it.", module.rootDir());
+                return;
+            }
 
             // TODO, I'm not sure if we can properly trace which source set a jar is composed from in Gradle. It would be a lot
             //       of heuristics for tracing various Gradle objects around through task I/O. So for now we just pick main.

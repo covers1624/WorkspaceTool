@@ -10,6 +10,7 @@ import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SubProjectList;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.plugins.BasePluginExtension;
 import org.gradle.api.plugins.PluginContainer;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 import org.jetbrains.annotations.Nullable;
@@ -82,7 +83,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
                 parent,
                 String.valueOf(project.getVersion()),
                 String.valueOf(project.getGroup()),
-                String.valueOf(project.findProperty("archivesBaseName"))
+                getArchivesBaseName(project)
         );
         projectData.putData(PluginData.class, buildPlugins(project, pluginBuilders, lookupCache));
 
@@ -173,5 +174,26 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
             }
         }
         return classToName;
+    }
+
+    private static @Nullable String getArchivesBaseName(Project project) {
+        if (project.getExtensions().findByName("base") != null) {
+            String baseName = getArchivesNameViaBase(project);
+            if (baseName != null) {
+                return baseName;
+            }
+        }
+
+        // As of Gradle 9 this property was removed.
+        Object name = project.findProperty("archivesBaseName");
+        return name != null ? String.valueOf(name) : null;
+    }
+
+    // BasePluginExtension was only formally introduced in Gradle 7.1
+    private static @Nullable String getArchivesNameViaBase(Project project) {
+        BasePluginExtension base = project.getExtensions().findByType(BasePluginExtension.class);
+        if (base == null) return null;
+
+        return base.getArchivesName().getOrNull();
     }
 }

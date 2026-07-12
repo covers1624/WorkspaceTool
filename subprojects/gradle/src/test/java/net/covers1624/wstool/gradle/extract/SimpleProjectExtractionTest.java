@@ -6,6 +6,7 @@ import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.gradle.api.data.*;
 import org.gradle.util.GradleVersion;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
@@ -149,5 +150,41 @@ public class SimpleProjectExtractionTest extends GradleTestBase {
                 .isNotNull()
                 .extracting(e -> e.langVersion)
                 .isEqualTo(21);
+    }
+
+    @CsvSource ({
+            "4.10.3, true",
+            "7.3, true",
+            "7.3, false",
+            "8.0, true",
+            "8.0, false",
+            "9.0.0, false",
+    })
+    @ParameterizedTest
+    public void testArchivesBaseName(String gradleVersion, boolean useLegacyBaseName) throws IOException {
+        GradleEmitter emitter = gradleEmitter("JavaPlugin")
+                .rootProject()
+                // language=Groovy
+                .withBuildGradle("""
+                        plugins {
+                            id 'java'
+                        }
+                        
+                        if (Boolean.parseBoolean("%b")) {
+                            archivesBaseName = 'JavaPluginTest'
+                        } else {
+                            base.archivesName = 'JavaPluginTest'
+                        }
+                        """.formatted(useLegacyBaseName))
+                .finish();
+
+        GradleModelExtractor extractor = extractor(emitter, false);
+        ProjectData data = extractor.extractProjectData(
+                emitter.getRootProjectDir(),
+                GradleVersion.version(gradleVersion),
+                Set.of()
+        );
+        assertThat(data.archivesBaseName)
+                .isEqualTo("JavaPluginTest");
     }
 }

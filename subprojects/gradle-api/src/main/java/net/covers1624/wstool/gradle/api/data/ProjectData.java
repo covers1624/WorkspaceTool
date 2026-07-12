@@ -41,9 +41,9 @@ public class ProjectData extends Data implements Serializable {
      * The project archivesBaseName.
      */
     // TODO is there another property we should use instead? Should we grab the publishing info instead?
-    public final String archivesBaseName;
+    public final @Nullable String archivesBaseName;
 
-    public ProjectData(String name, File projectDir, @Nullable ProjectData parent, String version, String group, String archivesBaseName) {
+    public ProjectData(String name, File projectDir, @Nullable ProjectData parent, String version, String group, @Nullable String archivesBaseName) {
         this.name = name;
         this.projectDir = projectDir;
         this.parent = parent;
