@@ -74,9 +74,13 @@ public class GradleModelExtractor {
 
     private final List<String> hashableFiles = new ArrayList<>(List.of(
             "buildSrc/build.gradle",
+            "buildSrc/build.gradle.kts",
             "buildSrc/settings.gradle",
+            "buildSrc/settings.gradle.kts",
             "build.gradle",
+            "build.gradle.kts",
             "settings.gradle",
+            "settings.gradle.kts",
             "gradle.properties",
             "build.properties",
             "gradle/wrapper/gradle-wrapper.properties"

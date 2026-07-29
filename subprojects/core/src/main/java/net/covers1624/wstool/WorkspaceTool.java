@@ -93,7 +93,7 @@ public class WorkspaceTool {
                     }
                 })
                 .filterNot(e -> e.getFileName().toString().equals("buildSrc"))
-                .filter(e -> Files.exists(e.resolve("build.gradle")))
+                .filter(e -> Files.exists(e.resolve("build.gradle")) || Files.exists(e.resolve("build.gradle.kts")))
                 .toList();
         LOGGER.info("Found {} modules.", modulePaths.size());
 
