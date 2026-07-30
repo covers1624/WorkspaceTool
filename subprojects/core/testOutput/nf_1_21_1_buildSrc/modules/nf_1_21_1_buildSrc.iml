@@ -4,7 +4,6 @@
     <exclude-output />
     <output url="file://$PROJECT_DIR$/out/nf_1_21_1_buildSrc" />
     <content url="file://$PROJECT_DIR$">
-      <excludeFolder url="file://$PROJECT_DIR$/.idea" />
       <excludeFolder url="file://$PROJECT_DIR$/.wstool" />
       <excludeFolder url="file://$PROJECT_DIR$/out" />
     </content>

@@ -50,7 +50,6 @@ public class IJWorkspace implements Workspace {
 
         rootPath = new ModulePath(List.of(env.projectRoot().getFileName().toString()));
         var rootModule = new RootModule(env.projectRoot(), rootPath);
-        rootModule.excludes().add(env.projectRoot().resolve(".idea"));
         rootModule.excludes().add(env.projectRoot().resolve(".wstool"));
         rootModule.excludes().add(env.projectRoot().resolve("out"));
         modules.put(rootPath, rootModule);
