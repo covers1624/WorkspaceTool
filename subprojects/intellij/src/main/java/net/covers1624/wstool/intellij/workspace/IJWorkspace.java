@@ -6,6 +6,7 @@ import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.workspace.Module;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.api.workspace.Workspace;
+import net.covers1624.wstool.intellij.IntellijWorkspaceType;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import net.covers1624.wstool.util.DeletingFileVisitor;
 import org.jdom2.Document;
@@ -33,6 +34,7 @@ import static net.covers1624.wstool.intellij.IJUtils.fileUrl;
 public class IJWorkspace implements Workspace {
 
     private final Environment env;
+    private final IntellijWorkspaceType.LinkingMode linkingMode;
     private final ModulePath rootPath;
     private final Map<ModulePath, IJModule> modules = new LinkedHashMap<>();
     private final Map<String, IJProjectModule> projectModules = new LinkedHashMap<>();
@@ -42,8 +44,9 @@ public class IJWorkspace implements Workspace {
 
     private int javaVersion = 8;
 
-    public IJWorkspace(Environment env) {
+    public IJWorkspace(Environment env, IntellijWorkspaceType.LinkingMode linkingMode) {
         this.env = env;
+        this.linkingMode = linkingMode;
 
         rootPath = new ModulePath(List.of(env.projectRoot().getFileName().toString()));
         var rootModule = new RootModule(env.projectRoot(), rootPath);
@@ -115,7 +118,7 @@ public class IJWorkspace implements Workspace {
 
         runConfigs().values().forEach(depCollector::collectFrom);
 
-        depCollector.hardlinkToCacheDir(env.projectCache());
+        depCollector.linkLibrariesToCache(linkingMode, env.projectCache());
 
         Path librariesDir = ideaDir.resolve("libraries");
         try {

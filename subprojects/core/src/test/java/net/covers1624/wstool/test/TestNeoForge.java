@@ -28,6 +28,7 @@ public class TestNeoForge extends TestBase {
                     
                     workspace:
                       type: "intellij"
+                      linkingMode: 'force_broken_symlinks'
                       runs:
                       - name: Client
                         run_dir: ./run
@@ -62,6 +63,7 @@ public class TestNeoForge extends TestBase {
                     
                     workspace:
                       type: "intellij"
+                      linkingMode: 'force_broken_symlinks'
                       runs:
                       - name: Client
                         run_dir: ./run
@@ -91,6 +93,7 @@ public class TestNeoForge extends TestBase {
                     
                     workspace:
                       type: "intellij"
+                      linkingMode: 'force_broken_symlinks'
                       runs:
                       - name: Client
                         run_dir: ./run
@@ -120,6 +123,7 @@ public class TestNeoForge extends TestBase {
                     
                     workspace:
                       type: "intellij"
+                      linkingMode: 'force_broken_symlinks'
                       runs:
                       - name: Client
                         run_dir: ./run

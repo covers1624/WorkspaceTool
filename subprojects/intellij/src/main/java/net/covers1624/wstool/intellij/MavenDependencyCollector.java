@@ -88,15 +88,17 @@ public class MavenDependencyCollector {
         return notation.withVersion(null);
     }
 
-    public void hardlinkToCacheDir(Path path) {
+    public void linkLibrariesToCache(IntellijWorkspaceType.LinkingMode linkingMode, Path path) {
+        if (linkingMode == IntellijWorkspaceType.LinkingMode.DISABLED) return;
+
         Path librariesDir = path.resolve("libraries");
 
         try {
             for (CollectedEntry dep : collectedDependencies.values()) {
                 Path cacheLibDir = librariesDir.resolve(dep.notation.toModulePath()).resolve(requireNonNull(dep.currentVersion));
-                dep.classes = linkIntoDir(cacheLibDir, dep.classes);
-                dep.javadoc = linkIntoDir(cacheLibDir, dep.javadoc);
-                dep.sources = linkIntoDir(cacheLibDir, dep.sources);
+                dep.classes = linkIntoDir(linkingMode, cacheLibDir, dep.classes);
+                dep.javadoc = linkIntoDir(linkingMode, cacheLibDir, dep.javadoc);
+                dep.sources = linkIntoDir(linkingMode, cacheLibDir, dep.sources);
             }
         } catch (IOException ex) {
             LOGGER.error("Error whilst linking files.", ex);
@@ -107,35 +109,42 @@ public class MavenDependencyCollector {
         return Collections.unmodifiableCollection(collectedDependencies.values());
     }
 
-    private @Nullable Path linkIntoDir(Path dir, @Nullable Path originalFile) throws IOException {
+    private @Nullable Path linkIntoDir(IntellijWorkspaceType.LinkingMode linkingMode, Path dir, @Nullable Path originalFile) throws IOException {
         if (originalFile == null) return null;
 
         Path linkedFile = dir.resolve(originalFile.getFileName());
         // The gradle file was deleted from gradle cache.
         if (Files.exists(linkedFile) && Files.notExists(originalFile)) return linkedFile;
-        // TODO, we should check if the inode of hardlinkFile and originalFile are identical and bail.
-        //       We want to delete it here to restore the hardlink if gradle re-caches the file to de-dupe
-        //       and reclaim disk space for the user.
-        Files.deleteIfExists(linkedFile);
-        IOUtils.makeParents(linkedFile);
-        if (!hardlinkFailed) {
-            try {
-                var dstStore = Files.getFileStore(linkedFile.getParent());
-                var srcStore = Files.getFileStore(originalFile.getParent());
-                if (dstStore.name().equals(srcStore.name())) {
-                    Files.createLink(linkedFile, originalFile);
-                    return linkedFile;
+        switch (linkingMode) {
+            case USE_HARD_LINKS -> {
+                // TODO, we should check if the inode of hardlinkFile and originalFile are identical and bail.
+                //       We want to delete it here to restore the hardlink if gradle re-caches the file to de-dupe
+                //       and reclaim disk space for the user.
+                Files.deleteIfExists(linkedFile);
+                IOUtils.makeParents(linkedFile);
+                if (!hardlinkFailed) {
+                    try {
+                        var dstStore = Files.getFileStore(linkedFile.getParent());
+                        var srcStore = Files.getFileStore(originalFile.getParent());
+                        if (dstStore.name().equals(srcStore.name())) {
+                            Files.createLink(linkedFile, originalFile);
+                            return linkedFile;
+                        }
+                        LOGGER.debug("Refusing to hardlink files across stores {} {}", dstStore, srcStore);
+                    } catch (IOException ex) {
+                        LOGGER.warn("Failed to hardlink dependencies into the workspace. You will be vulnerable to Gradle cache expiring in-use dependencies.", ex);
+                        hardlinkFailed = true;
+                    }
                 }
-                LOGGER.debug("Refusing to hardlink files across stores {} {}", dstStore, srcStore);
-            } catch (IOException ex) {
-                LOGGER.warn("Failed to hardlink dependencies into the workspace. You will be vulnerable to Gradle cache expiring in-use dependencies.", ex);
-                hardlinkFailed = true;
             }
+            case FORCE_BROKEN_SYMLINKS -> {
+                Files.deleteIfExists(linkedFile);
+                IOUtils.makeParents(linkedFile);
+                // This only exists for the test engine.
+                Files.createSymbolicLink(IOUtils.makeParents(linkedFile), originalFile);
+            }
+            case DISABLED -> { }
         }
-        // Hard linking failed, lets fallback to a symlink.
-        // This mostly exists for the test framework, so we can make class paths and whatnot in run configs stable.
-        // TODO perhaps we can have some proper config driven property for this.
-        Files.createSymbolicLink(IOUtils.makeParents(linkedFile), originalFile);
         return linkedFile;
     }
 
