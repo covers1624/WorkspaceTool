@@ -29,8 +29,7 @@ public final class Main {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Wrapper");
 
-    public static final Path SYSTEM_WT_FOLDER = Paths.get(System.getProperty("user.home"), ".workspace_tool")
-            .toAbsolutePath()
+    public static final Path SYSTEM_WT_FOLDER = chooseSysFolder().toAbsolutePath()
             .normalize();
     public static final Path WT_JDKS = SYSTEM_WT_FOLDER.resolve("jdks");
     public static final Path PROJECT_FOLDER = Paths.get(".")
@@ -113,5 +112,12 @@ public final class Main {
                 .forVersion(required)
                 .build()
         );
+    }
+
+    private static Path chooseSysFolder() {
+        String sysFolderOverride = System.getenv("WSTOOL_SYS_FOLDER");
+        if (sysFolderOverride != null) return Paths.get(sysFolderOverride);
+
+        return Paths.get(System.getProperty("user.home"), ".workspace_tool");
     }
 }

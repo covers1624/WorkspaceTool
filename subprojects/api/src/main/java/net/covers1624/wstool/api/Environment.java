@@ -43,8 +43,15 @@ public interface Environment {
     <T> T getService(Class<? extends T> clazz);
 
     static Environment of() {
+        var sysFolderOverride = System.getenv("WSTOOL_SYS_FOLDER");
+        Path sysFolder;
+        if (sysFolderOverride != null) {
+            sysFolder = Path.of(sysFolderOverride);
+        } else {
+            sysFolder = Path.of(System.getProperty("user.home"), ".workspace_tool");
+        }
         return of(
-                Path.of(System.getProperty("user.home"), ".workspace_tool"),
+                sysFolder,
                 Path.of(".").toAbsolutePath().normalize()
         );
     }
