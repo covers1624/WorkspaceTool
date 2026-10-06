@@ -4,8 +4,8 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.workspace.Module;
-import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.api.workspace.Workspace;
+import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.intellij.IntellijWorkspaceType;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import net.covers1624.wstool.util.DeletingFileVisitor;
@@ -38,7 +38,6 @@ public class IJWorkspace implements Workspace {
     private final ModulePath rootPath;
     private final Map<ModulePath, IJModule> modules = new LinkedHashMap<>();
     private final Map<String, IJProjectModule> projectModules = new LinkedHashMap<>();
-
 
     private final Map<String, IJRunConfig> runConfigs = new LinkedHashMap<>();
 
@@ -153,6 +152,7 @@ public class IJWorkspace implements Workspace {
         for (IJRunConfig runConfig : runConfigs.values()) {
             Path dest = runsDir.resolve(runConfig.name().replace("/", "_") + ".xml");
             writeDocument(runConfig.writeDocument(env, depCollector), dest);
+            runConfig.createWorkingDir();
         }
     }
 

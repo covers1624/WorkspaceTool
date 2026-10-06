@@ -10,8 +10,13 @@ import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -24,7 +29,9 @@ import static java.util.Objects.requireNonNull;
 /**
  * Created by covers1624 on 5/25/25.
  */
-public class IJRunConfig implements RunConfig {
+public final class IJRunConfig implements RunConfig {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(IJRunConfig.class);
 
     private final String name;
 
@@ -188,6 +195,16 @@ public class IJRunConfig implements RunConfig {
 
         component.addContent(configuration);
         return new Document(component);
+    }
+
+    public void createWorkingDir() {
+        if (runDir == null) return;
+
+        try {
+            Files.createDirectories(runDir);
+        } catch (IOException ex) {
+            LOGGER.warn("Unable to create working directory {} for run config {}.", runDir, name);
+        }
     }
 
     private static String escape(String str) {
