@@ -14,6 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -25,7 +27,8 @@ import java.util.Map;
 public class DependencyRemapper {
 
     private static final Logger LOGGER = LogManager.getLogger("DependencyRemapper");
-    private static final java.lang.reflect.Type gsonType = new TypeToken<Map<String, RemappedData>>() { }.getType();
+    private static final Type gsonType = new TypeToken<Map<String, RemappedData>>() { }.getType();
+    private static final int VERSION = 1;
 
     private final Path cacheDir;
     private final Path cacheFile;
@@ -45,11 +48,17 @@ public class DependencyRemapper {
         RemappedData remappedData = remapCache.get(dep.getNotation().toString());
         if (remappedData == null) {
             remappedData = new RemappedData();
+            remappedData.version = VERSION;
         }
-        if (remappedData.classes == null || !remappedData.classes.exists()) {
+        if (remappedData.classes == null || !remappedData.classes.exists() || remappedData.version != VERSION) {
             remappedData.classes = cacheDir.resolve(dep.getNotation().toPath()).toFile();
             LOGGER.info("Remapping dependency {}..", dep.getNotation());
-            remapper.process(dep.getClasses(), remappedData.classes.toPath());
+            try {
+                remapper.process(dep.getClasses(), remappedData.classes.toPath());
+            } catch (IOException ex) {
+                throw new RuntimeException("Remapping dependency failed.", ex);
+            }
+            remappedData.version = VERSION;
             remapCache.put(dep.getNotation().toString(), remappedData);
             save();
         }
@@ -73,6 +82,7 @@ public class DependencyRemapper {
 
     private static class RemappedData {
 
+        public int version;
         public File classes;
         public File sources;
         public File javadoc;
