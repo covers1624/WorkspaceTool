@@ -46,8 +46,8 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
             LookupCache lookupCache = new LookupCache();
             ProjectData projectData = buildProjectTree(project, null, pluginBuilders, lookupCache);
 
-            for (ProjectTransformer transformer : projectTransformers) {
-                lookupCache.projects.forEach((proj, data) -> transformer.transformProject(project.findProject(proj), data));
+            for (ProjectBuilder transformer : projectBuilders) {
+                lookupCache.projects.forEach((proj, data) -> transformer.preTransformProject(project.findProject(proj), data));
             }
 
             for (ProjectBuilder builder : projectBuilders) {

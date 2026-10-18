@@ -2,8 +2,7 @@ package net.covers1624.wstool.neoforge.gradle;
 
 import net.covers1624.quack.collection.ColUtils;
 import net.covers1624.quack.collection.FastStream;
-import net.covers1624.wstool.gradle.LookupCache;
-import net.covers1624.wstool.gradle.ProjectTransformer;
+import net.covers1624.wstool.gradle.ProjectBuilder;
 import net.covers1624.wstool.gradle.api.data.PluginData;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.databuild.SourceSetDataBuilder;
@@ -12,8 +11,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ModuleDependency;
-import org.gradle.api.publish.maven.MavenDependency;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
@@ -23,10 +20,10 @@ import java.util.function.Predicate;
 /**
  * Created by covers1624 on 1/12/25.
  */
-public class NeoForgeProjectTransformer implements ProjectTransformer {
+public class NeoForgeProjectBuilder implements ProjectBuilder {
 
     @Override
-    public void transformProject(Project project, ProjectData projectData) {
+    public void preTransformProject(Project project, ProjectData projectData) {
         PluginData pluginData = projectData.pluginData();
         NeoForgeGradleVersion version = pluginData.getData(NeoForgeGradleVersion.class);
         if (version == null) return;

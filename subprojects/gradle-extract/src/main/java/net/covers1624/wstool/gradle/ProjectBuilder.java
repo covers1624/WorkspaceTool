@@ -8,12 +8,24 @@ import org.gradle.api.Project;
  * into the provided {@link ProjectData} tree. Most core gradle data should be
  * deposited here.
  * <p>
- * Project builders are run one-by-one over the entire tree at once, before continuing to
- * the next builder.
+ * Project builders are run in two phases, first, {@link #preTransformProject}, all builders
+ * are offered all projects to pre-transform them, this can be used to modify project structure,
+ * remove dependencies and configurations, and build local state.
+ * <p>
+ * Next, {@link #buildProjectData} where resolution of gradle objects is permitted. Data should be
+ * inserted into {@link ProjectData}.
  * <p>
  * Created by covers1624 on 9/9/23.
  */
 public interface ProjectBuilder {
+
+    /**
+     * Transform the gradle project, and build any internal data structures.
+     *
+     * @param project     The project to build from.
+     * @param projectData The project data to store into.
+     */
+    default void preTransformProject(Project project, ProjectData projectData) { }
 
     /**
      * Build any main project related information into the provided {@link ProjectData}.
@@ -22,5 +34,5 @@ public interface ProjectBuilder {
      * @param projectData The project data to store into.
      * @param lookupCache Various caches shared between builders and steps.
      */
-    void buildProjectData(Project project, ProjectData projectData, LookupCache lookupCache);
+    default void buildProjectData(Project project, ProjectData projectData, LookupCache lookupCache) { }
 }
