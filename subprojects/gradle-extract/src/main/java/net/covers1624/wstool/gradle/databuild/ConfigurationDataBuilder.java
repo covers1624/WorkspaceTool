@@ -5,6 +5,7 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.wstool.gradle.LookupCache;
 import net.covers1624.wstool.gradle.ProjectBuilder;
+import net.covers1624.wstool.gradle.Sorting;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData.MavenDependency;
 import org.codehaus.groovy.runtime.InvokerHelper;
@@ -40,6 +41,7 @@ import static java.util.Objects.requireNonNull;
  * Created by covers1624 on 9/9/23.
  */
 @SuppressWarnings ("NotNullFieldNotInitialized") // See comment bellow above fields.
+@Sorting (600)
 public class ConfigurationDataBuilder implements ProjectBuilder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationDataBuilder.class);

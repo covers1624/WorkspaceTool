@@ -36,11 +36,9 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
     public Object buildAll(String modelName, ModelProperties properties, Project project) {
         try {
             ClassLoader cl = WorkspaceToolModelBuilder.class.getClassLoader();
-            List<PluginBuilder> pluginBuilders = FastStream.of(ServiceLoader.load(PluginBuilder.class, cl))
+            List<PluginBuilder> pluginBuilders = sortWithIndex(FastStream.of(ServiceLoader.load(PluginBuilder.class, cl)))
                     .toList();
-            List<ProjectBuilder> projectBuilders = FastStream.of(ServiceLoader.load(ProjectBuilder.class, cl))
-                    .toList();
-            List<ProjectTransformer> projectTransformers = FastStream.of(ServiceLoader.load(ProjectTransformer.class, cl))
+            List<ProjectBuilder> projectBuilders = sortWithIndex(FastStream.of(ServiceLoader.load(ProjectBuilder.class, cl)))
                     .toList();
 
             LookupCache lookupCache = new LookupCache();
@@ -195,5 +193,23 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
         if (base == null) return null;
 
         return base.getArchivesName().getOrNull();
+    }
+
+    private static <T> FastStream<T> sortWithIndex(FastStream<T> stream) {
+        return stream.map(WithSorting::new)
+                .sorted(Comparator.comparingInt(e -> e.index))
+                .map(e -> e.thing);
+    }
+
+    private static class WithSorting<T> {
+
+        private final T thing;
+        private final int index;
+
+        public WithSorting(T thing) {
+            this.thing = thing;
+            Sorting ann = thing.getClass().getAnnotation(Sorting.class);
+            index = ann != null ? ann.value() : Sorting.DEFAULT;
+        }
     }
 }
