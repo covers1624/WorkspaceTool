@@ -1,13 +1,11 @@
 package net.covers1624.wstool.neoforge.gradle;
 
 import net.covers1624.quack.collection.FastStream;
+import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.gradle.api.GradleTestBase;
-import net.covers1624.wstool.gradle.api.data.ConfigurationList;
-import net.covers1624.wstool.gradle.api.data.ProjectData;
-import net.covers1624.wstool.gradle.api.data.SourceSetAttribute;
-import net.covers1624.wstool.gradle.api.data.SourceSetList;
+import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.minecraft.AccessTransformerData;
 import net.covers1624.wstool.minecraft.InterfaceInjectionData;
 import net.covers1624.wstool.minecraft.ModLoaderAttribute;
@@ -15,6 +13,7 @@ import net.covers1624.wstool.minecraft.SideAttribute;
 import net.covers1624.wstool.neoforge.gradle.api.NeoForgeGradleVersion;
 import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -502,6 +501,46 @@ public class NeoForgeUserDevExtractionTests extends GradleTestBase {
                         emitter.getRootProjectDir().resolve("src/main/resources/META-INF/interfaces_different.json")
                 )
         );
+    }
+
+    @Test
+    public void nestedProjectAppliesOuterProjectPlugin() throws Throwable {
+        var emitter = gradleEmitter("NestedPlugins")
+                .rootProject()
+                .withBuildGradle("""
+                        plugins {
+                            id 'net.neoforged.moddev' version '2.0.148' apply false
+                        }
+                        """)
+                .withSettingsGradle("include 'nested'")
+                .finish()
+                .subProject("nested")
+                .withBuildGradle("""
+                        plugins {
+                            id 'net.neoforged.moddev'
+                        }
+                        """)
+                .finish();
+
+        GradleModelExtractor extractor = extractor(emitter, false);
+        ProjectData data = extractor.extractProjectData(
+                emitter.getRootProjectDir(),
+                GradleVersion.version("9.8.2"),
+                Set.of()
+        );
+        assertNotNull(data);
+        // Root project does not apply the project!
+        assertNull(data.pluginData().getData(NeoForgeGradleVersion.class));
+
+        // The sub-project should have a NeoForgeGradleVersion attached though!
+        var subList = data.getData(SubProjectList.class);
+        assertNotNull(subList);
+        var nested = subList.get("nested");
+        assertNotNull(nested);
+        var nestedVersion = nested.pluginData().getData(NeoForgeGradleVersion.class);
+        assertNotNull(nestedVersion);
+        assertEquals(NeoForgeGradleVersion.Variant.MOD_DEV_GRADLE, nestedVersion.variant);
+        assertEquals("2.0.148", nestedVersion.version);
     }
 
     private void assertNoDependencies(ConfigurationList configurations, String name) {

@@ -20,28 +20,53 @@ public class NeoForgePluginBuilder implements PluginBuilder {
 
     @Override
     public void buildPluginData(Project project, PluginData pluginData, List<String> additionalConfigurations) {
-        String ngVersion = findViaClasspath(project, "net.neoforged", "NeoGradle");
-        if (ngVersion == null) {
-            ngVersion = findViaClasspath(project, "net.neoforged.gradle", "userdev");
-        }
-        if (ngVersion != null) {
-            pluginData.putData(NeoForgeGradleVersion.class, new NeoForgeGradleVersion(Variant.NEO_GRADLE_USER_DEV, ngVersion));
-            return;
-        }
-
-        String ngfVersion = findViaClasspath(project, "net.neoforged.gradle", "neoform");
-        if (ngfVersion != null) {
-            pluginData.putData(NeoForgeGradleVersion.class, new NeoForgeGradleVersion(Variant.NEO_GRADLE_NEO_FORM, ngfVersion));
-            return;
-        }
-
-        String mdgVersion = findViaClasspath(project, "net.neoforged", "moddev-gradle");
-        if (mdgVersion != null) {
-            pluginData.putData(NeoForgeGradleVersion.class, new NeoForgeGradleVersion(Variant.MOD_DEV_GRADLE, mdgVersion));
+        NeoForgeGradleVersion version = detect(project, pluginData);
+        if (version != null) {
+            pluginData.putData(NeoForgeGradleVersion.class, version);
         }
     }
 
-    private static @Nullable String findViaClasspath(Project project, String group, String name) {
+    private static @Nullable NeoForgeGradleVersion detect(Project project, PluginData pluginData) {
+        if (pluginData.plugins.containsKey("net.neoforged.gradle")) {
+            return new NeoForgeGradleVersion(
+                    Variant.NEO_GRADLE_USER_DEV,
+                    findViaClasspath(project, "net.neoforged", "NeoGradle")
+            );
+        }
+        if (pluginData.plugins.containsKey("net.neoforged.gradle.userdev")) {
+            return new NeoForgeGradleVersion(
+                    Variant.NEO_GRADLE_USER_DEV,
+                    findViaClasspath(project, "net.neoforged.gradle", "userdev")
+            );
+        }
+        if (pluginData.plugins.containsKey("net.neoforged.gradle.neoform")) {
+            return new NeoForgeGradleVersion(
+                    Variant.NEO_GRADLE_NEO_FORM,
+                    findViaClasspath(project, "net.neoforged.gradle", "neoform")
+            );
+        }
+        if (pluginData.plugins.containsKey("net.neoforged.moddev")) {
+            return new NeoForgeGradleVersion(
+                    Variant.MOD_DEV_GRADLE,
+                    findViaClasspath(project, "net.neoforged", "moddev-gradle")
+            );
+        }
+        return null;
+    }
+
+    private static @Nullable String findViaClasspath(@Nullable Project project, String group, String name) {
+        while (project != null) {
+            String version = findViaProjectClasspath(project, group, name);
+            if (version != null) {
+                return version;
+            }
+            project = project.getParent();
+        }
+
+        return null;
+    }
+
+    private static @Nullable String findViaProjectClasspath(Project project, String group, String name) {
         ConfigurationContainer configurations = project.getBuildscript().getConfigurations();
         Configuration configuration = configurations.findByName("classpath");
         if (configuration == null || !configuration.isCanBeResolved()) {

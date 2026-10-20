@@ -1,6 +1,7 @@
 package net.covers1624.wstool.neoforge.gradle.api;
 
 import net.covers1624.wstool.gradle.api.data.Data;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by covers1624 on 1/30/25.
@@ -8,9 +9,9 @@ import net.covers1624.wstool.gradle.api.data.Data;
 public class NeoForgeGradleVersion extends Data {
 
     public final Variant variant;
-    public final String version;
+    public final @Nullable String version;
 
-    public NeoForgeGradleVersion(Variant variant, String version) {
+    public NeoForgeGradleVersion(Variant variant, @Nullable String version) {
         this.variant = variant;
         this.version = version;
     }
