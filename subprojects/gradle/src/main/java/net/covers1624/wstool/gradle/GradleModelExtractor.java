@@ -64,6 +64,9 @@ public class GradleModelExtractor {
     // The version above which we run Gradle with Java 17.
     private static final GradleVersion MIN_GRADLE_USE_J17 = GradleVersion.version("7.3");
 
+    // The version above which we run Gradle with Java 25.
+    private static final GradleVersion MIN_GRADLE_USE_J25 = GradleVersion.version("9.1.0");
+
     private final Supplier<List<Path>> gradleClassPath = Suppliers.memoize(this::buildClassPath);
     private final Supplier<String> gradleClassPathHash = Suppliers.memoize(this::hashGradleClassPath);
     private final Supplier<Path> initScriptPath = Suppliers.memoize(this::buildInitScript);
@@ -249,6 +252,7 @@ public class GradleModelExtractor {
     }
 
     static JavaVersion getJavaVersionForGradle(GradleVersion gradleVersion) {
+        if (gradleVersion.compareTo(MIN_GRADLE_USE_J25) >= 0) return JavaVersion.JAVA_25;
         if (gradleVersion.compareTo(MIN_GRADLE_USE_J17) >= 0) return JavaVersion.JAVA_17;
         if (gradleVersion.compareTo(MIN_GRADLE_USE_J16) >= 0) return JavaVersion.JAVA_16;
         return JavaVersion.JAVA_1_8;
