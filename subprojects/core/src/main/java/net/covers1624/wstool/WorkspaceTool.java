@@ -249,6 +249,7 @@ public class WorkspaceTool {
         if (sourceSets != null) {
             for (SourceSetData data : sourceSets.asMap().values()) {
                 SourceSet sourceSet = module.newSourceSet(data.name);
+                sourceSet.setSourceSetData(data);
                 sourceSetMap.put(data, sourceSet);
 
                 sourceSet.sourcePaths().putAll(

@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +51,9 @@ public class SourceSetDataBuilder implements ProjectBuilder {
 
             addSourcesFromExtension(sourceSet, data);
             addSourcesFromConvention(sourceSet, data);
+
+            data.attributes.addAll(lookupCache.sourceSetAttrs.getOrDefault(sourceSet, Collections.emptySet()));
+
             sourceSetData.put(sourceSet.getName(), data);
 
             SourceSetOutput output = sourceSet.getOutput();

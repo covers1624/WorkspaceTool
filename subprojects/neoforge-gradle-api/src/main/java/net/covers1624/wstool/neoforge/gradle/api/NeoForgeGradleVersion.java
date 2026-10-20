@@ -16,7 +16,8 @@ public class NeoForgeGradleVersion extends Data {
     }
 
     public enum Variant {
-        NEO_GRADLE,
+        NEO_GRADLE_USER_DEV,
+        NEO_GRADLE_NEO_FORM,
         MOD_DEV_GRADLE,
     }
 }

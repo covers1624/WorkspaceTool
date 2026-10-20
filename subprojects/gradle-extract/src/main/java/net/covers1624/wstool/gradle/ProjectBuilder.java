@@ -25,7 +25,7 @@ public interface ProjectBuilder {
      * @param project     The project to build from.
      * @param projectData The project data to store into.
      */
-    default void preTransformProject(Project project, ProjectData projectData) { }
+    default void preTransformProject(Project project, ProjectData projectData, LookupCache lookup) { }
 
     /**
      * Build any main project related information into the provided {@link ProjectData}.

@@ -1,9 +1,7 @@
 package net.covers1624.wstool.gradle.api.data;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by covers1624 on 16/5/23.
@@ -16,6 +14,8 @@ public class SourceSetData extends Data {
     public final String runtimeClasspathConfiguration;
 
     public final Map<String, List<File>> sourceMap = new HashMap<>();
+
+    public final Set<SourceSetAttribute> attributes = new LinkedHashSet<>();
 
     public SourceSetData(String name, String compileClasspathConfiguration, String runtimeClasspathConfiguration) {
         this.name = name;

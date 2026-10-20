@@ -1,5 +1,7 @@
 package net.covers1624.wstool.api.workspace;
 
+import net.covers1624.wstool.gradle.api.data.SourceSetData;
+
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -42,4 +44,19 @@ public interface SourceSet {
      */
     List<Dependency> runtimeDependencies();
 
+    /**
+     * Get the Gradle data this source set was built from.
+     * <p>
+     * This is used by frameworks to pull frameworks specific gradle extraction data in.
+     *
+     * @return The Gradle source set data that this module was built from.
+     */
+    SourceSetData sourceSetData();
+
+    /**
+     * Set the gradle data for this source set.
+     *
+     * @param data The data.
+     */
+    void setSourceSetData(SourceSetData data);
 }
