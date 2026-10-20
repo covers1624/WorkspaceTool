@@ -26,10 +26,7 @@ import org.gradle.tooling.model.Task;
 import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,6 +38,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Created by covers1624 on 17/5/23.
@@ -110,19 +109,26 @@ public class GradleModelExtractor {
         HashContainer.Entry outputEntry = container.getEntry("output");
         outputEntry.putFile(cacheFile);
 
+        ProjectData data = null;
+
         // Incorporate previous run data for which files to cache key against.
         HashContainer.Entry hashablesCache = getGradleFilesCache(container, cacheFile);
-        if (Files.notExists(cacheFile) || gradle.changed() || hashablesCache == null || hashablesCache.changed() || outputEntry.changed()) {
+        if (Files.exists(cacheFile) && !gradle.changed() && hashablesCache != null && !hashablesCache.changed() && !outputEntry.changed()) {
+            data = parseProjectData(cacheFile, false);
+        }
+
+        if (data == null) {
             JavaVersion javaVersion = getJavaVersionForGradle(gradleVersion);
             Path javaHome = jdkProvider.findOrProvisionJdk(javaVersion);
             extractProjectData(javaHome, project, cacheFile, gradleVersion, extraTasks);
             gradle.pushChanges();
             // Data is extracted, re-build the hashables list and save it.
-            Objects.requireNonNull(getGradleFilesCache(container, cacheFile)).pushChanges();
+            requireNonNull(getGradleFilesCache(container, cacheFile)).pushChanges();
             outputEntry.pushChanges();
+            data = requireNonNull(parseProjectData(cacheFile, true));
         }
 
-        return parseProjectData(cacheFile);
+        return data;
     }
 
     private @Nullable HashContainer.Entry getGradleFilesCache(HashContainer container, Path oldCache) {
@@ -142,11 +148,14 @@ public class GradleModelExtractor {
 
     private List<Path> collectProjectPaths(Path cache) {
         try {
-            return collectProjectPaths(parseProjectData(cache));
+            var data = parseProjectData(cache, false);
+            if (data != null) {
+                return collectProjectPaths(data);
+            }
         } catch (Throwable ex) {
             LOGGER.warn("Failed to collect project paths.", ex);
-            return List.of();
         }
+        return List.of();
     }
 
     private List<Path> collectProjectPaths(ProjectData data) {
@@ -159,9 +168,14 @@ public class GradleModelExtractor {
                 .toList();
     }
 
-    private ProjectData parseProjectData(Path cache) {
+    private @Nullable ProjectData parseProjectData(Path cache, boolean strict) {
         try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(cache))) {
             return (ProjectData) in.readObject();
+        } catch (InvalidClassException ex) {
+            if (strict) {
+                throw new RuntimeException("Failed to read project data.", ex);
+            }
+            return null; // Cache is stale.
         } catch (IOException | ClassNotFoundException ex) {
             throw new RuntimeException("Failed to read project data.", ex);
         }
