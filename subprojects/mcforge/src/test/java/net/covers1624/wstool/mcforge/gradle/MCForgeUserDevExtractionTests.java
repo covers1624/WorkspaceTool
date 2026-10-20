@@ -1,16 +1,20 @@
 package net.covers1624.wstool.mcforge.gradle;
 
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.gradle.GradleModelExtractor;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
 import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.mcforge.gradle.api.MCForgeGradleVersion;
+import net.covers1624.wstool.minecraft.AccessTransformerData;
 import net.covers1624.wstool.minecraft.ModLoaderAttribute;
 import net.covers1624.wstool.minecraft.SideAttribute;
 import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +30,9 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         GradleEmitter emitter = gradleEmitter("FG2Tests")
                 .rootProject()
                 .withFile("gradle.properties", "org.gradle.daemon=false")
+                .withFile("src/main/resources/one_at.cfg", "")
+                .withFile("src/main/resources/two_at.cfg", "")
+                .withFile("src/main/resources/three_accesstransformer.cfg", "")
                 .withBuildGradle("""
                         buildscript {
                             repositories {
@@ -42,6 +49,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
                             version = "1.12.2-14.23.5.2847"
                             runDir = "run"
                             mappings = "snapshot_20171003"
+                        
+                            at 'src/main/resources/three_accesstransformer.cfg'
                         }
                         
                         getAssets.enabled = false
@@ -77,6 +86,12 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         assertDependenciesContain(configurationData, "runtimeClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
 
         assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
+
+        assertAccessTransformers(data, List.of(
+                emitter.getRootProjectDir().resolve("src/main/resources/one_at.cfg"),
+                emitter.getRootProjectDir().resolve("src/main/resources/three_accesstransformer.cfg"),
+                emitter.getRootProjectDir().resolve("src/main/resources/two_at.cfg")
+        ));
     }
 
     @Test
@@ -84,6 +99,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         GradleEmitter emitter = gradleEmitter("FG3Tests")
                 .rootProject()
                 .withGradleProperties("org.gradle.daemon=false")
+                .withFile("src/main/resources/META-INF/accesstransformer.cfg", "")
+                .withFile("src/main/resources/META-INF/accesstransformer_different.cfg", "")
                 .withBuildGradle("""
                         buildscript {
                             repositories {
@@ -97,6 +114,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
                         apply plugin: 'net.minecraftforge.gradle'
                         minecraft {
                             mappings channel: 'snapshot', version: '20190719-1.14.3'
+                            accessTransformer file('src/main/resources/META-INF/accesstransformer.cfg')
+                            accessTransformer file('src/main/resources/META-INF/accesstransformer_different.cfg')
                         }
                         
                         dependencies {
@@ -124,6 +143,14 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         var sourceSets = data.getData(SourceSetList.class);
         assertNotNull(sourceSets);
         assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
+
+        assertAccessTransformers(
+                data,
+                List.of(
+                        emitter.getRootProjectDir().resolve("src/main/resources/META-INF/accesstransformer.cfg"),
+                        emitter.getRootProjectDir().resolve("src/main/resources/META-INF/accesstransformer_different.cfg")
+                )
+        );
     }
 
     @Test
@@ -131,6 +158,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         GradleEmitter emitter = gradleEmitter("FG4Tests")
                 .rootProject()
                 .withGradleProperties("org.gradle.daemon=false")
+                .withFile("src/main/resources/META-INF/accesstransformer.cfg", "")
+                .withFile("src/main/resources/META-INF/accesstransformer_different.cfg", "")
                 .withBuildGradle("""
                         buildscript {
                             repositories {
@@ -144,6 +173,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
                         apply plugin: 'net.minecraftforge.gradle'
                         minecraft {
                             mappings channel: 'official', version: '1.16.5'
+                            accessTransformer file('src/main/resources/META-INF/accesstransformer.cfg')
+                            accessTransformer file('src/main/resources/META-INF/accesstransformer_different.cfg')
                         }
                         
                         dependencies {
@@ -171,6 +202,14 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         var sourceSets = data.getData(SourceSetList.class);
         assertNotNull(sourceSets);
         assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
+
+        assertAccessTransformers(
+                data,
+                List.of(
+                        emitter.getRootProjectDir().resolve("src/main/resources/META-INF/accesstransformer.cfg"),
+                        emitter.getRootProjectDir().resolve("src/main/resources/META-INF/accesstransformer_different.cfg")
+                )
+        );
     }
 
     @Test
@@ -178,6 +217,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         GradleEmitter emitter = gradleEmitter("FG4Tests")
                 .rootProject()
                 .withGradleProperties("org.gradle.daemon=false")
+                .withFile("src/main/resources/META-INF/accesstransformer.cfg", "")
+                .withFile("src/main/resources/META-INF/accesstransformer_different.cfg", "")
                 .withBuildGradle("""
                         buildscript {
                             repositories {
@@ -191,6 +232,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
                         apply plugin: 'net.minecraftforge.gradle'
                         minecraft {
                             mappings channel: 'official', version: '1.16.5'
+                            accessTransformer file('src/main/resources/META-INF/accesstransformer.cfg')
+                            accessTransformer file('src/main/resources/META-INF/accesstransformer_different.cfg')
                         }
                         
                         dependencies {
@@ -218,6 +261,14 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         var sourceSets = data.getData(SourceSetList.class);
         assertNotNull(sourceSets);
         assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
+
+        assertAccessTransformers(
+                data,
+                List.of(
+                        emitter.getRootProjectDir().resolve("src/main/resources/META-INF/accesstransformer.cfg"),
+                        emitter.getRootProjectDir().resolve("src/main/resources/META-INF/accesstransformer_different.cfg")
+                )
+        );
     }
 
     @Test
@@ -225,6 +276,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         GradleEmitter emitter = gradleEmitter("FG6Tests")
                 .rootProject()
                 .withGradleProperties("org.gradle.daemon=false")
+                .withFile("src/main/resources/META-INF/accesstransformer.cfg", "")
+                .withFile("src/main/resources/META-INF/accesstransformer_different.cfg", "")
                 .withSettingsGradle("""
                         pluginManagement {
                             repositories {
@@ -252,6 +305,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
                         
                         minecraft {
                             mappings channel: 'official', version: '1.16.5'
+                            accessTransformer file('src/main/resources/META-INF/accesstransformer.cfg')
+                            accessTransformer file('src/main/resources/META-INF/accesstransformer_different.cfg')
                         }
                         
                         dependencies {
@@ -279,6 +334,14 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         var sourceSets = data.getData(SourceSetList.class);
         assertNotNull(sourceSets);
         assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
+
+        assertAccessTransformers(
+                data,
+                List.of(
+                        emitter.getRootProjectDir().resolve("src/main/resources/META-INF/accesstransformer.cfg"),
+                        emitter.getRootProjectDir().resolve("src/main/resources/META-INF/accesstransformer_different.cfg")
+                )
+        );
     }
 
     private void assertNoDependencies(ConfigurationList configurations, String name) {
@@ -309,5 +372,11 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         var sourceSet = sourceSets.get(name);
         assertNotNull(sourceSet);
         assertEquals(expected, sourceSet.attributes);
+    }
+
+    private void assertAccessTransformers(ProjectData projectData, List<Path> files) {
+        var atData = projectData.getData(AccessTransformerData.class);
+        assertNotNull(atData);
+        assertEquals(FastStream.of(files).map(Path::toFile).toList(), atData.files);
     }
 }
