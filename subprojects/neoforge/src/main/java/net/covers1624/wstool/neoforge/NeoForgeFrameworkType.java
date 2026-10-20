@@ -12,10 +12,7 @@ import net.covers1624.wstool.api.workspace.runs.EvalValue.ClasspathValue;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.gradle.GradleTaskExecutor;
 import net.covers1624.wstool.gradle.api.data.*;
-import net.covers1624.wstool.minecraft.AssetDownloader;
-import net.covers1624.wstool.minecraft.ForgeLikeFramework;
-import net.covers1624.wstool.minecraft.JSTExecutor;
-import net.covers1624.wstool.minecraft.ModLoaderAttribute;
+import net.covers1624.wstool.minecraft.*;
 import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
 import org.jetbrains.annotations.Nullable;
 
@@ -69,12 +66,10 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         }
 
         var ifaceCache = hashContainer.getEntry("iface_injections");
-        var ifaceInjections = collectInterfaceInjections(workspace);
-        ifaceInjections.forEach(ifaceCache::putFile);
+        var ifaceInjections = new ArrayList<Path>();
 
         var atCache = hashContainer.getEntry("access_transformers");
-        var accessTransformers = collectAccessTransformers(workspace);
-        accessTransformers.forEach(atCache::putFile);
+        var accessTransformers = new ArrayList<Path>();
 
         var parchmentCache = hashContainer.getEntry("parchment");
         var parchmentVersion = parchment();
@@ -91,6 +86,24 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
         var nfCoreModsMain = nfCoreMods.sourceSets().get("main");
 
+        // TODO this is not correct if we ever wire stuff up to the base/vanilla module.
+        for (Module module : workspace.allProjectModules()) {
+            var projectData = module.projectData();
+            if (projectData == null) continue;
+
+            var ifaceData = projectData.getData(InterfaceInjectionData.class);
+            if (ifaceData != null) {
+                ifaceData.files.forEach(e -> ifaceInjections.add(e.toPath()));
+            }
+
+            var atData = projectData.getData(AccessTransformerData.class);
+            if (atData != null) {
+                atData.files.forEach(e -> accessTransformers.add(e.toPath()));
+            }
+        }
+
+        ifaceInjections.forEach(ifaceCache::putFile);
+        accessTransformers.forEach(atCache::putFile);
         if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed() || parchmentCache.changed()) {
             taskExecutor.runTask(rootDir, "clean");
             taskExecutor.runTask(rootDir, "setup");

@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Created by covers1624 on 15/5/23.
@@ -37,5 +38,21 @@ public abstract class Data implements Serializable {
     @Nullable
     public <T extends Data> T getData(Class<T> clazz) {
         return SneakyUtils.unsafeCast(data.get(clazz));
+    }
+
+    /**
+     * Get a data object of a specific type, or create it if it's missing.
+     *
+     * @param clazz The type of the data object to retrieve.
+     * @param supp  The factory to create the data object if missing.
+     * @return The data object.
+     */
+    public <T extends Data> T getOrCreateData(Class<T> clazz, Supplier<? extends T> supp) {
+        T t = getData(clazz);
+        if (t == null) {
+            t = supp.get();
+            putData(clazz, t);
+        }
+        return t;
     }
 }
