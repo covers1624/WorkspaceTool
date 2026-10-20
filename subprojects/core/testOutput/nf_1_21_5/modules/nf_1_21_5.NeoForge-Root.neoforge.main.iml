@@ -112,6 +112,7 @@
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="org.ow2.asm:asm-analysis:9.8" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="cpw.mods:bootstraplauncher:2.0.2" />
     <orderEntry scope="COMPILE" exported="" type="library" level="project" name="net.neoforged:JarJarFileSystems:0.4.1" />
+    <orderEntry scope="COMPILE" exported="" type="library" level="project" name="io.github.llamalad7:mixinextras-neoforge:0.5.0" />
     <orderEntry scope="COMPILE" exported="" type="module" module-name="nf_1_21_5.CodeChicken.CodeChickenLib.main" />
     <orderEntry scope="RUNTIME" exported="" type="module-library">
       <library name="minecraft-resources.jar">
@@ -241,5 +242,6 @@
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.neoforged.fancymodloader:earlydisplay:7.0.13" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="net.fabricmc:sponge-mixin:0.15.2+mixin.0.8.7" />
     <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="cpw.mods:bootstraplauncher:2.0.2" />
+    <orderEntry scope="RUNTIME" exported="" type="library" level="project" name="io.github.llamalad7:mixinextras-neoforge:0.5.0" />
   </component>
 </module>

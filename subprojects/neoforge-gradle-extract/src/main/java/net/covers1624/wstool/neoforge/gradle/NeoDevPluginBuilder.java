@@ -39,6 +39,12 @@ public class NeoDevPluginBuilder implements PluginBuilder {
             } else {
                 pluginData.putData(NeoDevData.class, new NeoDevData(null));
             }
+
+            Configuration userdevCompileOnly = configurations.findByName("userdevCompileOnly");
+            Configuration libraries = configurations.findByName("libraries");
+            if (userdevCompileOnly != null && libraries != null) {
+                libraries.extendsFrom(userdevCompileOnly);
+            }
         }
     }
 }
