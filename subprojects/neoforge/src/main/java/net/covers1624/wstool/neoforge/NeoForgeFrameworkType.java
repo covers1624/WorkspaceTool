@@ -86,6 +86,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
         var nfCoreModsMain = nfCoreMods.sourceSets().get("main");
 
+        // TODO this is not correct if we ever wire stuff up to the base/vanilla module.
         for (Module module : workspace.allProjectModules()) {
             var projectData = module.projectData();
             if (projectData == null) continue;
