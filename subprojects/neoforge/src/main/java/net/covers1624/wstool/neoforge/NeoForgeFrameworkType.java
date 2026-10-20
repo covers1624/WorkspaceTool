@@ -15,11 +15,11 @@ import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.minecraft.AssetDownloader;
 import net.covers1624.wstool.minecraft.ForgeLikeFramework;
 import net.covers1624.wstool.minecraft.JSTExecutor;
+import net.covers1624.wstool.minecraft.ModLoaderAttribute;
 import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -121,12 +121,18 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
         var legacyClasspath = new LinkedHashSet<>(nfMain.runtimeDependencies());
 
-        // TODO we should be able to detect which source sets are mods in Gradle.
         for (Module module : workspace.allProjectModules()) {
             // TODO this needs to be better, perhaps we can add an exclude param to allProjectModules.
             if (module == nfModule || nfModule.subModules().containsValue(module)) continue;
             for (SourceSet ss : module.sourceSets().values()) {
-                if (isNeoForgeModPresent(ss)) {
+                // Exclude test source set. Any attrs on it should be inherited
+                // by the main source set, we also don't want it to be on the runtime classpath of Neo..
+                if (ss.name().equals("test")) continue;
+
+                var ssData = ss.sourceSetData();
+
+                // Link older Forge modules to NeoForge as well.
+                if (ssData.attributes.contains(ModLoaderAttribute.NEO_FORGE) || ssData.attributes.contains(ModLoaderAttribute.MC_FORGE)) {
                     nfMain.compileDependencies().add(new Dependency.SourceSetDependency(ss));
                     ss.compileDependencies().add(new Dependency.SourceSetDependency(nfMain));
                     // TODO split source set mods will need some work here.
@@ -273,14 +279,5 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                 "--fml.mcVersion", properties.get("minecraft_version"),
                 "--fml.neoFormVersion", properties.get("neoform_version")
         );
-    }
-
-    private static boolean isNeoForgeModPresent(SourceSet sourceSet) {
-        for (Path resourcesDir : sourceSet.sourcePaths().getOrDefault("resources", List.of())) {
-            if (Files.exists(resourcesDir.resolve("META-INF/mods.toml")) || Files.exists(resourcesDir.resolve("META-INF/neoforge.mods.toml"))) {
-                return true;
-            }
-        }
-        return false;
     }
 }

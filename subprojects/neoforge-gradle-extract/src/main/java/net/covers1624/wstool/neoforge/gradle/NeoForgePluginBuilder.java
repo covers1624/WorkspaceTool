@@ -4,6 +4,7 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.gradle.PluginBuilder;
 import net.covers1624.wstool.gradle.api.data.PluginData;
 import net.covers1624.wstool.neoforge.gradle.api.NeoForgeGradleVersion;
+import net.covers1624.wstool.neoforge.gradle.api.NeoForgeGradleVersion.Variant;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
@@ -24,13 +25,19 @@ public class NeoForgePluginBuilder implements PluginBuilder {
             ngVersion = findViaClasspath(project, "net.neoforged.gradle", "userdev");
         }
         if (ngVersion != null) {
-            pluginData.putData(NeoForgeGradleVersion.class, new NeoForgeGradleVersion(NeoForgeGradleVersion.Variant.NEO_GRADLE, ngVersion));
+            pluginData.putData(NeoForgeGradleVersion.class, new NeoForgeGradleVersion(Variant.NEO_GRADLE_USER_DEV, ngVersion));
+            return;
+        }
+
+        String ngfVersion = findViaClasspath(project, "net.neoforged.gradle", "neoform");
+        if (ngfVersion != null) {
+            pluginData.putData(NeoForgeGradleVersion.class, new NeoForgeGradleVersion(Variant.NEO_GRADLE_NEO_FORM, ngfVersion));
             return;
         }
 
         String mdgVersion = findViaClasspath(project, "net.neoforged", "moddev-gradle");
         if (mdgVersion != null) {
-            pluginData.putData(NeoForgeGradleVersion.class, new NeoForgeGradleVersion(NeoForgeGradleVersion.Variant.MOD_DEV_GRADLE, mdgVersion));
+            pluginData.putData(NeoForgeGradleVersion.class, new NeoForgeGradleVersion(Variant.MOD_DEV_GRADLE, mdgVersion));
         }
     }
 

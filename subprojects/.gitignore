@@ -13,6 +13,7 @@
 !mcforge-gradle-api/
 !mcforge-gradle-extract/
 !minecraft/
+!minecraft-gradle-api/
 !neoforge/
 !neoforge-gradle-api/
 !neoforge-gradle-extract/

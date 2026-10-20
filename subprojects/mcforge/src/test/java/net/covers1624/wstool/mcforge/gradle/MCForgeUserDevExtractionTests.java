@@ -1,10 +1,12 @@
 package net.covers1624.wstool.mcforge.gradle;
 
 import net.covers1624.wstool.gradle.GradleModelExtractor;
-import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.GradleEmitter;
+import net.covers1624.wstool.gradle.api.GradleTestBase;
 import net.covers1624.wstool.gradle.api.data.*;
 import net.covers1624.wstool.mcforge.gradle.api.MCForgeGradleVersion;
+import net.covers1624.wstool.minecraft.ModLoaderAttribute;
+import net.covers1624.wstool.minecraft.SideAttribute;
 import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.Test;
 
@@ -73,6 +75,8 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         assertNotNull(configurationData);
         assertDependenciesContain(configurationData, "compileClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
         assertDependenciesContain(configurationData, "runtimeClasspath", Set.of(new ConfigurationData.SourceSetDependency(apiSourceSet)));
+
+        assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
     }
 
     @Test
@@ -116,6 +120,10 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         ConfigurationList configurationData = data.getData(ConfigurationList.class);
         assertNotNull(configurationData);
         assertNull(configurationData.get("minecraft"));
+
+        var sourceSets = data.getData(SourceSetList.class);
+        assertNotNull(sourceSets);
+        assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
     }
 
     @Test
@@ -159,6 +167,10 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         assertNotNull(configurationData);
         assertNoDependencies(configurationData, "compileClasspath");
         assertNoDependencies(configurationData, "runtimeClasspath");
+
+        var sourceSets = data.getData(SourceSetList.class);
+        assertNotNull(sourceSets);
+        assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
     }
 
     @Test
@@ -202,6 +214,10 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         assertNotNull(configurationData);
         assertNoDependencies(configurationData, "compileClasspath");
         assertNoDependencies(configurationData, "runtimeClasspath");
+
+        var sourceSets = data.getData(SourceSetList.class);
+        assertNotNull(sourceSets);
+        assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
     }
 
     @Test
@@ -259,6 +275,10 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
         assertNotNull(configurationData);
         assertNoDependencies(configurationData, "compileClasspath");
         assertNoDependencies(configurationData, "runtimeClasspath");
+
+        var sourceSets = data.getData(SourceSetList.class);
+        assertNotNull(sourceSets);
+        assertAttributes(sourceSets, "main", Set.of(ModLoaderAttribute.MC_FORGE, SideAttribute.JOINED));
     }
 
     private void assertNoDependencies(ConfigurationList configurations, String name) {
@@ -283,5 +303,11 @@ public class MCForgeUserDevExtractionTests extends GradleTestBase {
                 .isNotNull();
         assertThat(configuration.dependencies)
                 .isEqualTo(deps);
+    }
+
+    private void assertAttributes(SourceSetList sourceSets, String name, Set<SourceSetAttribute> expected) {
+        var sourceSet = sourceSets.get(name);
+        assertNotNull(sourceSet);
+        assertEquals(expected, sourceSet.attributes);
     }
 }

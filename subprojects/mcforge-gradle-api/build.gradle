@@ -9,6 +9,7 @@ archivesBaseName = 'mcforge-gradle-api'
 
 dependencies {
     api project(':gradle-api')
+    api project(':minecraft-gradle-api')
 }
 
 publishing {

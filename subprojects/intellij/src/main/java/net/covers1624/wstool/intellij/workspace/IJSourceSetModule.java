@@ -3,12 +3,16 @@ package net.covers1624.wstool.intellij.workspace;
 import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.api.workspace.Module;
 import net.covers1624.wstool.api.workspace.SourceSet;
+import net.covers1624.wstool.gradle.api.data.SourceSetData;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Created by covers1624 on 5/5/25.
@@ -20,6 +24,8 @@ public final class IJSourceSetModule extends IJModule implements SourceSet {
     private final Map<String, List<Path>> sourcePaths = new LinkedHashMap<>();
     private final List<Dependency> compileDependencies = new ArrayList<>();
     private final List<Dependency> runtimeDependencies = new ArrayList<>();
+
+    private @Nullable SourceSetData sourceSetData;
 
     public IJSourceSetModule(ModulePath path, Module module) {
         super(path);
@@ -44,6 +50,16 @@ public final class IJSourceSetModule extends IJModule implements SourceSet {
     @Override
     public List<Dependency> runtimeDependencies() {
         return runtimeDependencies;
+    }
+
+    @Override
+    public SourceSetData sourceSetData() {
+        return requireNonNull(sourceSetData);
+    }
+
+    @Override
+    public void setSourceSetData(SourceSetData data) {
+        sourceSetData = data;
     }
 
     @Override

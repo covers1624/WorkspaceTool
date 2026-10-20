@@ -8,10 +8,15 @@ import net.covers1624.wstool.gradle.api.WorkspaceToolModel;
 import net.covers1624.wstool.gradle.api.data.PluginData;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import net.covers1624.wstool.gradle.api.data.SubProjectList;
+import net.covers1624.wstool.gradle.databuild.SourceSetDataBuilder;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.plugins.BasePluginExtension;
 import org.gradle.api.plugins.PluginContainer;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +50,7 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
             ProjectData projectData = buildProjectTree(project, null, pluginBuilders, lookupCache);
 
             for (ProjectBuilder transformer : projectBuilders) {
-                lookupCache.projects.forEach((proj, data) -> transformer.preTransformProject(project.findProject(proj), data));
+                lookupCache.projects.forEach((proj, data) -> transformer.preTransformProject(project.findProject(proj), data, lookupCache));
             }
 
             for (ProjectBuilder builder : projectBuilders) {
@@ -90,6 +95,8 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
         }
         lookupCache.projects.put(project.getPath(), projectData);
 
+        buildConfigurationReachability(project, lookupCache);
+
         SubProjectList subProjectData = new SubProjectList();
         for (Project subProj : project.getSubprojects()) {
             subProjectData.put(subProj.getName(), buildProjectTree(subProj, projectData, pluginBuilders, lookupCache));
@@ -97,6 +104,27 @@ public class WorkspaceToolModelBuilder implements ParameterizedToolingModelBuild
         projectData.putData(SubProjectList.class, subProjectData);
 
         return projectData;
+    }
+
+    private static void buildConfigurationReachability(Project project, LookupCache lookup) {
+        SourceSetContainer sourceSets = SourceSetDataBuilder.getSourceSetContainer(project);
+        if (sourceSets == null) return;
+
+        ConfigurationContainer configurations = project.getConfigurations();
+
+        for (SourceSet sourceSet : sourceSets) {
+            FastStream<Configuration> reachable = FastStream.of(
+                            sourceSet.getRuntimeClasspathConfigurationName(),
+                            sourceSet.getCompileClasspathConfigurationName()
+                    )
+                    .map(configurations::getByName)
+                    .flatMap(Configuration::getHierarchy)
+                    .distinct();
+            reachable.forEach(config -> {
+                lookup.reachableSourceSets.computeIfAbsent(config, e -> new ArrayList<>())
+                        .add(sourceSet);
+            });
+        }
     }
 
     // Build all plugin specific data for the project.

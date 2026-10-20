@@ -1,5 +1,6 @@
 package net.covers1624.wstool.neoforge.gradle;
 
+import net.covers1624.wstool.gradle.LookupCache;
 import net.covers1624.wstool.gradle.ProjectBuilder;
 import net.covers1624.wstool.gradle.api.data.ProjectData;
 import org.gradle.api.Project;
@@ -10,6 +11,6 @@ import org.gradle.api.Project;
 public class NeoDevProjectBuilder implements ProjectBuilder {
 
     @Override
-    public void preTransformProject(Project project, ProjectData projectData) {
+    public void preTransformProject(Project project, ProjectData projectData, LookupCache lookup) {
     }
 }
