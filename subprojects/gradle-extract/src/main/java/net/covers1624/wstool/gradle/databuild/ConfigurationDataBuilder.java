@@ -164,6 +164,7 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
         SourceSet sourceSet = null;
         try {
             sourceSet = pickSourceSetForFeatures(projectDep, project);
+        } catch (NoSuchMethodError ignored) {
         } catch (Throwable ex) {
             LOGGER.error("Failed to pick ProjectDependency feature.", ex);
         }
