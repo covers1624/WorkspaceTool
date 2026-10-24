@@ -24,6 +24,7 @@ public final class IJSourceSetModule extends IJModule implements SourceSet {
     private final Map<String, List<Path>> sourcePaths = new LinkedHashMap<>();
     private final List<Dependency> compileDependencies = new ArrayList<>();
     private final List<Dependency> runtimeDependencies = new ArrayList<>();
+    private final List<Dependency> apDependencies = new ArrayList<>();
 
     private @Nullable SourceSetData sourceSetData;
 
@@ -50,6 +51,11 @@ public final class IJSourceSetModule extends IJModule implements SourceSet {
     @Override
     public List<Dependency> runtimeDependencies() {
         return runtimeDependencies;
+    }
+
+    @Override
+    public List<Dependency> annotationProcessorDependencies() {
+        return apDependencies;
     }
 
     @Override

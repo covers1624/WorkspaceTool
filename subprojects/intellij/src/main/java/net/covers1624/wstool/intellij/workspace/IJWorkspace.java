@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
+import static java.util.Objects.requireNonNull;
 import static net.covers1624.wstool.intellij.IJUtils.fileUrl;
 
 /**
@@ -130,6 +132,7 @@ public class IJWorkspace implements Workspace {
         writeDocument(buildModulesXml(moduleFiles), ideaDir.resolve("modules.xml"));
 
         emitJavaVersionIntoMisc(ideaDir.resolve("misc.xml"));
+        insertIntoCompiler(ideaDir.resolve("compiler.xml"), depResolver);
 
         Path runsDir = ideaDir.resolve("runConfigurations");
         for (IJRunConfig runConfig : runConfigs.values()) {
@@ -183,16 +186,9 @@ public class IJWorkspace implements Workspace {
     }
 
     private void emitJavaVersionIntoMisc(Path miscFile) {
-        Document document;
-        if (Files.exists(miscFile)) {
-            try (InputStream is = Files.newInputStream(miscFile)) {
-                document = new SAXBuilder().build(is);
-            } catch (IOException | JDOMException ex) {
-                throw new RuntimeException("Failed to parse existing misc.xml file.", ex);
-            }
-        } else {
-            document = new Document(new Element("project").setAttribute("version", "4"));
-        }
+        var document = loadOrCreateDocument(miscFile, () ->
+                new Document(new Element("project").setAttribute("version", "4"))
+        );
         Element project = document.getRootElement();
 
         Element projectRootManager = FastStream.of(project.getChildren("component"))
@@ -218,6 +214,70 @@ public class IJWorkspace implements Workspace {
 
         // TODO see if we can emit sdk's as project libraries yet, let the user select to allocate/name one in the config?
         writeDocument(document, miscFile);
+    }
+
+    private void insertIntoCompiler(Path compilerFile, DependencyResolver depResolver) {
+        var document = loadOrCreateDocument(compilerFile, () ->
+                new Document(new Element("project").setAttribute("version", "4"))
+        );
+        Element project = document.getRootElement();
+
+        var compilerConfiguration = FastStream.of(project.getChildren("component"))
+                .filter(e -> e.getAttributeValue("name", "").equals("CompilerConfiguration"))
+                .onlyOrDefault();
+        if (compilerConfiguration == null) {
+            compilerConfiguration = new Element("component")
+                    .setAttribute("name", "CompilerConfiguration");
+            project.addContent(compilerConfiguration);
+        }
+
+        var modulesWithAP = FastStream.of(modules.values())
+                .mapNonNull(e -> e instanceof IJSourceSetModule m ? m : null)
+                .filterNot(e -> e.annotationProcessorDependencies().isEmpty())
+                .toList();
+
+        if (!modulesWithAP.isEmpty()) {
+            var ap = compilerConfiguration.getChild("annotationProcessing");
+            if (ap == null) {
+                ap = new Element("annotationProcessing");
+                compilerConfiguration.addContent(ap);
+            }
+            FastStream.of(ap.getChildren("profile"))
+                    .filter(e -> e.getAttributeValue("name", "").equals("WorkspaceTool Imported"))
+                    .toList()
+                    .forEach(ap::removeContent);
+
+            for (IJSourceSetModule module : modulesWithAP) {
+                var profile = new Element("profile")
+                        .setAttribute("name", "WorkspaceTool Imported")
+                        .setAttribute("enabled", "true");
+
+                profile.addContent(new Element("outputRelativeToContentRoot").setAttribute("value", "true"));
+                profile.addContent(new Element("module").setAttribute("name", module.path.toString()));
+                var processorPath = new Element("processorPath")
+                        .setAttribute("useClasspath", "false");
+                for (var dep : module.annotationProcessorDependencies()) {
+                    var entry = new Element("entry")
+                            .setAttribute("name", requireNonNull(depResolver.resolvePath(dep)).toAbsolutePath().toString());
+                    processorPath.addContent(entry);
+                }
+                profile.addContent(processorPath);
+
+                ap.addContent(profile);
+            }
+        }
+
+        writeDocument(document, compilerFile);
+    }
+
+    private static Document loadOrCreateDocument(Path file, Supplier<Document> factory) {
+        if (Files.notExists(file)) return factory.get();
+
+        try (InputStream is = Files.newInputStream(file)) {
+            return new SAXBuilder().build(is);
+        } catch (IOException | JDOMException ex) {
+            throw new RuntimeException("Failed to parse document: " + file, ex);
+        }
     }
 
     private static void writeDocument(Document doc, Path file) {

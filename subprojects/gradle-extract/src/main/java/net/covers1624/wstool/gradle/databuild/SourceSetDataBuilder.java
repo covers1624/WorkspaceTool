@@ -45,7 +45,12 @@ public class SourceSetDataBuilder implements ProjectBuilder {
         if (sourceSets == null) return;
 
         for (SourceSet sourceSet : sourceSets) {
-            SourceSetData data = new SourceSetData(sourceSet.getName(), sourceSet.getCompileClasspathConfigurationName(), sourceSet.getRuntimeClasspathConfigurationName());
+            SourceSetData data = new SourceSetData(
+                    sourceSet.getName(),
+                    sourceSet.getCompileClasspathConfigurationName(),
+                    sourceSet.getRuntimeClasspathConfigurationName(),
+                    sourceSet.getAnnotationProcessorConfigurationName()
+            );
             data.sourceMap.put("resources", getFiles(sourceSet.getResources()));
             data.sourceMap.put("java", getFiles(sourceSet.getJava()));
 

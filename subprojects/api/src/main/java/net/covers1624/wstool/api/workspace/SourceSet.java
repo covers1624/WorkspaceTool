@@ -45,6 +45,11 @@ public interface SourceSet {
     List<Dependency> runtimeDependencies();
 
     /**
+     * @return The {@link Dependency dependencies} on this source sets annotation processor classpath.
+     */
+    List<Dependency> annotationProcessorDependencies();
+
+    /**
      * Get the Gradle data this source set was built from.
      * <p>
      * This is used by frameworks to pull frameworks specific gradle extraction data in.

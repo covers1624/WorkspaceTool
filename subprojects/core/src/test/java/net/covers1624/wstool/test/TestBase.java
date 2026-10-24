@@ -3,6 +3,7 @@ package net.covers1624.wstool.test;
 import com.google.common.collect.Sets;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.CopyingFileVisitor;
+import net.covers1624.quack.util.SneakyUtils;
 import net.covers1624.wstool.WorkspaceTool;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.GitRepoManager;
@@ -68,7 +69,7 @@ public abstract class TestBase {
             return this;
         }
 
-        public TestInstance gradleProject(String path, String name, Consumer<GradleEmitter> cons) {
+        public TestInstance gradleProject(String path, String name, SneakyUtils.ThrowingConsumer<GradleEmitter, IOException> cons) throws IOException {
             GradleEmitter emitter = new GradleEmitter(name, projectDir.resolve(path));
             cons.accept(emitter);
             return this;

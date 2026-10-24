@@ -100,6 +100,11 @@ public class ConfigurationDataBuilder implements ProjectBuilder {
                     configurations.getAt(e.runtimeClasspathConfiguration),
                     getOrCreate(e.runtimeClasspathConfiguration)
             );
+            extractDependencies(
+                    ss.getAnnotationProcessorPath().minus(ss.getOutput()),
+                    configurations.getAt(e.annotationProcessorClasspathConfiguration),
+                    getOrCreate(e.annotationProcessorClasspathConfiguration)
+            );
         });
 
         for (Configuration extra : extraConfigurations) {

@@ -49,6 +49,7 @@ public class MavenDependencyCollector {
         for (SourceSet ss : module.sourceSets().values()) {
             collectDeps(ss.runtimeDependencies());
             collectDeps(ss.compileDependencies());
+            collectDeps(ss.annotationProcessorDependencies());
         }
         for (Module subModule : module.subModules().values()) {
             collectFrom(subModule);

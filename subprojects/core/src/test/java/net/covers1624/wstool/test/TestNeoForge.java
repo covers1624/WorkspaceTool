@@ -50,6 +50,29 @@ public class TestNeoForge extends TestBase {
             test.cloneRepo(
                     "CodeChicken/CodeChickenLib", "https://github.com/TheCBProject/CodeChickenLib", "master", "d6667cb693b2b28fb784a2d42987917b06f5114e"
             );
+            test.gradleProject("WithAnnotationProcessorDeps", "WithCompileOnlyDeps", e -> e
+                    .rootProject()
+                    .withFile("gradle/wrapper/gradle-wrapper.properties", """
+                            distributionBase=GRADLE_USER_HOME
+                            distributionPath=wrapper/dists
+                            distributionUrl=https\\://services.gradle.org/distributions/gradle-9.6.1-bin.zip
+                            zipStoreBase=GRADLE_USER_HOME
+                            zipStorePath=wrapper/dists
+                            """)
+                    .withBuildGradle("""
+                            plugins {
+                                id 'java'
+                            }
+                            
+                            repositories {
+                                mavenCentral()
+                            }
+                            
+                            dependencies {
+                                annotationProcessor 'net.sf.trove4j:core:3.1.0'
+                            }
+                            """)
+            );
             test.emitWorkspaceFile("""
                     frameworks:
                       - type: 'neoforge:1.21'
@@ -60,6 +83,7 @@ public class TestNeoForge extends TestBase {
                     
                     modules:
                       - "CodeChicken/**"
+                      - "WithAnnotationProcessorDeps"
                     
                     workspace:
                       type: "intellij"

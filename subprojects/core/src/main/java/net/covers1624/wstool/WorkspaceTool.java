@@ -192,6 +192,14 @@ public class WorkspaceTool {
                                 configurations.get(data.runtimeClasspathConfiguration).dependencies
                         )
                 );
+
+                sourceSet.annotationProcessorDependencies().addAll(
+                        buildDependencies(
+                                moduleMap,
+                                sourceSetMap,
+                                configurations.get(data.annotationProcessorClasspathConfiguration).dependencies
+                        )
+                );
             }
         });
         return module;

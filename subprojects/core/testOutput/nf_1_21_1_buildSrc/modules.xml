@@ -7,6 +7,9 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.CodeChicken.CodeChickenLib.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.CodeChicken.CodeChickenLib.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.CodeChicken.CodeChickenLib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.CodeChicken.CodeChickenLib.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.CodeChicken.CodeChickenLib.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.CodeChicken.CodeChickenLib.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.WithAnnotationProcessorDeps.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.WithAnnotationProcessorDeps.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.WithAnnotationProcessorDeps.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.WithAnnotationProcessorDeps.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.WithAnnotationProcessorDeps.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.WithAnnotationProcessorDeps.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.NeoForge-Root.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.NeoForge-Root.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.NeoForge-Root.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.NeoForge-Root.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.NeoForge-Root.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nf_1_21_1_buildSrc.NeoForge-Root.test.iml" />
