@@ -88,6 +88,7 @@ public class TestNeoForge extends TestBase {
                     workspace:
                       type: "intellij"
                       linkingMode: 'force_broken_symlinks'
+                      compilerHeapMemory: 2048
                       runs:
                       - name: Client
                         run_dir: ./run

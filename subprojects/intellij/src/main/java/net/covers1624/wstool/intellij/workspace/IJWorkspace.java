@@ -38,6 +38,8 @@ public class IJWorkspace implements Workspace {
 
     private final Environment env;
     private final IntellijWorkspaceType.LinkingMode linkingMode;
+    @Nullable private final Integer compilerHeapMemory;
+
     private final ModulePath rootPath;
     private final Map<ModulePath, IJModule> modules = new LinkedHashMap<>();
     private final Map<String, IJProjectModule> projectModules = new LinkedHashMap<>();
@@ -46,9 +48,10 @@ public class IJWorkspace implements Workspace {
 
     private int javaVersion = 8;
 
-    public IJWorkspace(Environment env, IntellijWorkspaceType.LinkingMode linkingMode) {
+    public IJWorkspace(Environment env, IntellijWorkspaceType.LinkingMode linkingMode, @Nullable Integer compilerHeapMemory) {
         this.env = env;
         this.linkingMode = linkingMode;
+        this.compilerHeapMemory = compilerHeapMemory;
 
         rootPath = new ModulePath(List.of(env.projectRoot().getFileName().toString()));
         var rootModule = new RootModule(env.projectRoot(), rootPath);
@@ -229,6 +232,18 @@ public class IJWorkspace implements Workspace {
             compilerConfiguration = new Element("component")
                     .setAttribute("name", "CompilerConfiguration");
             project.addContent(compilerConfiguration);
+        }
+
+        if (compilerHeapMemory != null) {
+            var heapSizeOpt = FastStream.of(project.getChildren("option"))
+                    .filter(e -> e.getAttributeValue("name", "").equals("BUILD_PROCESS_HEAP_SIZE"))
+                    .firstOrDefault();
+            if (heapSizeOpt == null) {
+                heapSizeOpt = new Element("option")
+                        .setAttribute("name", "BUILD_PROCESS_HEAP_SIZE");
+                compilerConfiguration.addContent(heapSizeOpt);
+            }
+            heapSizeOpt.setAttribute("value", compilerHeapMemory.toString());
         }
 
         var modulesWithAP = FastStream.of(modules.values())

@@ -17,7 +17,8 @@ import java.util.List;
 public record IntellijWorkspaceType(
         @Nullable List<RunConfigTemplate> runs,
         @JsonAdapter (LowerCaseEnumAdapterFactory.class)
-        @Nullable LinkingMode libraryLinkingMode
+        @Nullable LinkingMode libraryLinkingMode,
+        @Nullable Integer compilerHeapMemory
 ) implements WorkspaceType {
 
     @Override
@@ -32,7 +33,7 @@ public record IntellijWorkspaceType(
 
     @Override
     public Workspace newWorkspace(Environment env) {
-        return new IJWorkspace(env, libraryLinkingMode());
+        return new IJWorkspace(env, libraryLinkingMode(), compilerHeapMemory);
     }
 
     public enum LinkingMode {
