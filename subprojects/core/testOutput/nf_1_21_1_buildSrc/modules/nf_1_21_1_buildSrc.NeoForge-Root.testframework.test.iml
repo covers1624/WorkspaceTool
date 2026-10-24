@@ -2,7 +2,7 @@
 <module type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <exclude-output />
-    <output-test url="file://$PROJECT_DIR$/out/nf_1_21_1_buildSrc_NeoForge-Root_testframework_test" />
+    <output-test url="file://$PROJECT_DIR$/out/NeoForge-Root_testframework_test" />
     <content url="file://$PROJECT_DIR$/NeoForge/testframework/src/test">
       <sourceFolder url="file://$PROJECT_DIR$/NeoForge/testframework/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$PROJECT_DIR$/NeoForge/testframework/src/test/resources" type="java-test-resource" />

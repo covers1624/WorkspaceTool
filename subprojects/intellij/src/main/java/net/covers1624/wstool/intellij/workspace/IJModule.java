@@ -31,7 +31,13 @@ public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPat
     }
 
     public Path outputDir(Environment env) {
-        return env.projectRoot().resolve("out").resolve(path.joinNames("_"));
+        var outDir = env.projectRoot().resolve("out");
+        var tail = path.tail();
+        if (tail == null) {
+            // Must be the top-level group.
+            return outDir;
+        }
+        return outDir.resolve(tail.joinNames("_"));
     }
 
     public List<Path> excludes() {
