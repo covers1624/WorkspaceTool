@@ -1,5 +1,6 @@
 package net.covers1624.wstool.neoforge;
 
+import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +41,7 @@ public record NeoForge_1_21_10_FrameworkType(
     }
 
     @Override
-    public List<String> getVMArgs() {
+    public List<String> getVMArgs(Environment env) {
         return List.of(
                 "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
                 "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"

@@ -2,6 +2,7 @@ package net.covers1624.wstool.minecraft;
 
 import net.covers1624.jdkutils.JavaInstall;
 import net.covers1624.jdkutils.JavaVersion;
+import net.covers1624.quack.io.IOUtils;
 import net.covers1624.quack.maven.MavenNotation;
 import net.covers1624.quack.net.HttpEngineDownloadAction;
 import net.covers1624.quack.net.httpapi.HttpEngine;
@@ -9,6 +10,7 @@ import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.JdkProvider;
 import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.api.workspace.SourceSet;
+import net.covers1624.wstool.util.DeletingFileVisitor;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +37,13 @@ public class JSTExecutor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JSTExecutor.class);
 
-    private static final MavenNotation JST_NOTATION = MavenNotation.parse("net.neoforged.jst:jst-cli-bundle:2.0.3");
+    private static final MavenNotation JST_NOTATION = MavenNotation.parse("net.neoforged.jst:jst-cli-bundle:2.0.12");
 
     private final HttpEngine http;
     private final JdkProvider provider;
     private final Path librariesDir;
+    private final Path projectRoot;
+    private final Path tempAtRemapDir;
 
     private @Nullable Path jstBundlePath;
 
@@ -47,9 +51,11 @@ public class JSTExecutor {
         http = env.getService(HttpEngine.class);
         provider = env.getService(JdkProvider.class);
         librariesDir = env.systemFolder().resolve("libraries");
+        projectRoot = env.projectRoot();
+        tempAtRemapDir = env.projectCache().resolve("ats");
     }
 
-    public void applyJST(SourceSet classpath, List<Path> mcSources, List<Path> ifaceInjections, List<Path> accessTransformers, @Nullable String parchmentVersion) {
+    public void applyJST(SourceSet classpath, List<Path> mcSources, List<Path> ifaceInjections, List<Path> accessTransformers, @Nullable String parchmentVersion, @Nullable SRGRemapper legacyRemapper) {
         if (ifaceInjections.isEmpty() && accessTransformers.isEmpty() && parchmentVersion == null) return;
 
         var jst = getJstBundle();
@@ -71,6 +77,8 @@ public class JSTExecutor {
                 args.add(file.toAbsolutePath().toString());
             }
         }
+
+        accessTransformers = remapAccessTransformers(legacyRemapper, accessTransformers);
 
         if (!accessTransformers.isEmpty()) {
             args.add("--enable-accesstransformers");
@@ -141,6 +149,35 @@ public class JSTExecutor {
                 if (outputZip != null) Files.deleteIfExists(outputZip);
             } catch (IOException ignored) { }
         }
+    }
+
+    private List<Path> remapAccessTransformers(@Nullable SRGRemapper legacyRemapper, List<Path> accessTransformers) {
+        if (Files.exists(tempAtRemapDir)) {
+            try {
+                Files.walkFileTree(tempAtRemapDir, new DeletingFileVisitor());
+            } catch (IOException ex) {
+                LOGGER.warn("Failed to cleanup temp access transformer dir.", ex);
+            }
+        }
+
+        if (legacyRemapper == null || accessTransformers.isEmpty()) return accessTransformers;
+
+        List<Path> newAts = new ArrayList<>();
+        for (Path oldPath : accessTransformers) {
+            var absOldPath = oldPath.toAbsolutePath().normalize();
+            var name = oldPath.startsWith(projectRoot) ? projectRoot.relativize(absOldPath).toString() : String.valueOf(System.currentTimeMillis());
+            var newPath = tempAtRemapDir.resolve(name.replaceAll("[/\\\\]", "_"));
+            try {
+                var lines = Files.readAllLines(oldPath, StandardCharsets.UTF_8);
+                lines.replaceAll(legacyRemapper::mapAllNames);
+                Files.write(IOUtils.makeParents(newPath), lines, StandardCharsets.UTF_8);
+            } catch (IOException ex) {
+                throw new RuntimeException("Failed to remap Access Transformer.", ex);
+            }
+            newAts.add(newPath);
+        }
+
+        return newAts;
     }
 
     private static Path createLibrariesList(SourceSet sourceSet, List<Path> mcSources) {
@@ -248,7 +285,6 @@ public class JSTExecutor {
                 "zip"
         ));
     }
-
 
     private Path downloadMaven(MavenNotation notation) {
         Path dest = notation.toPath(librariesDir);

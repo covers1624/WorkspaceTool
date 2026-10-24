@@ -19,9 +19,19 @@ public class NeoDevPluginBuilder implements PluginBuilder {
 
     @Override
     public void buildPluginData(Project project, PluginData pluginData, List<String> additionalConfigurations) {
-        if (pluginData.plugins.containsKey("net.neoforged.gradle.platform.PlatformDevProjectPlugin")) {
-            additionalConfigurations.add("moduleOnly");
-            pluginData.putData(NeoDevData.class, new NeoDevData("moduleOnly"));
+        // NF platform plugin is applied as a class, not with an id......
+        if (pluginData.plugins.containsKey("net.neoforged.gradle.platform.PlatformDevProjectPlugin")
+            // Legacy fallback for 1.20.1
+            || pluginData.plugins.containsValue("net.minecraftforge.gradle.patcher.PatcherPlugin")) {
+            if (project.getConfigurations().findByName("moduleOnly") != null) {
+                additionalConfigurations.add("moduleOnly");
+                pluginData.putData(NeoDevData.class, new NeoDevData("moduleOnly"));
+            }
+            // Legacy fallback for 1.20.1
+            else if (project.getConfigurations().findByName("moduleonly") != null) {
+                additionalConfigurations.add("moduleonly");
+                pluginData.putData(NeoDevData.class, new NeoDevData("moduleonly"));
+            }
         } else if (pluginData.plugins.containsKey("net.neoforged.neodev.NeoDevPlugin")) {
             ConfigurationContainer configurations = project.getConfigurations();
             Configuration moduleLibraries = configurations.findByName("moduleLibraries");

@@ -11,17 +11,17 @@ import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.api.workspace.runs.EvalValue.ClasspathValue;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.gradle.GradleTaskExecutor;
-import net.covers1624.wstool.gradle.api.data.*;
+import net.covers1624.wstool.gradle.api.data.ConfigurationList;
+import net.covers1624.wstool.gradle.api.data.JavaToolchainData;
+import net.covers1624.wstool.gradle.api.data.PluginData;
+import net.covers1624.wstool.gradle.api.data.ProjectExtData;
 import net.covers1624.wstool.minecraft.*;
 import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
@@ -80,11 +80,12 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var possibleMods = findPossibleMods(workspace);
 
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
-        var nfSubModule = nfModule.subModules().get("neoforge");
+        var nfSubModule = getMainSubModule(nfModule);
         var nfMain = nfSubModule.sourceSets().get("main");
         var nfClient = nfSubModule.sourceSets().get("client");
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
-        var nfCoreModsMain = nfCoreMods.sourceSets().get("main");
+
+        var legacyRemapper = getLegacyMappings(nfSubModule);
 
         // TODO this is not correct if we ever wire stuff up to the base/vanilla module.
         for (Module module : workspace.allProjectModules()) {
@@ -93,12 +94,20 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
             var ifaceData = projectData.getData(InterfaceInjectionData.class);
             if (ifaceData != null) {
-                ifaceData.files.forEach(e -> ifaceInjections.add(e.toPath()));
+                ifaceData.files.forEach(e -> {
+                    if (e.exists()) {
+                        ifaceInjections.add(e.toPath());
+                    }
+                });
             }
 
             var atData = projectData.getData(AccessTransformerData.class);
             if (atData != null) {
-                atData.files.forEach(e -> accessTransformers.add(e.toPath()));
+                atData.files.forEach(e -> {
+                    if (e.exists()) {
+                        accessTransformers.add(e.toPath());
+                    }
+                });
             }
         }
 
@@ -107,7 +116,10 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed() || parchmentCache.changed()) {
             taskExecutor.runTask(rootDir, "clean");
             taskExecutor.runTask(rootDir, "setup");
-            taskExecutor.tryRunTasks(rootDir, ":neoforge:neoForgeIdeSync");
+            var importTasks =  ideImportTasks(env, nfModule, nfSubModule);
+            if (!importTasks.isEmpty()) {
+                taskExecutor.tryRunTasks(rootDir, importTasks.toArray(String[]::new));
+            }
 
             List<Path> mcSources = new ArrayList<>(
                     nfMain.sourcePaths().getOrDefault("java", List.of())
@@ -121,7 +133,8 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                     mcSources,
                     ifaceInjections,
                     accessTransformers,
-                    parchmentVersion
+                    parchmentVersion,
+                    legacyRemapper
             );
 
             requiresSetupProp.setValue(false);
@@ -130,7 +143,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             parchmentCache.pushChanges();
         }
 
-        applyNeoForgeToolchain(requireNonNull(nfModule.projectData()), workspace);
+        applyNeoForgeToolchain(nfModule, nfSubModule, workspace);
 
         var legacyClasspath = new LinkedHashSet<>(nfMain.runtimeDependencies());
 
@@ -160,10 +173,11 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         if (moduleClasspath != null) {
             legacyClasspath.removeAll(moduleClasspath);
         }
+        adjustLegacyClasspath(legacyClasspath);
 
-        var assetIndex = assetDownloader.downloadAssets(getMcVersion(nfSubModule));
+        var assetIndex = assetDownloader.downloadAssets(getMcVersion(nfModule, nfSubModule));
 
-        var cliProperties = buildCliProperties(nfSubModule);
+        var cliProperties = buildCliProperties(nfModule, nfSubModule);
         for (RunConfig run : workspace.runConfigs().values()) {
             var type = run.config().get("type");
             if (type == null) throw new RuntimeException("Expected run config " + run.name() + " to contain 'type' config option.");
@@ -180,12 +194,15 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
             List<ModClassesEvalValue.ModClass> modClasses = new ArrayList<>();
             modClasses.add(new ModClassesEvalValue.ModClass("minecraft", modClassesMcDependencies));
-            modClasses.add(new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreModsMain)));
+            if (nfCoreMods != null) {
+                modClasses.add(new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreMods.sourceSets().get("main"))));
+            }
             possibleMods.forEach(mod -> modClasses.add(new ModClassesEvalValue.ModClass(mod.modId(), new Dependency.SourceSetDependency(mod.ss()))));
             run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(modClasses));
+            run.envVars().putAll(getEnvVars(nfModule, nfSubModule));
 
             // Use addFirst so we are in front of any user-added args.
-            run.vmArgs().addFirst(getVMArgs());
+            run.vmArgs().addFirst(getVMArgs(env));
             if (moduleClasspath != null) {
                 run.vmArgs().addFirstEval(new ClasspathValue(moduleClasspath));
                 run.vmArgs().addFirst("-p");
@@ -210,6 +227,23 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
             run.args().addAll(cliProperties);
         }
+
+        postBuild(env, nfModule, nfSubModule);
+    }
+
+    default List<String> ideImportTasks(Environment env, Module nfModule, Module nfSubModule) {
+        return List.of(":neoforge:neoForgeIdeSync");
+    }
+
+    default void postBuild(Environment env, Module nfModule, Module nfSubModule) {
+    }
+
+    default Module getMainSubModule(Module nfModule) {
+        return nfModule.subModules().get("neoforge");
+    }
+
+    default @Nullable SRGRemapper getLegacyMappings(Module nfSubModule) {
+        return null;
     }
 
     default void addLaunchTarget(RunConfig run, String type) {
@@ -227,7 +261,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         }
     }
 
-    default List<String> getVMArgs() {
+    default List<String> getVMArgs(Environment env) {
         return List.of(
                 "--add-modules", "ALL-MODULE-PATH",
                 "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
@@ -237,20 +271,21 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         );
     }
 
-    private void applyNeoForgeToolchain(ProjectData projectData, Workspace workspace) {
-        var subProjectData = projectData.getData(SubProjectList.class);
-        if (subProjectData == null) return;
+    default Map<String, String> getEnvVars(Module rootModule, Module module) {
+        return Map.of();
+    }
 
-        var nfSubProject = subProjectData.get("neoforge");
-        if (nfSubProject == null) return;
+    private void applyNeoForgeToolchain(Module rootModule, Module nfSubModule, Workspace workspace) {
+        var projectData = nfSubModule.projectData();
+        if (projectData == null) return;
 
-        JavaToolchainData toolchainData = nfSubProject.getData(JavaToolchainData.class);
+        JavaToolchainData toolchainData = projectData.getData(JavaToolchainData.class);
         if (toolchainData == null) return;
 
         workspace.setJavaVersion(toolchainData.langVersion);
     }
 
-    private static @Nullable Set<Dependency> buildModuleClasspath(Module rootModule, Module module, ModuleProcessor processor) {
+    default @Nullable Set<Dependency> buildModuleClasspath(Module rootModule, Module module, ModuleProcessor processor) {
         var projectData = requireNonNull(module.projectData());
         var pluginData = projectData.getData(PluginData.class);
         if (pluginData == null) {
@@ -271,15 +306,17 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         return processor.processConfiguration(rootModule, moduleClasspathConfiguration);
     }
 
-    private static String getMcVersion(Module module) {
+    default void adjustLegacyClasspath(Set<Dependency> dependencies) {
+    }
+
+    default String getMcVersion(Module rootModule, Module module) {
         var gradleData = requireNonNull(module.projectData());
         var properties = requireNonNull(gradleData.getData(ProjectExtData.class))
                 .properties;
-
-        return properties.get("minecraft_version");
+        return requireNonNull(properties.get("minecraft_version"), "I don't know how to get the Minecraft version from this NeoForge project.");
     }
 
-    private static List<String> buildCliProperties(Module module) {
+    default List<String> buildCliProperties(Module rootModule, Module module) {
         var gradleData = requireNonNull(module.projectData());
         var properties = requireNonNull(gradleData.getData(ProjectExtData.class))
                 .properties;
