@@ -3,8 +3,8 @@ package net.covers1624.wstool.intellij.workspace;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.Environment;
+import net.covers1624.wstool.api.workspace.*;
 import net.covers1624.wstool.api.workspace.Module;
-import net.covers1624.wstool.api.workspace.Workspace;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.intellij.IntellijWorkspaceType;
 import net.covers1624.wstool.intellij.MavenDependencyCollector;
@@ -15,6 +15,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -111,6 +112,34 @@ public class IJWorkspace implements Workspace {
             throw new RuntimeException("Failed to create directories.", ex);
         }
 
+        var depResolver = resolveDependencies(ideaDir);
+
+        ContentRootCollector crCollector = new ContentRootCollector();
+        for (IJModule module : modules.values()) {
+            crCollector.processModule(module);
+        }
+
+        List<Path> moduleFiles = new ArrayList<>();
+        for (IJModule module : modules.values()) {
+            String name = module.path.joinNames(".");
+            Path moduleFile = modulesDir.resolve(name + ".iml");
+            writeDocument(module.buildDocument(env, depResolver, crCollector), moduleFile);
+            moduleFiles.add(moduleFile);
+        }
+
+        writeDocument(buildModulesXml(moduleFiles), ideaDir.resolve("modules.xml"));
+
+        emitJavaVersionIntoMisc(ideaDir.resolve("misc.xml"));
+
+        Path runsDir = ideaDir.resolve("runConfigurations");
+        for (IJRunConfig runConfig : runConfigs.values()) {
+            Path dest = runsDir.resolve(runConfig.name().replace("/", "_") + ".xml");
+            writeDocument(runConfig.writeDocument(env, depResolver), dest);
+            runConfig.createWorkingDir();
+        }
+    }
+
+    private DependencyResolver resolveDependencies(Path ideaDir) {
         MavenDependencyCollector depCollector = new MavenDependencyCollector();
         modules().values().forEach(depCollector::collectFrom);
 
@@ -130,30 +159,7 @@ public class IJWorkspace implements Workspace {
             Path file = librariesDir.resolve(entry.name().replace(':', '.') + ".xml");
             writeDocument(entry.buildDocument(), file);
         }
-
-        ContentRootCollector crCollector = new ContentRootCollector();
-        for (IJModule module : modules.values()) {
-            crCollector.processModule(module);
-        }
-
-        List<Path> moduleFiles = new ArrayList<>();
-        for (IJModule module : modules.values()) {
-            String name = module.path.joinNames(".");
-            Path moduleFile = modulesDir.resolve(name + ".iml");
-            writeDocument(module.buildDocument(env, depCollector, crCollector), moduleFile);
-            moduleFiles.add(moduleFile);
-        }
-
-        writeDocument(buildModulesXml(moduleFiles), ideaDir.resolve("modules.xml"));
-
-        emitJavaVersionIntoMisc(ideaDir.resolve("misc.xml"));
-
-        Path runsDir = ideaDir.resolve("runConfigurations");
-        for (IJRunConfig runConfig : runConfigs.values()) {
-            Path dest = runsDir.resolve(runConfig.name().replace("/", "_") + ".xml");
-            writeDocument(runConfig.writeDocument(env, depCollector), dest);
-            runConfig.createWorkingDir();
-        }
+        return resolver(env, depCollector);
     }
 
     private Document buildModulesXml(List<Path> moduleFiles) {
@@ -241,6 +247,33 @@ public class IJWorkspace implements Workspace {
 
             path = path.parent();
         }
+    }
+
+    private static DependencyResolver resolver(Environment env, MavenDependencyCollector collector) {
+        return new DependencyResolver() {
+            @Override
+            public @Nullable String lookupName(Dependency.MavenDependency dep) {
+                var ent = collector.lookup(dep);
+                if (ent == null) return null;
+
+                return ent.name();
+            }
+
+            @Override
+            public @Nullable Path resolvePath(Dependency dep) {
+                return switch (dep) {
+                    case Dependency.MavenDependency mavenDep -> {
+                        var found = collector.lookup(mavenDep);
+                        if (found == null) {
+                            throw new RuntimeException("Unable to find dependency " + mavenDep + " in the library collector.");
+                        }
+                        yield found.classes();
+                    }
+                    case Dependency.SourceSetDependency(SourceSet sourceSet) -> ((IJSourceSetModule) sourceSet).outputDir(env);
+                    case Dependency.FileDependency(Path file) -> file;
+                };
+            }
+        };
     }
 
     public static sealed class RootModule extends IJModuleWithPath permits IJWorkspace.GroupModule {

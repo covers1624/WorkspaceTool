@@ -2,13 +2,12 @@ package net.covers1624.wstool.neoforge;
 
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.workspace.Dependency;
+import net.covers1624.wstool.api.workspace.DependencyResolver;
 import net.covers1624.wstool.api.workspace.runs.EvalValue;
-import org.jetbrains.annotations.Nullable;
 
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Created by covers1624 on 7/3/25.
@@ -16,10 +15,10 @@ import java.util.function.Function;
 public record ModClassesEvalValue(List<ModClass> entries) implements EvalValue {
 
     @Override
-    public String eval(Function<Dependency, @Nullable Path> depFunc) {
+    public String eval(DependencyResolver depResolver) {
         return FastStream.of(entries)
                 .flatMap(e -> FastStream.of(e.dependencies)
-                        .map(d -> e.name + "%%" +depFunc.apply(d).toAbsolutePath())
+                        .map(d -> e.name + "%%" + requireNonNull(depResolver.resolvePath(d)).toAbsolutePath())
                 )
                 .join(":");
     }

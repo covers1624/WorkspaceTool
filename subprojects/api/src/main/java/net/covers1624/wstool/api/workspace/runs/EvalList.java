@@ -1,14 +1,11 @@
 package net.covers1624.wstool.api.workspace.runs;
 
 import net.covers1624.quack.collection.FastStream;
-import net.covers1624.wstool.api.workspace.Dependency;
-import org.jetbrains.annotations.Nullable;
+import net.covers1624.wstool.api.workspace.DependencyResolver;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * A wrapper around {@link List} to assist with
@@ -56,9 +53,9 @@ public class EvalList {
         return Collections.unmodifiableList(values);
     }
 
-    public List<String> toList(Function<Dependency, @Nullable Path> depFunc) {
+    public List<String> toList(DependencyResolver depResolver) {
         return FastStream.of(values)
-                .map(e -> e.eval(depFunc))
+                .map(e -> e.eval(depResolver))
                 .toList();
     }
 }

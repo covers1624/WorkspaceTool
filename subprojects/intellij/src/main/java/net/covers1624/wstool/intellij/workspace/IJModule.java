@@ -3,7 +3,7 @@ package net.covers1624.wstool.intellij.workspace;
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.workspace.Dependency;
-import net.covers1624.wstool.intellij.MavenDependencyCollector;
+import net.covers1624.wstool.api.workspace.DependencyResolver;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
@@ -56,7 +56,7 @@ public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPat
         return List.of();
     }
 
-    public final Document buildDocument(Environment env, MavenDependencyCollector collector, ContentRootCollector crCollector) {
+    public final Document buildDocument(Environment env, DependencyResolver depResolver, ContentRootCollector crCollector) {
         Element module = new Element("module")
                 .setAttribute("type", "JAVA_MODULE")
                 .setAttribute("version", "4");
@@ -96,11 +96,11 @@ public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPat
                 case MavenDependencyEntry ent -> {
                     orderEntry.setAttribute("type", "library");
                     orderEntry.setAttribute("level", "project");
-                    var library = collector.lookup(ent.dep);
+                    var library = depResolver.lookupName(ent.dep);
                     if (library == null) {
                         throw new RuntimeException("Unable to find dependency " + ent.dep + " in the library collector.");
                     }
-                    orderEntry.setAttribute("name", library.name());
+                    orderEntry.setAttribute("name", library);
                 }
                 case ProjectDependencyEntry ent -> {
                     orderEntry.setAttribute("type", "module");

@@ -2,15 +2,13 @@ package net.covers1624.wstool.intellij.workspace;
 
 import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.Environment;
-import net.covers1624.wstool.api.workspace.Dependency;
 import net.covers1624.wstool.api.workspace.SourceSet;
 import net.covers1624.wstool.api.workspace.runs.EvalList;
 import net.covers1624.wstool.api.workspace.runs.EvalMap;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
-import net.covers1624.wstool.intellij.MavenDependencyCollector;
+import net.covers1624.wstool.api.workspace.DependencyResolver;
 import org.jdom2.Document;
 import org.jdom2.Element;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +20,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
@@ -110,7 +107,7 @@ public final class IJRunConfig implements RunConfig {
         return envVars;
     }
 
-    public Document writeDocument(Environment env, MavenDependencyCollector collector) {
+    public Document writeDocument(Environment env, DependencyResolver depResolver) {
         Element component = new Element("component")
                 .setAttribute("name", "ProjectRunConfigurationManager");
 
@@ -143,25 +140,13 @@ public final class IJRunConfig implements RunConfig {
                 .setAttribute("name", ((IJSourceSetModule) requireNonNull(classpath, "Run config " + name + " must have a classpath.")).path.toString())
         );
 
-        Function<Dependency, @Nullable Path> depFunc = e -> switch (e) {
-            case Dependency.MavenDependency mavenDep -> {
-                var found = collector.lookup(mavenDep);
-                if (found == null) {
-                    throw new RuntimeException("Unable to find dependency " + mavenDep + " in the library collector.");
-                }
-                yield found.classes();
-            }
-            case Dependency.SourceSetDependency(SourceSet sourceSet) -> ((IJSourceSetModule) sourceSet).outputDir(env);
-            case Dependency.FileDependency(Path file) -> file;
-        };
-
         configuration.addContent(new Element("option")
                 .setAttribute("name", "PROGRAM_PARAMETERS")
-                .setAttribute("value", FastStream.of(args.toList(depFunc)).map(IJRunConfig::escape).join(" "))
+                .setAttribute("value", FastStream.of(args.toList(depResolver)).map(IJRunConfig::escape).join(" "))
         );
 
-        List<String> vmArgs = new ArrayList<>(this.vmArgs.toList(depFunc));
-        sysProps.toMap(depFunc).forEach((k, v) -> vmArgs.add("-D" + k + "=" + v));
+        List<String> vmArgs = new ArrayList<>(this.vmArgs.toList(depResolver));
+        sysProps.toMap(depResolver).forEach((k, v) -> vmArgs.add("-D" + k + "=" + v));
         configuration.addContent(new Element("option")
                 .setAttribute("name", "VM_PARAMETERS")
                 .setAttribute("value", FastStream.of(vmArgs).map(IJRunConfig::escape).join(" "))
@@ -174,7 +159,7 @@ public final class IJRunConfig implements RunConfig {
 
         if (!envVars.isEmpty()) {
             Element envs = new Element("envs");
-            envVars.toMap(depFunc).forEach((k, v) -> {
+            envVars.toMap(depResolver).forEach((k, v) -> {
                 envs.addContent(new Element("env")
                         .setAttribute("name", k)
                         .setAttribute("value", v)

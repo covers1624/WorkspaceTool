@@ -1,14 +1,11 @@
 package net.covers1624.wstool.api.workspace.runs;
 
 import net.covers1624.quack.collection.FastStream;
-import net.covers1624.wstool.api.workspace.Dependency;
-import org.jetbrains.annotations.Nullable;
+import net.covers1624.wstool.api.workspace.DependencyResolver;
 
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Created by covers1624 on 5/28/25.
@@ -49,8 +46,8 @@ public class EvalMap {
         return Collections.unmodifiableMap(values);
     }
 
-    public Map<String, String> toMap(Function<Dependency, @Nullable Path> depFunc) {
+    public Map<String, String> toMap(DependencyResolver depResolver) {
         return FastStream.of(values.entrySet())
-                .toLinkedHashMap(Map.Entry::getKey, e -> e.getValue().eval(depFunc));
+                .toLinkedHashMap(Map.Entry::getKey, e -> e.getValue().eval(depResolver));
     }
 }
