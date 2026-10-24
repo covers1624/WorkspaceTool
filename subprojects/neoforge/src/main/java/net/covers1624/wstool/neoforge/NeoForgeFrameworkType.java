@@ -114,7 +114,6 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         ifaceInjections.forEach(ifaceCache::putFile);
         accessTransformers.forEach(atCache::putFile);
         if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed() || parchmentCache.changed()) {
-            taskExecutor.runTask(rootDir, "clean");
             taskExecutor.runTask(rootDir, "setup");
             var importTasks =  ideImportTasks(env, nfModule, nfSubModule);
             if (!importTasks.isEmpty()) {
