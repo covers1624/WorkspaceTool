@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Represents a module/project.
@@ -29,10 +30,18 @@ public interface Module {
      */
     Map<String, ? extends Module> subModules();
 
+    default Optional<? extends Module> findModule(String name) {
+        return Optional.ofNullable(subModules().get(name));
+    }
+
     /**
      * @return The source sets within this module.
      */
     Map<String, ? extends SourceSet> sourceSets();
+
+    default Optional<? extends SourceSet> findSourceSet(String name) {
+        return Optional.ofNullable(sourceSets().get(name));
+    }
 
     /**
      * @return A list of paths within this module that should be ignored by the workspace/ide.

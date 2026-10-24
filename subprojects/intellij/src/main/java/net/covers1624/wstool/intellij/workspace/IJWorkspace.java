@@ -344,8 +344,8 @@ public class IJWorkspace implements Workspace {
                         }
                         yield found.classes();
                     }
-                    case Dependency.SourceSetDependency(SourceSet sourceSet) -> ((IJSourceSetModule) sourceSet).outputDir(env);
-                    case Dependency.FileDependency(Path file) -> file;
+                    case Dependency.SourceSetDependency(SourceSet sourceSet, boolean exported) -> ((IJSourceSetModule) sourceSet).outputDir(env);
+                    case Dependency.FileDependency(Path file, boolean exported) -> file;
                 };
             }
         };

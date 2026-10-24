@@ -1,5 +1,6 @@
 package net.covers1624.wstool.neoforge;
 
+import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.api.HashContainer;
@@ -19,6 +20,7 @@ import net.covers1624.wstool.minecraft.*;
 import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -82,23 +84,36 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
         var nfSubModule = getMainSubModule(nfModule);
         var nfMain = nfSubModule.sourceSets().get("main");
+        var ifaceInjectionDestinations = FastStream.concat(
+                        FastStream.of(nfMain),
+                        FastStream.of(nfModule.findModule("testframework").flatMap(e -> e.findSourceSet("main"))),
+                        FastStream.of(nfModule.findModule("tests").flatMap(e -> e.findSourceSet("junit"))),
+                        FastStream.of(nfModule.findModule("tests").flatMap(e -> e.findSourceSet("main"))))
+                .filterNonNull()
+                .toList();
         var nfClient = nfSubModule.sourceSets().get("client");
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
 
         var legacyRemapper = getLegacyMappings(nfSubModule);
 
         // TODO this is not correct if we ever wire stuff up to the base/vanilla module.
+        Set<Module> ifaceInjectionSources = new LinkedHashSet<>();
         for (Module module : workspace.allProjectModules()) {
             var projectData = module.projectData();
             if (projectData == null) continue;
 
             var ifaceData = projectData.getData(InterfaceInjectionData.class);
             if (ifaceData != null) {
-                ifaceData.files.forEach(e -> {
+                boolean hasIfaceInjection = false;
+                for (File e : ifaceData.files) {
                     if (e.exists()) {
                         ifaceInjections.add(e.toPath());
+                        hasIfaceInjection = true;
                     }
-                });
+                }
+                if (hasIfaceInjection) {
+                    ifaceInjectionSources.add(module);
+                }
             }
 
             var atData = projectData.getData(AccessTransformerData.class);
@@ -115,7 +130,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         accessTransformers.forEach(atCache::putFile);
         if (requiresSetupProp.getBoolean() || ifaceCache.changed() || atCache.changed() || parchmentCache.changed()) {
             taskExecutor.runTask(rootDir, "setup");
-            var importTasks =  ideImportTasks(env, nfModule, nfSubModule);
+            var importTasks = ideImportTasks(env, nfModule, nfSubModule);
             if (!importTasks.isEmpty()) {
                 taskExecutor.tryRunTasks(rootDir, importTasks.toArray(String[]::new));
             }
@@ -158,11 +173,24 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
                 // Link older Forge modules to NeoForge as well.
                 if (ssData.attributes.contains(ModLoaderAttribute.NEO_FORGE) || ssData.attributes.contains(ModLoaderAttribute.MC_FORGE)) {
-                    nfMain.compileDependencies().add(new Dependency.SourceSetDependency(ss));
-                    ss.compileDependencies().add(new Dependency.SourceSetDependency(nfMain));
+                    // Currently, Minecraft needs access to these source sets if interface injections are present.
+                    // To avoid marking the dependency as exported to _every single module_ we have to selectively export
+                    // it to the extra projects neo ships that have Minecraft access, otherwise they get compile errors.
+                    // TODO we may be able to instead emit a stub jar for this, which we can freely export with minimal impact.
+                    if (ifaceInjectionSources.contains(module)) {
+                        for (var dest : ifaceInjectionDestinations) {
+                            dest.compileDependencies().add(new Dependency.SourceSetDependency(ss, false));
+                        }
+                    }
+
+                    // we always need a non-exported runtime dependency here, so any extra dependencies the module
+                    // has are also available for the game to discover.
+                    nfMain.runtimeDependencies().add(new Dependency.SourceSetDependency(ss, false));
+
+                    ss.compileDependencies().add(new Dependency.SourceSetDependency(nfMain, true));
                     // TODO split source set mods will need some work here.
                     if (nfClient != null) {
-                        ss.compileDependencies().add(new Dependency.SourceSetDependency(nfClient));
+                        ss.compileDependencies().add(new Dependency.SourceSetDependency(nfClient, true));
                     }
                 }
             }
@@ -184,19 +212,19 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             var isSplitSourcesClient = nfClient != null && type.contains("client");
 
             List<Dependency> modClassesMcDependencies = new ArrayList<>();
-            modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain));
-            modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain));
+            modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain, true));
+            modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain, true));
             if (isSplitSourcesClient) {
-                modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient));
-                modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient));
+                modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient, true));
+                modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient, true));
             }
 
             List<ModClassesEvalValue.ModClass> modClasses = new ArrayList<>();
             modClasses.add(new ModClassesEvalValue.ModClass("minecraft", modClassesMcDependencies));
             if (nfCoreMods != null) {
-                modClasses.add(new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreMods.sourceSets().get("main"))));
+                modClasses.add(new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreMods.sourceSets().get("main"), true)));
             }
-            possibleMods.forEach(mod -> modClasses.add(new ModClassesEvalValue.ModClass(mod.modId(), new Dependency.SourceSetDependency(mod.ss()))));
+            possibleMods.forEach(mod -> modClasses.add(new ModClassesEvalValue.ModClass(mod.modId(), new Dependency.SourceSetDependency(mod.ss(), true))));
             run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(modClasses));
             run.envVars().putAll(getEnvVars(nfModule, nfSubModule));
 

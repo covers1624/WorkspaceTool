@@ -59,7 +59,8 @@ public class DevLoginProcessor {
         classpath.runtimeDependencies()
                 .add(new Dependency.MavenDependency(
                         DEVLOGIN_NOTATION,
-                        Map.of("classes", devLoginJar)
+                        Map.of("classes", devLoginJar),
+                        false
                 ));
     }
 

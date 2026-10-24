@@ -100,9 +100,9 @@ public final class IJSourceSetModule extends IJModule implements SourceSet {
     //       are publicly exported (api, vs implementation) and use that.
     private DependencyEntry collectDependency(Dependency dep, DependencyScope scope) {
         return switch (dep) {
-            case Dependency.MavenDependency mavenDep -> new MavenDependencyEntry(mavenDep, scope, true);
-            case Dependency.SourceSetDependency(SourceSet sourceSet) -> new ProjectDependencyEntry(((IJModule) sourceSet), scope, true);
-            case Dependency.FileDependency(Path file) -> new FileDependencyEntry(file, scope, true);
+            case Dependency.MavenDependency mavenDep -> new MavenDependencyEntry(mavenDep, scope, mavenDep.exported());
+            case Dependency.SourceSetDependency(SourceSet sourceSet, boolean exported) -> new ProjectDependencyEntry(((IJModule) sourceSet), scope, exported);
+            case Dependency.FileDependency(Path file, boolean exported) -> new FileDependencyEntry(file, scope, exported);
         };
     }
 }

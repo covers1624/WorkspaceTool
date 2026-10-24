@@ -208,6 +208,8 @@ public class WorkspaceTool {
     private static Set<Dependency> buildDependencies(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, Set<? extends ConfigurationData.Dependency> deps) {
         // TODO this can likely be converted back to a List when/if we remove the recursive-ness of extracted Gradle dependencies.
         Set<Dependency> dependencies = new LinkedHashSet<>();
+        // TODO we should be able to attribute these back to `api` vs `implementation` and know which are _actually_ exported.
+        //      for now we just assume they all are.
         for (ConfigurationData.Dependency dep : deps) {
             switch (dep) {
                 case ConfigurationData.MavenDependency maven -> {
@@ -217,7 +219,8 @@ public class WorkspaceTool {
                                     .toMap(
                                             Map.Entry::getKey,
                                             e -> e.getValue().toPath()
-                                    )
+                                    ),
+                            true
                     ));
                     dependencies.addAll(buildDependencies(moduleMap, sourceSetMap, maven.children));
                 }
@@ -226,18 +229,18 @@ public class WorkspaceTool {
                     if (sourceSet == null) {
                         throw new RuntimeException("Unknown SourceSet whilst processing dependencies. " + ss.sourceSet.name);
                     }
-                    dependencies.add(new Dependency.SourceSetDependency(sourceSet));
+                    dependencies.add(new Dependency.SourceSetDependency(sourceSet, true));
                 }
                 case ConfigurationData.ProjectDependency proj -> {
                     var project = moduleMap.get(proj.project);
                     if (project == null) {
                         throw new RuntimeException("Unknown Project whilst processing dependencies. " + proj.project.name);
                     }
-                    dependencies.add(new Dependency.SourceSetDependency(project.sourceSets().get("main")));
+                    dependencies.add(new Dependency.SourceSetDependency(project.sourceSets().get("main"), true));
                 }
                 case ConfigurationData.FilesDependency filesDep -> {
                     for (File file : filesDep.files) {
-                        dependencies.add(new Dependency.FileDependency(file.toPath()));
+                        dependencies.add(new Dependency.FileDependency(file.toPath(), true));
                     }
                 }
                 default -> throw new RuntimeException("Unhandled dependency type: " + dep.getClass());
@@ -312,11 +315,11 @@ public class WorkspaceTool {
 
     private static void insertCrossModuleLinks(List<Dependency> dependencies, Map<MavenNotation, SourceSet> depLookup) {
         for (int i = 0; i < dependencies.size(); i++) {
-            if (dependencies.get(i) instanceof Dependency.MavenDependency(MavenNotation notation, Map<String, Path> files)) {
+            if (dependencies.get(i) instanceof Dependency.MavenDependency(MavenNotation notation, Map<String, Path> files, boolean exported)) {
                 // TODO, ideally if we pull publishing metadata, we only need to nuke version.
                 var found = depLookup.get(notation.withVersion("").withClassifier("").withExtension("jar"));
                 if (found != null) {
-                    dependencies.set(i, new Dependency.SourceSetDependency(found));
+                    dependencies.set(i, new Dependency.SourceSetDependency(found, exported));
                 }
             }
         }
