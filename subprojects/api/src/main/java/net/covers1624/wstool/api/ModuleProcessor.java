@@ -18,12 +18,14 @@ public interface ModuleProcessor {
     /**
      * Extract a project and build a {@link Module} for it in the given {@link Workspace}.
      *
-     * @param workspace  The workspace.
-     * @param project    The project dir.
-     * @param extraTasks Any extra Gradle tasks to run whilst extracting.
+     * @param workspace      The workspace.
+     * @param project        The project dir.
+     * @param extraTasks     Any extra Gradle tasks to run whilst extracting.
+     * @param excludeModules Any modules to exclude when building the tree.
+     *                       These are in gradle-like coords, ':NeoForge:base'
      * @return The new module.
      */
-    Module buildModule(Workspace workspace, Path project, Set<String> extraTasks);
+    Module buildModule(Workspace workspace, Path project, Set<String> extraTasks, Set<String> excludeModules);
 
     /**
      * Process the given gradle configuration, producing a set of {@link Dependency Dependencies}.

@@ -106,9 +106,9 @@ public class WorkspaceTool {
 
         ModuleProcessor moduleProcessor = new ModuleProcessor() {
             @Override
-            public Module buildModule(Workspace workspace, Path project, Set<String> extraTasks) {
+            public Module buildModule(Workspace workspace, Path project, Set<String> extraTasks, Set<String> excludeModules) {
                 var data = modelExtractor.extractProjectData(project, extraTasks);
-                return WorkspaceTool.buildModule(workspace, data);
+                return WorkspaceTool.buildModule(workspace, data, excludeModules);
             }
 
             @Override
@@ -128,7 +128,7 @@ public class WorkspaceTool {
         Workspace workspace = workspaceType.newWorkspace(env);
         for (Path modulePath : modulePaths) {
             LOGGER.info("Processing module {}", env.projectRoot().relativize(modulePath));
-            moduleProcessor.buildModule(workspace, modulePath, Set.of());
+            moduleProcessor.buildModule(workspace, modulePath, Set.of(), Set.of());
         }
 
         LOGGER.info("Discovering cross-project links.");
@@ -154,14 +154,14 @@ public class WorkspaceTool {
         LOGGER.info("Done!");
     }
 
-    private static Module buildModule(Workspace workspace, ProjectData project) {
+    private static Module buildModule(Workspace workspace, ProjectData project, Set<String> excludeModules) {
         Module module = workspace.newModule(project.projectDir.toPath(), project.name);
         module.excludes().add(module.rootDir().resolve(".gradle"));
 
         // First build the tree of modules.
         Map<ProjectData, Module> moduleMap = new LinkedHashMap<>();
         Map<SourceSetData, SourceSet> sourceSetMap = new LinkedHashMap<>();
-        buildModuleTree(moduleMap, sourceSetMap, project, module);
+        buildModuleTree(moduleMap, sourceSetMap, project, module, excludeModules);
 
         // Then process them and insert dependencies. This must be done in a 2-pass system, as we need the
         // module tree to exist in order to make SourceSet/Module dependencies.
@@ -250,7 +250,7 @@ public class WorkspaceTool {
         return dependencies;
     }
 
-    private static void buildModuleTree(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, ProjectData project, Module module) {
+    private static void buildModuleTree(Map<ProjectData, Module> moduleMap, Map<SourceSetData, SourceSet> sourceSetMap, ProjectData project, Module module, Set<String> excludeModules) {
         module.setProjectData(project);
         module.excludes().add(module.rootDir().resolve("build"));
         module.excludes().add(module.rootDir().resolve("out"));
@@ -276,11 +276,17 @@ public class WorkspaceTool {
         var subProjects = project.getData(SubProjectList.class);
         if (subProjects != null) {
             for (ProjectData subProject : subProjects.asMap().values()) {
+                if (excludeModules.contains(subProject.identifier())) {
+                    module.excludes().add(subProject.projectDir.toPath());
+                    continue;
+                }
+
                 buildModuleTree(
                         moduleMap,
                         sourceSetMap,
                         subProject,
-                        module.newSubModule(subProject.projectDir.toPath(), subProject.name)
+                        module.newSubModule(subProject.projectDir.toPath(), subProject.name),
+                        excludeModules
                 );
             }
         }

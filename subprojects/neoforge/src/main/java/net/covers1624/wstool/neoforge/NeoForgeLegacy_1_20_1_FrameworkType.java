@@ -15,9 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -40,6 +38,14 @@ public record NeoForgeLegacy_1_20_1_FrameworkType(
     @Override public String branch() { return requireNonNull(branch, "NeoForge framework requires branch."); }
     @Override public String commit() { return requireNonNull(commit, "NeoForge framework requires commit."); }
     // @formatter:on
+
+    @Override
+    public Set<String> excludeModules() {
+        var set = new HashSet<>(NeoForgeFrameworkType.super.excludeModules());
+        set.add(":ForgeRoot:clean");
+        set.add(":ForgeRoot:fmlonly");
+        return set;
+    }
 
     @Override
     public List<String> ideImportTasks(Environment env, Module nfModule, Module nfSubModule) {

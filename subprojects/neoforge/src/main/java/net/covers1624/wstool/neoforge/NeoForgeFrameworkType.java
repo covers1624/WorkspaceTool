@@ -81,7 +81,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
         var possibleMods = findPossibleMods(workspace);
 
-        var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of());
+        var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of(), excludeModules());
         var nfSubModule = getMainSubModule(nfModule);
         var nfMain = nfSubModule.sourceSets().get("main");
         var ifaceInjectionDestinations = FastStream.concat(
@@ -256,6 +256,10 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         }
 
         postBuild(env, nfModule, nfSubModule);
+    }
+
+    default Set<String> excludeModules() {
+        return Set.of(":NeoForge-Root:base", ":NeoForge-Root:clean");
     }
 
     default List<String> ideImportTasks(Environment env, Module nfModule, Module nfSubModule) {

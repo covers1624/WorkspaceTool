@@ -39,19 +39,21 @@ public class ContentRootCollector {
 
             MutableRoot found = null;
             for (Path path : roots.keySet().toArray(Path[]::new)) {
-                if (!rootPath.equals(path) && rootPath.startsWith(path)) {
-                    var paths = roots.remove(path);
-                    if (paths != null) {
-                        roots.computeIfAbsent(rootPath, e -> new ArrayList<>())
-                                .addAll(paths);
-                    }
-                } else if (path.startsWith(rootPath)) {
+                if (rootPath.startsWith(path)) {
                     var paths = roots.get(path);
                     found = FastStream.of(paths)
                             .filter(e -> e.root.equals(path)) // Prefer exact
                             .firstOrDefault(paths.getFirst()); // Otherwise meh
                     break;
                 }
+                if (path.startsWith(rootPath)) {
+                    var paths = roots.remove(path);
+                    if (paths != null) {
+                        roots.computeIfAbsent(rootPath, e -> new ArrayList<>())
+                                .addAll(paths);
+                    }
+                }
+
                 // Pointless
                 if (roots.size() == 1) break;
             }

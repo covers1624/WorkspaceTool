@@ -4,8 +4,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
@@ -50,6 +48,14 @@ public class ProjectData extends Data implements Serializable {
         this.version = version;
         this.group = group;
         this.archivesBaseName = archivesBaseName;
+    }
+
+    public String identifier() {
+        String ident = ":" + name;
+        if (parent != null) {
+            ident = parent.identifier() + ident;
+        }
+        return ident;
     }
 
     public PluginData pluginData() {
