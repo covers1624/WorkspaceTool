@@ -96,13 +96,11 @@ public final class IJSourceSetModule extends IJModule implements SourceSet {
         return entries;
     }
 
-    // TODO, we don't actually want to always export everything. We should extract more Gradle data about what dependencies
-    //       are publicly exported (api, vs implementation) and use that.
     private DependencyEntry collectDependency(Dependency dep, DependencyScope scope) {
         return switch (dep) {
             case Dependency.MavenDependency mavenDep -> new MavenDependencyEntry(mavenDep, scope, mavenDep.exported());
             case Dependency.SourceSetDependency(SourceSet sourceSet, boolean exported) -> new ProjectDependencyEntry(((IJModule) sourceSet), scope, exported);
-            case Dependency.FileDependency(Path file, boolean exported) -> new FileDependencyEntry(file, scope, exported);
+            case Dependency.FileDependency(Path file, List<Path> sources, boolean exported) -> new FileDependencyEntry(file, sources, scope, exported);
         };
     }
 }

@@ -115,7 +115,13 @@ public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPat
                                     .setAttribute("url", fileUrl(ent.file))
                             ));
                     library.addContent(new Element("JAVADOC"));
-                    library.addContent(new Element("SOURCES"));
+                    library.addContent(new Element("SOURCES")
+                            .addContent(FastStream.of(ent.sources)
+                                    .map(e -> new Element("root")
+                                            .setAttribute("url", fileUrl(e))
+                                    )
+                                    .toList()
+                            ));
 
                     orderEntry.addContent(library);
                 }
@@ -175,7 +181,7 @@ public abstract sealed class IJModule permits IJSourceSetModule, IJModuleWithPat
 
     public record FileDependencyEntry(
             Path file,
-            DependencyScope scope,
+            List<Path> sources, DependencyScope scope,
             boolean exported
     ) implements DependencyEntry { }
 }

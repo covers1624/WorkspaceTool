@@ -240,7 +240,7 @@ public class WorkspaceTool {
                 }
                 case ConfigurationData.FilesDependency filesDep -> {
                     for (File file : filesDep.files) {
-                        dependencies.add(new Dependency.FileDependency(file.toPath(), true));
+                        dependencies.add(new Dependency.FileDependency(file.toPath(), List.of(), true));
                     }
                 }
                 default -> throw new RuntimeException("Unhandled dependency type: " + dep.getClass());

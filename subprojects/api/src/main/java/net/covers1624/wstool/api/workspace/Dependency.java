@@ -3,6 +3,7 @@ package net.covers1624.wstool.api.workspace;
 import net.covers1624.quack.maven.MavenNotation;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,5 +17,5 @@ public sealed interface Dependency permits Dependency.MavenDependency, Dependenc
 
     record SourceSetDependency(SourceSet sourceSet, boolean exported) implements Dependency { }
 
-    record FileDependency(Path file, boolean exported) implements Dependency { }
+    record FileDependency(Path file, List<Path> sources, boolean exported) implements Dependency { }
 }

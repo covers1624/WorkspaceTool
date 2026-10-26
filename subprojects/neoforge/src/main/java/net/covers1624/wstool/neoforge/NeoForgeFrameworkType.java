@@ -84,35 +84,21 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of(), excludeModules());
         var nfSubModule = getMainSubModule(nfModule);
         var nfMain = nfSubModule.sourceSets().get("main");
-        var ifaceInjectionDestinations = FastStream.concat(
-                        FastStream.of(nfMain),
-                        FastStream.of(nfModule.findModule("testframework").flatMap(e -> e.findSourceSet("main"))),
-                        FastStream.of(nfModule.findModule("tests").flatMap(e -> e.findSourceSet("junit"))),
-                        FastStream.of(nfModule.findModule("tests").flatMap(e -> e.findSourceSet("main"))))
-                .filterNonNull()
-                .toList();
         var nfClient = nfSubModule.sourceSets().get("client");
         var nfCoreMods = nfModule.subModules().get("neoforge-coremods");
 
         var legacyRemapper = getLegacyMappings(nfSubModule);
 
-        // TODO this is not correct if we ever wire stuff up to the base/vanilla module.
-        Set<Module> ifaceInjectionSources = new LinkedHashSet<>();
         for (Module module : workspace.allProjectModules()) {
             var projectData = module.projectData();
             if (projectData == null) continue;
 
             var ifaceData = projectData.getData(InterfaceInjectionData.class);
             if (ifaceData != null) {
-                boolean hasIfaceInjection = false;
                 for (File e : ifaceData.files) {
                     if (e.exists()) {
                         ifaceInjections.add(e.toPath());
-                        hasIfaceInjection = true;
                     }
-                }
-                if (hasIfaceInjection) {
-                    ifaceInjectionSources.add(module);
                 }
             }
 
@@ -161,6 +147,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
         var legacyClasspath = new LinkedHashSet<>(nfMain.runtimeDependencies());
 
+        var attachedSourceSets = new ArrayList<SourceSet>();
         for (Module module : workspace.allProjectModules()) {
             // TODO this needs to be better, perhaps we can add an exclude param to allProjectModules.
             if (module == nfModule || nfModule.subModules().containsValue(module)) continue;
@@ -173,19 +160,10 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
                 // Link older Forge modules to NeoForge as well.
                 if (ssData.attributes.contains(ModLoaderAttribute.NEO_FORGE) || ssData.attributes.contains(ModLoaderAttribute.MC_FORGE)) {
-                    // Currently, Minecraft needs access to these source sets if interface injections are present.
-                    // To avoid marking the dependency as exported to _every single module_ we have to selectively export
-                    // it to the extra projects neo ships that have Minecraft access, otherwise they get compile errors.
-                    // TODO we may be able to instead emit a stub jar for this, which we can freely export with minimal impact.
-                    if (ifaceInjectionSources.contains(module)) {
-                        for (var dest : ifaceInjectionDestinations) {
-                            dest.compileDependencies().add(new Dependency.SourceSetDependency(ss, false));
-                        }
-                    }
-
                     // we always need a non-exported runtime dependency here, so any extra dependencies the module
                     // has are also available for the game to discover.
                     nfMain.runtimeDependencies().add(new Dependency.SourceSetDependency(ss, false));
+                    attachedSourceSets.add(ss);
 
                     ss.compileDependencies().add(new Dependency.SourceSetDependency(nfMain, true));
                     // TODO split source set mods will need some work here.
@@ -195,6 +173,17 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                 }
             }
         }
+
+        var interfacesJar = env.projectCache().resolve("interfaces.jar");
+        InterfaceInjectionStubGenerator.generate(interfacesJar, ifaceInjections);
+        nfMain.compileDependencies().add(new Dependency.FileDependency(
+                interfacesJar,
+                FastStream.of(attachedSourceSets)
+                        .flatMap(e -> e.sourcePaths().values())
+                        .flatMap(e -> e)
+                        .toList(),
+                true
+        ));
 
         var moduleClasspath = buildModuleClasspath(nfModule, nfSubModule, moduleProcessor);
         if (moduleClasspath != null) {
