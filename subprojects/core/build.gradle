@@ -30,6 +30,18 @@ test {
     systemProperty("net.covers1624.covers1624.wstool.test_update", project.findProperty("test_update") != null)
 }
 
+jar {
+    manifest {
+        attributes 'Specification-Title': 'WorkspaceTool'
+        attributes 'Specification-Vendor': 'covers1624'
+        attributes 'Specification-Version': "1"
+        attributes 'Implementation-Title': 'WorkspaceTool - Core'
+        attributes 'Implementation-Vendor': 'covers1624'
+        attributes 'Implementation-Version': version
+        attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+    }
+}
+
 publishing {
     publications {
         publication(MavenPublication) {
