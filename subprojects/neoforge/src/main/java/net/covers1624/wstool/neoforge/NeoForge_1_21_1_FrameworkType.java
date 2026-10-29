@@ -34,19 +34,38 @@ public record NeoForge_1_21_1_FrameworkType(
             run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
         }
 
-        run.args().addAll("--launchTarget", switch (type) {
-            case "client" -> "forgeclientdev";
-            case "data" -> "forgedatadev";
-            case "server" -> "forgeserverdev";
+        switch (type) {
+            case "client" -> {
+                run.args().addAll("--launchTarget", "forgeclientdev");
+                run.args().addAll(
+                        "--version", gradleData.version,
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.fmlVersion", properties.get("fancy_mod_loader_version"),
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+            }
+            case "data" -> {
+                run.args().addAll("--launchTarget", "forgedatadev");
+                run.args().addAll("--gameDir", "."); //Patch states that this is 'required' by ModLauncher, but it falls back to this..
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.fmlVersion", properties.get("fancy_mod_loader_version"),
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+            }
+            case "server" -> {
+                run.args().addAll("--launchTarget", "forgeserverdev");
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.fmlVersion", properties.get("fancy_mod_loader_version"),
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+            }
             default -> throw new RuntimeException("Unknown type. Expecting 'client', 'server', 'data'. Got: " + type);
-        });
-        run.args().addAll(
-                "--version", gradleData.version,
-                "--fml.neoForgeVersion", gradleData.version,
-                "--fml.fmlVersion", properties.get("fancy_mod_loader_version"),
-                "--fml.mcVersion", properties.get("minecraft_version"),
-                "--fml.neoFormVersion", properties.get("neoform_version")
-        );
+        }
 
         run.vmArgs().addAll(
                 "--add-modules", "ALL-MODULE-PATH",

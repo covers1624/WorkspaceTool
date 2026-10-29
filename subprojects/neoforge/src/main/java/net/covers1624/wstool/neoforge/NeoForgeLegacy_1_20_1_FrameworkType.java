@@ -158,19 +158,35 @@ public record NeoForgeLegacy_1_20_1_FrameworkType(
             run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
         }
 
-        run.args().addAll("--launchTarget", switch (type) {
-            case "client" -> "forgeclientdev";
-            case "data" -> "forgedatadev";
-            case "server" -> "forgeserverdev";
+        switch (type) {
+            case "client" -> {
+                run.args().addAll("--launchTarget", "forgeclientdev");
+                run.args().addAll(
+                        "--version", rootGradleData.version,
+                        "--fml.mcVersion", rootProperties.get("MC_VERSION"),
+                        "--fml.forgeVersion", rootProperties.get("FORGE_VERSION"),
+                        "--fml.mcpVersion", rootProperties.get("MCP_VERSION")
+                );
+            }
+            case "data" -> {
+                run.args().addAll("--launchTarget", "forgedatadev");
+                run.args().addAll("--gameDir", "."); //Patch states that this is 'required' by ModLauncher, but it falls back to this..
+                run.args().addAll(
+                        "--fml.mcVersion", rootProperties.get("MC_VERSION"),
+                        "--fml.forgeVersion", rootProperties.get("FORGE_VERSION"),
+                        "--fml.mcpVersion", rootProperties.get("MCP_VERSION")
+                );
+            }
+            case "server" -> {
+                run.args().addAll("--launchTarget", "forgeserverdev");
+                run.args().addAll(
+                        "--fml.mcVersion", rootProperties.get("MC_VERSION"),
+                        "--fml.forgeVersion", rootProperties.get("FORGE_VERSION"),
+                        "--fml.mcpVersion", rootProperties.get("MCP_VERSION")
+                );
+            }
             default -> throw new RuntimeException("Unknown type. Expecting 'client', 'server', 'data'. Got: " + type);
-        });
-        run.args().addAll(
-                "--version", rootGradleData.version,
-                "--fml.mcVersion", rootProperties.get("MC_VERSION"),
-                "--fml.forgeVersion", rootProperties.get("FORGE_VERSION"),
-                "--fml.fmlVersion", rootProperties.get("FORGE_VERSION"),
-                "--fml.mcpVersion", rootProperties.get("MCP_VERSION")
-        );
+        }
 
         run.envVars().put("LAUNCHER_VERSION", "1.0");
         run.envVars().put("FORGE_SPEC", subprojectProperties.get("SPEC_VERSION"));

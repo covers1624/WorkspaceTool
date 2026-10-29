@@ -31,23 +31,50 @@ public record NeoForge_1_21_10_FrameworkType(
         var properties = requireNonNull(gradleData.getData(ProjectExtData.class))
                 .properties;
 
-        if (run.mainClass() == null) {
-            run.mainClass(switch (type) {
-                case "client" -> "net.neoforged.fml.startup.Client";
-                case "client_data" -> "net.neoforged.fml.startup.DataClient";
-                case "server" -> "net.neoforged.fml.startup.Server";
-                case "server_data" -> "net.neoforged.fml.startup.DataServer";
-                case "game_test_server" -> "net.neoforged.fml.startup.GameTestServer";
-                default -> throw new RuntimeException("Unknown type. Expecting 'client', 'client_data', 'server', 'server_data'. Got: " + type);
-            });
+        switch (type) {
+            case "client" -> {
+                run.args().addAll(
+                        "--version", gradleData.version,
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.Client");
+            }
+            case "client_data" -> {
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.DataClient");
+            }
+            case "server" -> {
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.Server");
+            }
+            case "server_data" -> {
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.DataServer");
+            }
+            case "game_test_server" -> {
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.GameTestServer");
+            }
+            default -> throw new RuntimeException("Unknown type. Expecting 'client', 'client_data', 'server', 'server_data'. Got: " + type);
         }
-        run.args().addAll(
-                "--version", gradleData.version,
-                "--fml.neoForgeVersion", gradleData.version,
-                "--fml.fmlVersion", properties.get("fancy_mod_loader_version"),
-                "--fml.mcVersion", properties.get("minecraft_version"),
-                "--fml.neoFormVersion", properties.get("neoform_version")
-        );
 
         run.vmArgs().addAll(
                 "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
