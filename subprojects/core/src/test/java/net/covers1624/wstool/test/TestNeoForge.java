@@ -39,6 +39,14 @@ public class TestNeoForge extends TestBase {
                         config:
                           type: 'client'
                           dev_login: 'default'
+                      - name: Server
+                        run_dir: "./run"
+                        config:
+                          type: 'server'
+                      - name: Data
+                        run_dir: "./run"
+                        config:
+                          type: 'data'
                     """);
             test.run();
         }
@@ -94,6 +102,14 @@ public class TestNeoForge extends TestBase {
                         run_dir: ./run
                         config:
                           type: 'client'
+                      - name: Server
+                        run_dir: "./run"
+                        config:
+                          type: 'server'
+                      - name: Data
+                        run_dir: "./run"
+                        config:
+                          type: 'data'
                     """);
             test.run();
         }
@@ -124,6 +140,14 @@ public class TestNeoForge extends TestBase {
                         run_dir: ./run
                         config:
                           type: 'client'
+                      - name: Server
+                        run_dir: "./run"
+                        config:
+                          type: 'server'
+                      - name: Data
+                        run_dir: "./run"
+                        config:
+                          type: 'client_data'
                     """);
             test.run();
         }
@@ -154,6 +178,52 @@ public class TestNeoForge extends TestBase {
                         run_dir: ./run
                         config:
                           type: 'client'
+                      - name: Server
+                        run_dir: "./run"
+                        config:
+                          type: 'server'
+                      - name: Data
+                        run_dir: "./run"
+                        config:
+                          type: 'client_data'
+                    """);
+            test.run();
+        }
+    }
+
+    @Test
+    public void testNF_1_21_11() throws IOException {
+        try (var test = newTestInstance("nf_1_21_11")) {
+            test.cloneRepo(
+                    "CodeChicken/CodeChickenLib", "https://github.com/TheCBProject/CodeChickenLib", "master", "d6667cb693b2b28fb784a2d42987917b06f5114e"
+            );
+            test.emitWorkspaceFile("""
+                    frameworks:
+                      - type: 'neoforge:1.21.10'
+                        path: "NeoForge"
+                        url: "https://github.com/neoforged/NeoForge.git"
+                        branch: "1.21.x"
+                        commit: "0753a6a7dd9ed0bafc5441142206f33618f031b3"
+                    
+                    modules:
+                      - "CodeChicken/**"
+                    
+                    workspace:
+                      type: "intellij"
+                      linkingMode: 'force_broken_symlinks'
+                      runs:
+                      - name: Client
+                        run_dir: ./run
+                        config:
+                          type: 'client'
+                      - name: Server
+                        run_dir: "./run"
+                        config:
+                          type: 'server'
+                      - name: Data
+                        run_dir: "./run"
+                        config:
+                          type: 'client_data'
                     """);
             test.run();
         }
