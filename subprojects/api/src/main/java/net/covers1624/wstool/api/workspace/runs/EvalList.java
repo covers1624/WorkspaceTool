@@ -4,6 +4,7 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.wstool.api.workspace.DependencyResolver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,6 +26,9 @@ public class EvalList {
         values.add(value);
     }
 
+    public void addAll(String... entries) {
+        addAll(Arrays.asList(entries));
+    }
     public void addAll(List<String> entries) {
         entries.forEach(e -> values.add(new EvalValue.StringValue(e)));
     }

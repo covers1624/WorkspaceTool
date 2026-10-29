@@ -1,9 +1,9 @@
 package net.covers1624.wstool.neoforge;
 
+import net.covers1624.wstool.api.workspace.Module;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
+import net.covers1624.wstool.gradle.api.data.ProjectExtData;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
@@ -26,19 +26,35 @@ public record NeoForge_1_21_4_FrameworkType(
     // @formatter:on
 
     @Override
-    public void addLaunchTarget(RunConfig run, String type) {
+    public void addRunArguments(Module nfModule, Module nfSubModule, RunConfig run, String type) {
+        var gradleData = requireNonNull(nfSubModule.projectData());
+        var properties = requireNonNull(gradleData.getData(ProjectExtData.class))
+                .properties;
+
         if (run.mainClass() == null) {
             run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
         }
-        var launchTarget = switch (type) {
+        run.args().addAll("--launchTarget", switch (type) {
             case "client" -> "neoforgeclientdev";
             case "client_data" -> "neoforgeclientdatadev";
             case "server" -> "neoforgeserverdev";
             case "server_data" -> "neoforgeserverdatadev";
             default -> throw new RuntimeException("Unknown type. Expecting 'client', 'client_data', 'server', 'server_data'. Got: " + type);
-        };
-        if (launchTarget != null) {
-            run.args().addAll(List.of("--launchTarget", launchTarget));
-        }
+        });
+        run.args().addAll(
+                "--version", gradleData.version,
+                "--fml.neoForgeVersion", gradleData.version,
+                "--fml.fmlVersion", properties.get("fancy_mod_loader_version"),
+                "--fml.mcVersion", properties.get("minecraft_version"),
+                "--fml.neoFormVersion", properties.get("neoform_version")
+        );
+
+        run.vmArgs().addAll(
+                "--add-modules", "ALL-MODULE-PATH",
+                "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
+                "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
+                "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
+                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
+        );
     }
 }

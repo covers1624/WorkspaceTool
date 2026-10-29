@@ -1,5 +1,8 @@
 package net.covers1624.wstool.neoforge;
 
+import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.runs.RunConfig;
+import net.covers1624.wstool.gradle.api.data.ProjectExtData;
 import org.jetbrains.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
@@ -21,4 +24,36 @@ public record NeoForge_1_21_1_FrameworkType(
     @Override public String branch() { return requireNonNull(branch, "NeoForge framework requires branch."); }
     @Override public String commit() { return requireNonNull(commit, "NeoForge framework requires commit."); }
     // @formatter:on
+
+    @Override
+    public void addRunArguments(Module nfModule, Module nfSubModule, RunConfig run, String type) {
+        var gradleData = requireNonNull(nfSubModule.projectData());
+        var properties = requireNonNull(gradleData.getData(ProjectExtData.class))
+                .properties;
+        if (run.mainClass() == null) {
+            run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
+        }
+
+        run.args().addAll("--launchTarget", switch (type) {
+            case "client" -> "forgeclientdev";
+            case "data" -> "forgedatadev";
+            case "server" -> "forgeserverdev";
+            default -> throw new RuntimeException("Unknown type. Expecting 'client', 'server', 'data'. Got: " + type);
+        });
+        run.args().addAll(
+                "--version", gradleData.version,
+                "--fml.neoForgeVersion", gradleData.version,
+                "--fml.fmlVersion", properties.get("fancy_mod_loader_version"),
+                "--fml.mcVersion", properties.get("minecraft_version"),
+                "--fml.neoFormVersion", properties.get("neoform_version")
+        );
+
+        run.vmArgs().addAll(
+                "--add-modules", "ALL-MODULE-PATH",
+                "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
+                "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
+                "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
+                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
+        );
+    }
 }
