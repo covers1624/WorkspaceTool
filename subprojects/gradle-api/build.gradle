@@ -14,7 +14,7 @@ dependencies {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs += ['--release', '8']
+    options.release = 8
 }
 
 publishing {
