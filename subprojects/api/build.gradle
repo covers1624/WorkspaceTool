@@ -7,7 +7,7 @@ java {
     }
 }
 
-archivesBaseName = 'api'
+base.archivesName = 'api'
 
 dependencies {
     api loggerLibs.log4j2.api
@@ -38,7 +38,7 @@ dependencies {
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId archivesBaseName
+            artifactId base.archivesName.get()
 
             from components.java
         }

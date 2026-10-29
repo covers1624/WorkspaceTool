@@ -5,7 +5,7 @@ java {
     }
 }
 
-archivesBaseName = 'mcforge'
+base.archivesName = 'mcforge'
 
 dependencies {
     api project(':api')
@@ -23,7 +23,7 @@ dependencies {
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId archivesBaseName
+            artifactId base.archivesName.get()
 
             from components.java
         }

@@ -5,7 +5,7 @@ java {
     }
 }
 
-archivesBaseName = 'gradle-test-api'
+base.archivesName = 'gradle-test-api'
 
 dependencies {
     api project(":api")

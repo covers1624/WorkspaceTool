@@ -1,11 +1,11 @@
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(21)
         vendor = JvmVendorSpec.ADOPTIUM
     }
 }
 
-archivesBaseName = 'mcforge-gradle-extract'
+base.archivesName = 'mcforge-gradle-extract'
 
 dependencies {
     api project(':gradle-extract')
@@ -15,10 +15,14 @@ dependencies {
     compileOnly gradleApi()
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['--release', '8']
+}
+
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId archivesBaseName
+            artifactId base.archivesName.get()
 
             from components.java
         }

@@ -5,7 +5,7 @@ java {
     }
 }
 
-archivesBaseName = 'gradle'
+base.archivesName = 'gradle'
 
 sourceSets {
     main.resources.srcDirs += 'src/main/generated'
@@ -30,7 +30,7 @@ processResources {
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId archivesBaseName
+            artifactId base.archivesName.get()
 
             from components.java
         }

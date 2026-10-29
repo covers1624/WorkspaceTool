@@ -5,7 +5,7 @@ java {
     }
 }
 
-archivesBaseName = 'test-api'
+base.archivesName = 'test-api'
 
 dependencies {
     runtimeOnly loggerLibs.log4j2.core

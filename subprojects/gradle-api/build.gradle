@@ -1,11 +1,11 @@
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(21)
         vendor = JvmVendorSpec.ADOPTIUM
     }
 }
 
-archivesBaseName = "gradle-api"
+base.archivesName = "gradle-api"
 
 dependencies {
     compileOnly(gradleApi())
@@ -13,10 +13,14 @@ dependencies {
     api libs.quack
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['--release', '8']
+}
+
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId archivesBaseName
+            artifactId base.archivesName.get()
 
             from components.java
         }

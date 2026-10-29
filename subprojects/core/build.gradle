@@ -5,7 +5,7 @@ java {
     }
 }
 
-archivesBaseName = 'core'
+base.archivesName = 'core'
 
 dependencies {
     api project(":api")
@@ -45,7 +45,7 @@ jar {
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId archivesBaseName
+            artifactId base.archivesName.get()
 
             from components.java
             artifact(rootProject.tasks.named('genVersionManifest')) {

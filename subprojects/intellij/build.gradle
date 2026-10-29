@@ -5,7 +5,7 @@ java {
     }
 }
 
-archivesBaseName = 'intellij'
+base.archivesName = 'intellij'
 
 dependencies {
     api project(':api')
@@ -18,7 +18,7 @@ dependencies {
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId archivesBaseName
+            artifactId base.archivesName.get()
 
             from components.java
         }
