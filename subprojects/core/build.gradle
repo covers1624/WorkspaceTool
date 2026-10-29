@@ -45,11 +45,11 @@ jar {
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId base.archivesName.get()
+            artifactId = base.archivesName.get()
 
             from components.java
             artifact(rootProject.tasks.named('genVersionManifest')) {
-                extension 'json'
+                extension = 'json'
             }
         }
     }

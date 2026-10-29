@@ -94,7 +94,7 @@ assemble.dependsOn realJar
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId base.archivesName.get()
+            artifactId = base.archivesName.get()
 
             artifact realJar
         }

@@ -19,7 +19,7 @@ tasks.withType(JavaCompile).configureEach {
 publishing {
     publications {
         publication(MavenPublication) {
-            artifactId base.archivesName.get()
+            artifactId = base.archivesName.get()
 
             from components.java
         }
