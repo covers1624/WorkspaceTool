@@ -1,5 +1,4 @@
 import groovy.json.JsonOutput
-import org.gradle.api.attributes.java.TargetJvmEnvironment
 import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner
 
 import java.nio.file.Files
@@ -33,6 +32,10 @@ subprojects { subProject ->
     if (!isTestApi) {
         apply plugin: 'maven-publish'
         apply plugin: 'signing'
+    }
+
+    java {
+        disableAutoTargetJvm()
     }
 
     group = rootProject.group
@@ -178,12 +181,13 @@ tasks.register('genVersionManifest') {
         }
         def manifest = [
                 'wrapperVersionFilter': '[0.5.0,)',
-                'javaVersion'      : 'JAVA_21',
+                'javaVersion'      : 'JAVA_' + rootProject.property('java_version'),
                 'classPaths'       : [
                         'main'  : mainClasspath,
                         'gradle': gradleClasspath
                 ],
                 'javaArgs'         : [
+                        '--enable-native-access=ALL-UNNAMED',
                         '-cp',
                         '${classPaths.main}',
                         '-Dnet.covers1624.wstool.gradle_classpath=${classPaths.gradle}',

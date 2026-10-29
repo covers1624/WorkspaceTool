@@ -75,6 +75,7 @@ public final class Main {
 
         LOGGER.info("Preparing JRE..");
         Path jre = selectJre(httpEngine, environment.javaVersion);
+        LOGGER.info("Using JRE at {}", jre);
         LOGGER.info("Launching..");
 
         System.out.println();

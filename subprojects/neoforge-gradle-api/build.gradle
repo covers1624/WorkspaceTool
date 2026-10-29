@@ -1,6 +1,6 @@
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(rootProject.property('java_version'))
         vendor = JvmVendorSpec.ADOPTIUM
     }
 }

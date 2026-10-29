@@ -15,6 +15,7 @@
 
 # Include Gradle related files.
 !gradle/
+!gradle.properties
 !settings.gradle
 !build.gradle
 !gradlew

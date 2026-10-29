@@ -63,6 +63,10 @@ public class WorkspaceTool {
     public static void run(Environment env) throws IOException {
         LOGGER.info("Starting WorkspaceTool v@{}", VERSION);
         LOGGER.info("  Project Directory: {}", env.projectRoot());
+        LOGGER.info("  Java Home: {}", System.getProperty("java.home"));
+        LOGGER.info("  Java Vendor: {}", System.getProperty("java.vendor"));
+        LOGGER.info("  Java Version: {}", System.getProperty("java.version"));
+
         List<Extension> extensions = loadExtensions();
 
         Path configFile = env.projectRoot().resolve("workspace.yml");
