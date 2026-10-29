@@ -23,7 +23,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -193,12 +196,13 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
         var assetIndex = assetDownloader.downloadAssets(getMcVersion(nfModule, nfSubModule));
 
-        var cliProperties = buildCliProperties(nfModule, nfSubModule);
         for (RunConfig run : workspace.runConfigs().values()) {
             var type = run.config().get("type");
             if (type == null) throw new RuntimeException("Expected run config " + run.name() + " to contain 'type' config option.");
 
-            var isSplitSourcesClient = nfClient != null && type.contains("client");
+            // Any combination of 'client' or 'data', but as long as 'server' is missing, to negative match 'server_data'.
+            var includeClient = type.contains("client") || type.contains("data") && !type.contains("server");
+            var isSplitSourcesClient = nfClient != null && includeClient;
 
             List<Dependency> modClassesMcDependencies = new ArrayList<>();
             modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain, true));
@@ -215,10 +219,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             }
             possibleMods.forEach(mod -> modClasses.add(new ModClassesEvalValue.ModClass(mod.modId(), new Dependency.SourceSetDependency(mod.ss(), true))));
             run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(modClasses));
-            run.envVars().putAll(getEnvVars(nfModule, nfSubModule));
 
-            // Use addFirst so we are in front of any user-added args.
-            run.vmArgs().addFirst(getVMArgs(env));
             if (moduleClasspath != null) {
                 run.vmArgs().addFirstEval(new ClasspathValue(moduleClasspath));
                 run.vmArgs().addFirst("-p");
@@ -227,21 +228,20 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             run.sysProps().put("ignoreList", "mixinextras-neoforge-,client-extra,neoforge-");
             run.sysProps().putEval("legacyClassPath", new ClasspathValue(legacyClasspath));
 
-            run.args().addAll(List.of(
-                    "--gameDir", ".",
-                    "--assetsDir", assetDownloader.assetsDir.toAbsolutePath().toString(),
-                    "--assetIndex", assetIndex.id()
-            ));
+            if (includeClient) {
+                run.args().addAll(List.of(
+                        "--assetsDir", assetDownloader.assetsDir.toAbsolutePath().toString(),
+                        "--assetIndex", assetIndex.id()
+                ));
+            }
 
-            addLaunchTarget(run, type);
+            addRunArguments(nfModule, nfSubModule, run, type);
 
             if (isSplitSourcesClient) {
                 run.classpath(nfClient);
             } else {
                 run.classpath(nfMain);
             }
-
-            run.args().addAll(cliProperties);
         }
 
         postBuild(env, nfModule, nfSubModule);
@@ -266,34 +266,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         return null;
     }
 
-    default void addLaunchTarget(RunConfig run, String type) {
-        if (run.mainClass() == null) {
-            run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
-        }
-        var launchTarget = switch (type) {
-            case "client" -> "forgeclientdev";
-            case "data" -> "forgedatadev";
-            case "server" -> "forgeserverdev";
-            default -> throw new RuntimeException("Unknown type. Expecting 'client', 'server', 'data'. Got: " + type);
-        };
-        if (launchTarget != null) {
-            run.args().addAll(List.of("--launchTarget", launchTarget));
-        }
-    }
-
-    default List<String> getVMArgs(Environment env) {
-        return List.of(
-                "--add-modules", "ALL-MODULE-PATH",
-                "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
-                "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
-                "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
-                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
-        );
-    }
-
-    default Map<String, String> getEnvVars(Module rootModule, Module module) {
-        return Map.of();
-    }
+    void addRunArguments(Module nfModule, Module nfSubModule, RunConfig run, String type);
 
     private void applyNeoForgeToolchain(Module rootModule, Module nfSubModule, Workspace workspace) {
         var projectData = nfSubModule.projectData();
@@ -334,20 +307,5 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         var properties = requireNonNull(gradleData.getData(ProjectExtData.class))
                 .properties;
         return requireNonNull(properties.get("minecraft_version"), "I don't know how to get the Minecraft version from this NeoForge project.");
-    }
-
-    default List<String> buildCliProperties(Module rootModule, Module module) {
-        var gradleData = requireNonNull(module.projectData());
-        var properties = requireNonNull(gradleData.getData(ProjectExtData.class))
-                .properties;
-
-        var version = gradleData.version;
-        return List.of(
-                "--version", version,
-                "--fml.neoForgeVersion", version,
-                "--fml.fmlVersion", properties.get("fancy_mod_loader_version"),
-                "--fml.mcVersion", properties.get("minecraft_version"),
-                "--fml.neoFormVersion", properties.get("neoform_version")
-        );
     }
 }

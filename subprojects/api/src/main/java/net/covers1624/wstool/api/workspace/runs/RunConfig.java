@@ -27,6 +27,12 @@ public interface RunConfig {
 
     void mainClass(String mainClass);
 
+    default void mainClassIfMissing(String mainClass) {
+        if (mainClass() == null) {
+            mainClass(mainClass);
+        }
+    }
+
     EvalList args();
 
     EvalList vmArgs();

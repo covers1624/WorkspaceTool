@@ -1,10 +1,9 @@
 package net.covers1624.wstool.neoforge;
 
-import net.covers1624.wstool.api.Environment;
+import net.covers1624.wstool.api.workspace.Module;
 import net.covers1624.wstool.api.workspace.runs.RunConfig;
+import net.covers1624.wstool.gradle.api.data.ProjectExtData;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
@@ -27,22 +26,57 @@ public record NeoForge_1_21_10_FrameworkType(
     // @formatter:on
 
     @Override
-    public void addLaunchTarget(RunConfig run, String type) {
-        if (run.mainClass() == null) {
-            run.mainClass(switch (type) {
-                case "client" -> "net.neoforged.fml.startup.Client";
-                case "client_data" -> "net.neoforged.fml.startup.DataClient";
-                case "server" -> "net.neoforged.fml.startup.Server";
-                case "server_data" -> "net.neoforged.fml.startup.DataServer";
-                case "game_test_server" -> "net.neoforged.fml.startup.GameTestServer";
-                default -> throw new RuntimeException("Unknown type. Expecting 'client', 'client_data', 'server', 'server_data'. Got: " + type);
-            });
-        }
-    }
+    public void addRunArguments(Module nfModule, Module nfSubModule, RunConfig run, String type) {
+        var gradleData = requireNonNull(nfSubModule.projectData());
+        var properties = requireNonNull(gradleData.getData(ProjectExtData.class))
+                .properties;
 
-    @Override
-    public List<String> getVMArgs(Environment env) {
-        return List.of(
+        switch (type) {
+            case "client" -> {
+                run.args().addAll(
+                        "--version", gradleData.version,
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.Client");
+            }
+            case "client_data" -> {
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.DataClient");
+            }
+            case "server" -> {
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.Server");
+            }
+            case "server_data" -> {
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.DataServer");
+            }
+            case "game_test_server" -> {
+                run.args().addAll(
+                        "--fml.neoForgeVersion", gradleData.version,
+                        "--fml.mcVersion", properties.get("minecraft_version"),
+                        "--fml.neoFormVersion", properties.get("neoform_version")
+                );
+                run.mainClassIfMissing("net.neoforged.fml.startup.GameTestServer");
+            }
+            default -> throw new RuntimeException("Unknown type. Expecting 'client', 'client_data', 'server', 'server_data'. Got: " + type);
+        }
+
+        run.vmArgs().addAll(
                 "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
                 "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
         );

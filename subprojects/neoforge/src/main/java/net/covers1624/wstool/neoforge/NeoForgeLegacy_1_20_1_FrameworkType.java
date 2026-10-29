@@ -4,6 +4,7 @@ import net.covers1624.quack.collection.FastStream;
 import net.covers1624.quack.io.IOUtils;
 import net.covers1624.wstool.api.Environment;
 import net.covers1624.wstool.api.workspace.Module;
+import net.covers1624.wstool.api.workspace.runs.RunConfig;
 import net.covers1624.wstool.gradle.api.data.ConfigurationData;
 import net.covers1624.wstool.gradle.api.data.ConfigurationList;
 import net.covers1624.wstool.gradle.api.data.ProjectExtData;
@@ -15,7 +16,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -31,6 +35,25 @@ public record NeoForgeLegacy_1_20_1_FrameworkType(
         @Nullable String commit,
         @Nullable String parchment
 ) implements NeoForgeFrameworkType {
+
+    private static final List<String> IGNORE_LIST = List.of(
+            "bootstraplauncher",
+            "asm-tree",
+            "asm",
+            "asm-commons",
+            "asm-util",
+            "asm-analysis",
+            "securejarhandler",
+            "JarJarFileSystems",
+            "events-",
+            "language-minecraft",
+            "language-java",
+            "language-lowcode",
+            "core-",
+            "client-extra",
+            "neoforge-",
+            "forge-"
+    );
 
     // @formatter:off
     @Override public String path() { return path != null ? path : "NeoForge"; }
@@ -124,55 +147,59 @@ public record NeoForgeLegacy_1_20_1_FrameworkType(
     }
 
     @Override
-    public Map<String, String> getEnvVars(Module rootModule, Module nfSubModule) {
-        var subprojectProperties = requireNonNull(requireNonNull(nfSubModule.projectData()).getData(ProjectExtData.class))
-                .properties;
-        return Map.of(
-                "LAUNCHER_VERSION", "1.0",
-                "FORGE_SPEC", subprojectProperties.get("SPEC_VERSION")
-        );
-    }
-
-
-    @Override
-    public List<String> getVMArgs(Environment env) {
-        List<String> vmArgs = new ArrayList<>(NeoForgeFrameworkType.super.getVMArgs(env));
-        // todo getSysProps
-        vmArgs.add("-Dmixin.env.disableRefMap=true");
-        var ignores = List.of(
-                "bootstraplauncher",
-                "asm-tree",
-                "asm",
-                "asm-commons",
-                "asm-util",
-                "asm-analysis",
-                "securejarhandler",
-                "JarJarFileSystems",
-                "events-",
-                "language-minecraft",
-                "language-java",
-                "language-lowcode",
-                "core-",
-                "client-extra",
-                "neoforge-",
-                "forge-"
-        );
-        vmArgs.add("-Dignorelist=" + String.join(",", ignores));
-        return vmArgs;
-    }
-
-    @Override
-    public List<String> buildCliProperties(Module rootModule, Module module) {
-        var rootGradleData = requireNonNull(rootModule.projectData());
+    public void addRunArguments(Module nfModule, Module nfSubModule, RunConfig run, String type) {
+        var rootGradleData = requireNonNull(nfModule.projectData());
         var rootProperties = requireNonNull(rootGradleData.getData(ProjectExtData.class))
                 .properties;
-        return List.of(
-                "--version", rootGradleData.version,
-                "--fml.mcVersion", rootProperties.get("MC_VERSION"),
-                "--fml.forgeVersion", rootProperties.get("FORGE_VERSION"),
-                "--fml.fmlVersion", rootProperties.get("FORGE_VERSION"),
-                "--fml.mcpVersion", rootProperties.get("MCP_VERSION")
-        );
+        var subprojectProperties = requireNonNull(requireNonNull(nfSubModule.projectData()).getData(ProjectExtData.class))
+                .properties;
+
+        if (run.mainClass() == null) {
+            run.mainClass("cpw.mods.bootstraplauncher.BootstrapLauncher");
+        }
+
+        switch (type) {
+            case "client" -> {
+                run.args().addAll("--launchTarget", "forgeclientdev");
+                run.args().addAll(
+                        "--version", rootGradleData.version,
+                        "--fml.mcVersion", rootProperties.get("MC_VERSION"),
+                        "--fml.forgeVersion", rootProperties.get("FORGE_VERSION"),
+                        "--fml.mcpVersion", rootProperties.get("MCP_VERSION")
+                );
+            }
+            case "data" -> {
+                run.args().addAll("--launchTarget", "forgedatadev");
+                run.args().addAll("--gameDir", "."); //Patch states that this is 'required' by ModLauncher, but it falls back to this..
+                run.args().addAll(
+                        "--fml.mcVersion", rootProperties.get("MC_VERSION"),
+                        "--fml.forgeVersion", rootProperties.get("FORGE_VERSION"),
+                        "--fml.mcpVersion", rootProperties.get("MCP_VERSION")
+                );
+            }
+            case "server" -> {
+                run.args().addAll("--launchTarget", "forgeserverdev");
+                run.args().addAll(
+                        "--fml.mcVersion", rootProperties.get("MC_VERSION"),
+                        "--fml.forgeVersion", rootProperties.get("FORGE_VERSION"),
+                        "--fml.mcpVersion", rootProperties.get("MCP_VERSION")
+                );
+            }
+            default -> throw new RuntimeException("Unknown type. Expecting 'client', 'server', 'data'. Got: " + type);
+        }
+
+        run.envVars().put("LAUNCHER_VERSION", "1.0");
+        run.envVars().put("FORGE_SPEC", subprojectProperties.get("SPEC_VERSION"));
+
+        run.vmArgs().addAll(List.of(
+                "--add-modules", "ALL-MODULE-PATH",
+                "--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler",
+                "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
+                "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
+                "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"
+        ));
+        run.vmArgs().add("-Dmixin.env.disableRefMap=true");
+        run.vmArgs().add("-Dignorelist=" + String.join(",", IGNORE_LIST));
     }
 
     public @Nullable SRGRemapper getLegacyMappings(Module nfSubModule) {
