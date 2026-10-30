@@ -6,6 +6,7 @@ import net.covers1624.wstool.api.GitRepoManager;
 import net.covers1624.wstool.api.HashContainer;
 import net.covers1624.wstool.api.ModuleProcessor;
 import net.covers1624.wstool.api.workspace.Dependency;
+import net.covers1624.wstool.api.workspace.Dependency.SourceSetDependency;
 import net.covers1624.wstool.api.workspace.Module;
 import net.covers1624.wstool.api.workspace.SourceSet;
 import net.covers1624.wstool.api.workspace.Workspace;
@@ -17,6 +18,7 @@ import net.covers1624.wstool.gradle.api.data.JavaToolchainData;
 import net.covers1624.wstool.gradle.api.data.PluginData;
 import net.covers1624.wstool.gradle.api.data.ProjectExtData;
 import net.covers1624.wstool.minecraft.*;
+import net.covers1624.wstool.neoforge.ModClassesEvalValue.ModClass;
 import net.covers1624.wstool.neoforge.gradle.api.NeoDevData;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,8 +83,6 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
         if (parchmentVersion != null) {
             parchmentCache.putString(parchmentVersion);
         }
-
-        var possibleMods = findPossibleMods(workspace);
 
         var nfModule = moduleProcessor.buildModule(workspace, rootDir, Set.of(), excludeModules());
         var nfSubModule = getMainSubModule(nfModule);
@@ -150,6 +150,7 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
 
         var legacyClasspath = new LinkedHashSet<>(nfMain.runtimeDependencies());
 
+        var modClasses = new ArrayList<ModClass>();
         var attachedSourceSets = new ArrayList<SourceSet>();
         for (Module module : workspace.allProjectModules()) {
             // TODO this needs to be better, perhaps we can add an exclude param to allProjectModules.
@@ -165,13 +166,17 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
                 if (ssData.attributes.contains(ModLoaderAttribute.NEO_FORGE) || ssData.attributes.contains(ModLoaderAttribute.MC_FORGE)) {
                     // we always need a non-exported runtime dependency here, so any extra dependencies the module
                     // has are also available for the game to discover.
-                    nfMain.runtimeDependencies().add(new Dependency.SourceSetDependency(ss, false));
+                    nfMain.runtimeDependencies().add(new SourceSetDependency(ss, false));
                     attachedSourceSets.add(ss);
 
-                    ss.compileDependencies().add(new Dependency.SourceSetDependency(nfMain, true));
+                    ss.compileDependencies().add(new SourceSetDependency(nfMain, true));
                     // TODO split source set mods will need some work here.
                     if (nfClient != null) {
-                        ss.compileDependencies().add(new Dependency.SourceSetDependency(nfClient, true));
+                        ss.compileDependencies().add(new SourceSetDependency(nfClient, true));
+                    }
+
+                    for (var id : getModIds(ss)) {
+                        modClasses.add(new ModClass(id, new SourceSetDependency(ss, true)));
                     }
                 }
             }
@@ -204,21 +209,20 @@ public interface NeoForgeFrameworkType extends ForgeLikeFramework {
             var includeClient = type.contains("client") || type.contains("data") && !type.contains("server");
             var isSplitSourcesClient = nfClient != null && includeClient;
 
+            var thisRunModClasses = new ArrayList<>(modClasses);
             List<Dependency> modClassesMcDependencies = new ArrayList<>();
-            modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain, true));
-            modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfMain, true));
+            modClassesMcDependencies.add(new SourceSetDependency(nfMain, true));
+            modClassesMcDependencies.add(new SourceSetDependency(nfMain, true));
             if (isSplitSourcesClient) {
-                modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient, true));
-                modClassesMcDependencies.add(new Dependency.SourceSetDependency(nfClient, true));
+                modClassesMcDependencies.add(new SourceSetDependency(nfClient, true));
+                modClassesMcDependencies.add(new SourceSetDependency(nfClient, true));
             }
 
-            List<ModClassesEvalValue.ModClass> modClasses = new ArrayList<>();
-            modClasses.add(new ModClassesEvalValue.ModClass("minecraft", modClassesMcDependencies));
             if (nfCoreMods != null) {
-                modClasses.add(new ModClassesEvalValue.ModClass("neoforge-coremods", new Dependency.SourceSetDependency(nfCoreMods.sourceSets().get("main"), true)));
+                thisRunModClasses.addFirst(new ModClass("neoforge-coremods", new SourceSetDependency(nfCoreMods.sourceSets().get("main"), true)));
             }
-            possibleMods.forEach(mod -> modClasses.add(new ModClassesEvalValue.ModClass(mod.modId(), new Dependency.SourceSetDependency(mod.ss(), true))));
-            run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(modClasses));
+            thisRunModClasses.addFirst(new ModClass("minecraft", modClassesMcDependencies));
+            run.envVars().putEval("MOD_CLASSES", new ModClassesEvalValue(thisRunModClasses));
 
             if (moduleClasspath != null) {
                 run.vmArgs().addFirstEval(new ClasspathValue(moduleClasspath));
